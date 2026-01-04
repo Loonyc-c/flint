@@ -1,0 +1,16 @@
+{
+  "name": "@flint/shared",
+  "version": "1.0.0",
+  "description": "Shared types and validations for Flint frontend and backend",
+  "type": "module",
+  "main": "types/index.ts",
+  "exports": {
+    "./types": "./types/index.ts",
+    "./validations": "./validations/index.ts",
+    "./types/*": "./types/*",
+    "./validations/*": "./validations/*"
+  },
+  "dependencies": {
+    "zod": "^4.3.5"
+  }
+}
