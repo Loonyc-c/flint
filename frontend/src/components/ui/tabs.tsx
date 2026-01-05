@@ -52,13 +52,13 @@ export const Tabs = ({
               {isActive && (
                 <motion.div
                   {...({
-                    layoutId: 'clickedbutton'
+                    layoutId: 'clickedbutton',
+                    transition: { type: 'spring', bounce: 0.3, duration: 0.6 },
+                    className: cn(
+                      'absolute inset-0 rounded-full bg-gray-200 dark:bg-zinc-800',
+                      activeTabClassName
+                    )
                   } as any)}
-                  transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
-                  className={cn(
-                    'absolute inset-0 rounded-full bg-gray-200 dark:bg-zinc-800',
-                    activeTabClassName
-                  )}
                 />
               )}
 
@@ -90,12 +90,14 @@ const FadeInDiv = ({ className, active }: FadeInDivProps) => {
     <div className={cn('w-full', className)}>
       <motion.div
         key={active.value}
-        layoutId={active.value}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
-        className="w-full"
+        {...({
+          layoutId: active.value,
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          exit: { opacity: 0, y: -20 },
+          transition: { type: 'spring', bounce: 0.3, duration: 0.6 },
+          className: 'w-full'
+        } as any)}
       >
         {active.content}
       </motion.div>
