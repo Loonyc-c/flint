@@ -1,0 +1,21 @@
+{
+  "version": 2,
+  "buildCommand": "cd frontend && npm run copy:shared && npm run build",
+  "installCommand": "cd shared && npm install && cd ../frontend && npm install && cd ../backend && npm install",
+  "framework": "nextjs",
+  "outputDirectory": "frontend/.next",
+  "regions": ["sfo1"],
+  "cleanUrls": true,
+  "rewrites": [
+    {
+      "source": "/v1/:path*",
+      "destination": "/api/v1/:path*"
+    }
+  ],
+  "functions": {
+    "backend/api/index.ts": {
+      "memory": 1024,
+      "maxDuration": 30
+    }
+  }
+}

@@ -1,11 +1,11 @@
 import { ZodError } from 'zod'
 
 import { ErrorCode, ServiceException } from '@/features/error'
-import localizationService from '@/features/auth/services/localization'
-import { TranslationKey } from '@/features/auth/services/localization/types'
 
 import { HttpStatus, Locale } from '@/data/constants'
 import { ApiErrorHandler } from '@/shared/api/types'
+import { TranslationKey } from '@/features/localization/types'
+import localizationService from '@/features/localization'
 export enum ApiErrorCode {
   NOT_IMPLEMENTED = 994,
   NOT_FOUND = 995,

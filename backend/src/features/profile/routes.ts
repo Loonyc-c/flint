@@ -7,7 +7,7 @@ import getProfile from '@/features/profile/handlers/get-profile'
 const router = Router()
 
 router.post('/profile', createApiHandler(createProfile))
-router.put('/profile', createApiHandler(updateProfile))
-router.get('/profile', createApiHandler(getProfile))
+router.put('/profile/:id', createApiHandler(updateProfile))
+router.get('/profile/:id', createApiHandler(getProfile))
 
 export default router

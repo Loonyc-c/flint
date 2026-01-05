@@ -1,0 +1,22 @@
+{
+  "name": "flint-monolith",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Flint monolith repository with frontend, backend, and shared code",
+  "scripts": {
+    "install:all": "cd shared && npm install && cd ../frontend && npm install && cd ../backend && npm install",
+    "copy:shared": "cd frontend && npm run copy:shared && cd ../backend && npm run copy:shared",
+    "build:frontend": "cd frontend && npm run copy:shared && npm run build",
+    "build:backend": "cd backend && npm run copy:shared",
+    "build:all": "npm run copy:shared && npm run build:frontend && npm run build:backend",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:backend": "cd backend && npm run dev",
+    "lint:all": "cd frontend && npm run lint && cd ../backend && npm run lint"
+  },
+  "workspaces": [
+    "frontend",
+    "backend",
+    "shared"
+  ]
+}
+
