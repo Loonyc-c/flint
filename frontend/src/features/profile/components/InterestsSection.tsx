@@ -35,10 +35,13 @@ export const InterestsSection = ({ selectedInterests, onEdit, error }: Interests
           selectedInterests.map(interest => (
             <motion.span
               key={interest}
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-              className="px-4 py-2 bg-neutral-50 dark:bg-black border border-neutral-100 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full font-bold"
+              {...({
+                initial: { scale: 0.8, opacity: 0 },
+                animate: { scale: 1, opacity: 1 },
+                transition: { type: 'spring', stiffness: 300, damping: 20 },
+                className:
+                  'px-4 py-2 bg-neutral-50 dark:bg-black border border-neutral-100 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full font-bold'
+              } as any)}
             >
               {interest}
             </motion.span>
@@ -75,17 +78,22 @@ export const InterestsModal = ({
       {isOpen && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={onClose}
-            className="absolute inset-0 bg-black/80 backdrop-blur-md"
+            {...({
+              initial: { opacity: 0 },
+              animate: { opacity: 1 },
+              exit: { opacity: 0 },
+              onClick: onClose,
+              className: 'absolute inset-0 bg-black/80 backdrop-blur-md'
+            } as any)}
           />
           <motion.div
-            initial={{ y: '100%' }}
-            animate={{ y: 0 }}
-            exit={{ y: '100%' }}
-            className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-[40px] sm:rounded-3xl p-8 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
+            {...({
+              initial: { y: '100%' },
+              animate: { y: 0 },
+              exit: { y: '100%' },
+              className:
+                'relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-[40px] sm:rounded-3xl p-8 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col'
+            } as any)}
           >
             <div className="flex items-center justify-between mb-8">
               <div>

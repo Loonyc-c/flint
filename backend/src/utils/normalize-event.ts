@@ -4,13 +4,7 @@ import { Request } from 'express'
 import type { NormalizedEvent } from '@/shared/api/types'
 
 const normalizeEvent = (req: Request): NormalizedEvent => {
-  const {
-    body,
-    params: pathParameters, // Use params for path parameters
-    method: httpMethodRaw,
-    headers,
-    ...rest
-  } = req
+  const { body, params: pathParameters, method: httpMethodRaw, headers, ...rest } = req
 
   const queryStringParameters = req.query as Record<string, string | string[] | undefined>
 

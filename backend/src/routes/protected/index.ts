@@ -5,7 +5,6 @@ import { authorizer } from '@/middleware/auth.middleware'
 
 const router = Router()
 
-// Apply Auth Middleware to all routes in this router
 router.use(authorizer)
 
 router.use(matchesRouter)

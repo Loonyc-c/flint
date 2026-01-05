@@ -18,21 +18,17 @@ export const matchService = {
     const interactionCollection = await getInteractionCollection()
     const userCollection = await getUserCollection()
 
-    // 0. Check if current user has a complete profile
     const currentUser = await userCollection.findOne({ _id: userObjectId })
     if (!currentUser?.profileCompletion || currentUser.profileCompletion < MIN_PROFILE_COMPLETION) {
-      // User is not eligible to see others because they are not eligible to be seen.
       return []
     }
 
-    // 1. Get IDs of users already swiped on
     const interactions = await interactionCollection
       .find({ actorId: userObjectId }, { projection: { targetId: 1 } })
       .toArray()
 
     const swipedIds = interactions.map((i) => i.targetId)
 
-    // 2. Find users NOT in swipedIds and NOT self AND have >= 80% completion
     const candidates = await userCollection
       .find({
         _id: { $nin: [...swipedIds, userObjectId] },
@@ -42,12 +38,10 @@ export const matchService = {
       .limit(limit)
       .toArray()
 
-    // 3. Map to UserProfile
     return candidates.map((user) => ({
       id: user._id.toHexString(),
       firstName: user.auth.firstName,
       lastName: user.auth.lastName,
-      // Add other profile fields here
     }))
   },
 
@@ -60,7 +54,6 @@ export const matchService = {
     const targetObjectId = new ObjectId(targetId)
     const userCollection = await getUserCollection()
 
-    // 0. Validate Profile Completeness
     const actor = await userCollection.findOne({ _id: actorObjectId })
     if (!actor?.profileCompletion || actor.profileCompletion < MIN_PROFILE_COMPLETION) {
       throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
@@ -77,7 +70,6 @@ export const matchService = {
     const interactionCollection = await getInteractionCollection()
     const matchCollection = await getMatchCollection()
 
-    // 1. Check if already swiped
     const existingInteraction = await interactionCollection.findOne({
       actorId: actorObjectId,
       targetId: targetObjectId,
@@ -89,7 +81,6 @@ export const matchService = {
       })
     }
 
-    // 2. Record the swipe
     const interaction: DbInteraction = {
       actorId: actorObjectId,
       targetId: targetObjectId,
@@ -99,7 +90,6 @@ export const matchService = {
 
     await interactionCollection.insertOne(interaction)
 
-    // 3. If LIKE, check for match
     if (type === InteractionType.LIKE) {
       const reverseInteraction = await interactionCollection.findOne({
         actorId: targetObjectId,
@@ -108,7 +98,6 @@ export const matchService = {
       })
 
       if (reverseInteraction) {
-        // IT'S A MATCH!
         const match: DbMatch = {
           users: [actorObjectId, targetObjectId],
           createdAt: new Date(),
@@ -132,19 +121,16 @@ export const matchService = {
     const matchCollection = await getMatchCollection()
     const userCollection = await getUserCollection()
 
-    // Find matches where the user is one of the participants
     const matches = await matchCollection.find({ users: userObjectId }).toArray()
 
     if (matches.length === 0) {
       return []
     }
 
-    // Get all other user IDs from the matches
     const otherUserIds = matches
       .map((match) => match.users.find((id) => !id.equals(userObjectId)))
       .filter((id): id is ObjectId => !!id)
 
-    // Fetch all other users in one query
     const otherUsers = await userCollection
       .find({ _id: { $in: otherUserIds } })
       .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1 })
@@ -152,7 +138,6 @@ export const matchService = {
 
     const userMap = new Map(otherUsers.map((user) => [user._id.toHexString(), user]))
 
-    // Map matches to results using the userMap
     return matches
       .map((match) => {
         const otherUserId = match.users.find((id) => !id.equals(userObjectId))

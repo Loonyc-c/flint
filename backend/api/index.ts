@@ -4,7 +4,6 @@ import { VercelRequest, VercelResponse } from '@vercel/node'
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
-    // Ensure DB is connected before handling request
     await getDbConnection()
     return app(req, res)
   } catch (error) {
