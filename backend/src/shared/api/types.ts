@@ -10,6 +10,8 @@ export interface NormalizedEvent<T = unknown> {
   queryStringParameters: QueryParams
   httpMethod: string
   headers: Record<string, string>
+  user?: unknown
+  query: QueryParams
 }
 
 export type ApiHandlerResponse<Resp> = Promise<Resp | { response: Resp; headers?: ResponseHeaders }>

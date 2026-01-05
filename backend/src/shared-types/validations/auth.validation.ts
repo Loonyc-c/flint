@@ -26,7 +26,7 @@ const REGEX_PATTERNS = {
 export const emailSchema = z
   .string()
   .min(1, 'Email is required')
-  .transform(email => {
+  .transform((email: string) => {
     const trimmed = email.trim().toLowerCase()
     const [localPart, domain] = trimmed.split('@')
     if (domain === 'gmail.com') {
@@ -60,7 +60,7 @@ export const passwordSchema = z
 export const nameSchema = z
   .string()
   .min(1, 'Name is required')
-  .transform(name => {
+  .transform((name: string) => {
     return name
       .toLowerCase()
       .split(' ')
@@ -109,10 +109,13 @@ export const resetPasswordSchema = z
     password: passwordSchema,
     confirmPassword: passwordSchema
   })
-  .refine(data => data.password === data.confirmPassword, {
-    message: "Passwords don't match",
-    path: ['confirmPassword']
-  })
+  .refine(
+    (data: { password: string; confirmPassword: string }) => data.password === data.confirmPassword,
+    {
+      message: "Passwords don't match",
+      path: ['confirmPassword']
+    }
+  )
 
 export type ResetPasswordFormData = z.infer<typeof resetPasswordSchema>
 

@@ -3,14 +3,6 @@ export enum Locale {
   ENGLISH = 'en',
 }
 
-export const REGEX_VALIDATIONS = {
-  PHONE: /^\d{8}$/,
-  EMAIL:
-    /^(([^<>()[\]\\.,;:\s@!?%"^&*]+(\.[^<>()[\]\\.,;:\s@"]+)*)|(".+"))@((\[[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\.[0-9]{1,3}\])|(([a-zA-Z\-0-9]+\.)+[a-zA-Z]{2,}))$/,
-  PASSWORD: /^(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/,
-  OTP: /^\d{6}$/,
-} as const
-
 export const TOKEN_ISSUER = 'flint-customer'
 export const CLIENT = 'flint'
 

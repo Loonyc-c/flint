@@ -1,12 +1,13 @@
 import { googleSchema } from '@shared/validations'
 import { NormalizedEvent } from '@/shared/api/types'
 import { authService } from '@/features/auth'
-import { ServiceException } from '@/features/auth/services/error'
+import { ServiceException } from '@/features/error'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
-import { TranslationKey } from '@/features/auth/services/localization/types'
+import { TranslationKey } from '@/features/localization/types'
 
 const handler = async (event: NormalizedEvent) => {
+  
   const { body } = event
 
   try {
@@ -16,7 +17,10 @@ const handler = async (event: NormalizedEvent) => {
     const name = `${user.auth.lastName} ${user.auth.firstName}`
 
     const accessToken = authService.generateToken(user._id.toHexString(), {
-      principalId: user._id.toHexString(),
+      userId: user._id.toHexString(),
+      firstName: user.auth.firstName,
+      lastName: user.auth.lastName,
+      email: user.auth.email
     })
 
     return {

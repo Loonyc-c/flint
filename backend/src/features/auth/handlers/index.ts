@@ -1,5 +1,0 @@
-export { default as loginHandler } from './login'
-export { default as signUpHandler } from './sign-up'
-export { default as forgetPasswordHandler } from './forget-password'
-export { default as resetPasswordHandler } from './reset-password'
-export { default as googleHandler } from './google'

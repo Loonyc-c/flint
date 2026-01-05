@@ -1,7 +1,3 @@
-/**
- * Shared Validations Exports
- * Clean single entry point for all shared validation schemas
- */
 
 export {
   emailSchema,
@@ -18,3 +14,13 @@ export {
   type ResetPasswordFormData,
   googleSchema
 } from './auth.validation'
+
+export {
+  swipeSchema,
+  type SwipeFormData
+} from './match.validation'
+
+export {
+  profileCreationSchema,
+  type ProfileCreationFormData
+} from './profile.validation'

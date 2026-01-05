@@ -1,9 +1,9 @@
 'use client'
 
-import ForgetPasswordForm from '@/src/components/auth/ForgetPasswordForm'
-import AuthHeader from '@/src/components/auth/AuthHeader'
+import ForgetPasswordForm from '@/features/auth/components/ForgetPasswordForm'
+import AuthHeader from '@/features/auth/components/AuthHeader'
 
-export default function ForgetPasswordPage() {
+const ForgetPasswordPage = () => {
   return (
     <>
       <AuthHeader />
@@ -15,4 +15,6 @@ export default function ForgetPasswordPage() {
     </>
   )
 }
+
+export default ForgetPasswordPage;
 

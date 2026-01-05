@@ -7,8 +7,10 @@
   "exports": {
     "./types": "./types/index.ts",
     "./validations": "./validations/index.ts",
+    "./lib": "./lib/index.ts",
     "./types/*": "./types/*",
-    "./validations/*": "./validations/*"
+    "./validations/*": "./validations/*",
+    "./lib/*": "./lib/*"
   },
   "dependencies": {
     "zod": "^4.3.5"

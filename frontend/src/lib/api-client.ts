@@ -1,3 +1,6 @@
+import { isNil } from "./utils"
+
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9999/v1'
 
 export interface ApiSuccessResponse<T> {
@@ -29,8 +32,10 @@ export class ApiError extends Error {
   }
 }
 
-export async function apiRequest<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+export const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
   const url = `${API_BASE_URL}${endpoint}`
+
+  const token = typeof window !== 'undefined' ? localStorage.getItem('flint_access_token') : null
 
   let response: Response
   try {
@@ -38,6 +43,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
       ...options,
       headers: {
         'Content-Type': 'application/json',
+        ...(!isNil(token) ? { Authorization: `Bearer ${token}` } : {}),
         ...options.headers
       },
       credentials: 'include'
@@ -56,7 +62,7 @@ export async function apiRequest<T>(endpoint: string, options: RequestInit = {})
   let responseData: ApiResponse<T> | ApiErrorResponse
   try {
     responseData = await response.json()
-  } catch (parseError) {
+  } catch {
     throw new ApiError(
       response.status || 0,
       `Invalid response from server (status: ${response.status})`,

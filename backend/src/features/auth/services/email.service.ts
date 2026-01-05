@@ -1,4 +1,4 @@
-import { ErrorCode, ServiceException } from '@/features/auth/services/error'
+import { ErrorCode, ServiceException } from '@/features/error'
 import { isNil } from '@/utils'
 import nodemailer from 'nodemailer'
 

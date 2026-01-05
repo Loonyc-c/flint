@@ -4,9 +4,8 @@ import { User } from '@/data/db/types/user'
 import { isNil, isNonEmptyString } from '@/utils'
 import dayjs from 'dayjs'
 import jwt from 'jsonwebtoken'
-import bcryptjs from 'bcryptjs'
 import { DbUser } from '@/data/db/types/user'
-import { ErrorCode, ServiceException } from '@/features/auth/services/error'
+import { ErrorCode, ServiceException } from '@/features/error'
 import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
@@ -18,7 +17,10 @@ if (!JWT_SECRET) {
 }
 
 export type AuthorizerPayload = {
-  principalId: string
+  userId: string
+  firstName: string
+  lastName: string
+  email: string
 }
 
 export interface AuthToken {
@@ -92,7 +94,7 @@ export const authService: AuthService = {
     }
 
     const passMatch = isNonEmptyString(user.auth.password)
-      ? await bcryptjs.compare(password, user.auth.password)
+      ? await bcrypt.compare(password, user.auth.password)
       : false
 
     if (!passMatch) {
@@ -103,6 +105,13 @@ export const authService: AuthService = {
   },
   createUser: async (input) => {
     const { firstName, lastName, email, password } = input
+
+    const userCollection = await getUserCollection()
+    const existingUser = await userCollection.findOne({ 'auth.email': email })
+
+    if (existingUser) {
+      throw new ServiceException('err.user.already_exists', ErrorCode.BAD_REQUEST)
+    }
 
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
@@ -121,8 +130,6 @@ export const authService: AuthService = {
       updatedBy: 'system',
       createdBy: 'system',
     }
-
-    const userCollection = await getUserCollection()
 
     const res = await userCollection.insertOne(doc)
     if (!res.acknowledged) {
@@ -144,13 +151,14 @@ export const authService: AuthService = {
     }
 
     const resetToken = crypto.randomBytes(32).toString('hex')
+    const hashedToken = crypto.createHash('sha256').update(resetToken).digest('hex')
     const resetTokenExpiry = dayjs().add(15, 'minutes').toDate()
 
     await userCollection.updateOne(
       { _id: user._id },
       {
         $set: {
-          'auth.passwordResetToken': resetToken,
+          'auth.passwordResetToken': hashedToken,
           'auth.passwordResetExpires': resetTokenExpiry,
           updatedAt: new Date(),
         },
@@ -188,9 +196,10 @@ export const authService: AuthService = {
 
   resetPassword: async (token, password) => {
     const userCollection = await getUserCollection()
+    const hashedToken = crypto.createHash('sha256').update(token).digest('hex')
 
     const user = await userCollection.findOne({
-      'auth.passwordResetToken': token,
+      'auth.passwordResetToken': hashedToken,
       'auth.passwordResetExpires': { $gt: new Date() },
     })
 
@@ -227,7 +236,7 @@ export const authService: AuthService = {
         isNil(payload) ||
         isNil(payload.email) ||
         isNil(payload.given_name) ||
-        isNil(payload.family_name)
+        isNil(payload.family_name) 
       ) {
         throw new ServiceException('err.auth.invalid_token', ErrorCode.BAD_REQUEST)
       }

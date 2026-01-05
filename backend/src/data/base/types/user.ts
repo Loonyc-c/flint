@@ -1,4 +1,4 @@
-import { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from '../enums/user'
+import { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from "@/shared-types/types"
 
 export type UserProfile = {
   nickName: string
@@ -9,9 +9,9 @@ export type UserProfile = {
   photos: string[]
   voiceIntro: string
   questions: {
-    question: string
+    questionId: string
     audioUrl: string
-  }
+  }[]
 }
 
 export type SubScription = {
@@ -22,10 +22,7 @@ export type SubScription = {
 }
 
 export type UserPreferences = {
-  ageRange: {
-    mn: number
-    en: number
-  }
+  ageRange: number // max age range 
   lookingFor: LOOKING_FOR
 }
 

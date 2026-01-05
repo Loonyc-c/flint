@@ -1,6 +1,6 @@
 import { ZodError } from 'zod'
 
-import { ErrorCode, ServiceException } from '@/features/auth/services/error'
+import { ErrorCode, ServiceException } from '@/features/error'
 import localizationService from '@/features/auth/services/localization'
 import { TranslationKey } from '@/features/auth/services/localization/types'
 

@@ -1,4 +1,3 @@
-import { PROFILE_STEPS } from '@/data/base/enums/user'
 import { BaseCollection } from '@/data/base/types'
 import { SubScription, UserContactInfo, UserPreferences, UserProfile } from '@/data/base/types/user'
 import { WithId } from 'mongodb'
@@ -13,9 +12,9 @@ export type DbUser = BaseCollection & {
     passwordResetToken?: string
     passwordResetExpires?: Date
   }
-  profileStep?: PROFILE_STEPS
   profile?: UserProfile
   subScription?: SubScription
   preferences?: UserPreferences
   contactInfo?: UserContactInfo
+  profileCompletion?: number
 }

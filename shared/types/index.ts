@@ -17,3 +17,14 @@ export type {
   ApiResponse,
   AuthError
 } from './auth'
+
+export type {
+  Interaction,
+  Match,
+  SwipeRequest,
+  SwipeResponse,
+  UserProfile
+} from './match'
+export { InteractionType } from './match'
+export * from './enums'
+export * from './profile'

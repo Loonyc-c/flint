@@ -1,11 +1,11 @@
 'use client'
 
-import LoginForm from '@/src/components/auth/LoginForm'
-import SignupForm from '@/src/components/auth/SignupForm'
-import { Tabs } from '@/src/components/ui/tabs'
-import AuthHeader from '@/src/components/auth/AuthHeader'
+import LoginForm from '@/features/auth/components/LoginForm'
+import SignupForm from '@/features/auth/components/SignupForm'
+import { Tabs } from '@/components/ui/tabs'
+import AuthHeader from '@/features/auth/components/AuthHeader'
 
-export default function AuthPage() {
+const AuthPage = () => {
   const tabs = [
     {
       title: 'Login',
@@ -31,3 +31,5 @@ export default function AuthPage() {
     </>
   )
 }
+
+export default AuthPage;

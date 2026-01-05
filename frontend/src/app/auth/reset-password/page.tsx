@@ -1,9 +1,9 @@
 'use client'
 
-import ResetPasswordForm from '@/src/components/auth/ResetPasswordForm'
-import AuthHeader from '@/src/components/auth/AuthHeader'
+import ResetPasswordForm from '@/features/auth/components/ResetPasswordForm'
+import AuthHeader from '@/features/auth/components/AuthHeader'
 
-export default function ResetPasswordPage() {
+const ResetPasswordPage = () => {
   return (
     <>
       <AuthHeader />
@@ -15,3 +15,5 @@ export default function ResetPasswordPage() {
     </>
   )
 }
+
+export default ResetPasswordPage;

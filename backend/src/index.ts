@@ -1,30 +1,11 @@
-import 'dotenv/config'
-import express from 'express'
-import cors from 'cors'
+import app from './app'
+import http from 'http'
 import { getDbConnection } from './data/db'
-import { createErrorhandler } from '@/shared/api/handler'
-import { apiErrorHandler } from '@/shared/api/error'
-import publicRouter from '@/routes/public'
 
-const app = express()
+const server = http.createServer(app)
+const port = process.env.PORT || 9999
 
-const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'
-
-app.use(
-  cors({
-    origin: CLIENT_URL,
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  }),
-)
-app.use(express.json())
-const port = 9999
-
-app.use('/v1', publicRouter)
-app.use(createErrorhandler(apiErrorHandler))
-
-app.listen(port, async () => {
+server.listen(port, async () => {
   try {
     await getDbConnection()
     console.log('✅ MongoDB connected')

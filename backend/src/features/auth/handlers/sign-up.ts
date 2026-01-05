@@ -1,12 +1,12 @@
 import { NormalizedEvent } from '@/shared/api/types'
-import { ServiceException } from '@/features/auth/services/error'
+import { ServiceException } from '@/features/error'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
-import { TranslationKey } from '@/features/auth/services/localization/types'
 import { MongoError } from 'mongodb'
 import { isNil } from '@/utils'
 import { signupSchema } from '@shared/validations'
 import { authService } from '@/features/auth'
+import { TranslationKey } from '@/features/localization/types'
 
 const handler = async (event: NormalizedEvent) => {
   const { body } = event
@@ -29,7 +29,7 @@ const handler = async (event: NormalizedEvent) => {
     if (e instanceof MongoError) {
       if (e.code === 11000) {
         const err = e as MongoError & { keyValue?: Record<string, unknown> }
-        if (!isNil(err.keyValue) && !isNil(err?.keyValue['name'])) {
+        if (!isNil(err.keyValue) && !isNil(err?.keyValue['email'])) {
           throw new ApiException(HttpStatus.BAD_REQUEST, ApiErrorCode.BAD_REQUEST, {
             message: 'err.data.conflict' as TranslationKey,
             isReadableMessage: true,
