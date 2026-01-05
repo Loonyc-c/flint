@@ -1,4 +1,8 @@
-import { getInteractionCollection, getMatchCollection, getUserCollection } from '@/data/db/collection'
+import {
+  getInteractionCollection,
+  getMatchCollection,
+  getUserCollection,
+} from '@/data/db/collection'
 import { DbInteraction } from '@/data/db/types/interaction'
 import { DbMatch } from '@/data/db/types/match'
 import { InteractionType, SwipeResponse, UserProfile } from '@shared/types'
@@ -17,15 +21,15 @@ export const matchService = {
     // 0. Check if current user has a complete profile
     const currentUser = await userCollection.findOne({ _id: userObjectId })
     if (!currentUser?.profileCompletion || currentUser.profileCompletion < MIN_PROFILE_COMPLETION) {
-       // User is not eligible to see others because they are not eligible to be seen.
-       return []
+      // User is not eligible to see others because they are not eligible to be seen.
+      return []
     }
 
     // 1. Get IDs of users already swiped on
     const interactions = await interactionCollection
       .find({ actorId: userObjectId }, { projection: { targetId: 1 } })
       .toArray()
-    
+
     const swipedIds = interactions.map((i) => i.targetId)
 
     // 2. Find users NOT in swipedIds and NOT self AND have >= 80% completion
@@ -33,7 +37,7 @@ export const matchService = {
       .find({
         _id: { $nin: [...swipedIds, userObjectId] },
         profileCompletion: { $gte: MIN_PROFILE_COMPLETION },
-        profile: { $exists: true, $ne: null }
+        profile: { $exists: true },
       })
       .limit(limit)
       .toArray()
@@ -47,7 +51,11 @@ export const matchService = {
     }))
   },
 
-  swipe: async (actorId: string, targetId: string, type: InteractionType): Promise<SwipeResponse> => {
+  swipe: async (
+    actorId: string,
+    targetId: string,
+    type: InteractionType,
+  ): Promise<SwipeResponse> => {
     const actorObjectId = new ObjectId(actorId)
     const targetObjectId = new ObjectId(targetId)
     const userCollection = await getUserCollection()
@@ -76,9 +84,9 @@ export const matchService = {
     })
 
     if (existingInteraction) {
-       throw new ApiException(HttpStatus.BAD_REQUEST, ApiErrorCode.BAD_REQUEST, {
-         message: 'Already swiped on this user',
-       })
+      throw new ApiException(HttpStatus.BAD_REQUEST, ApiErrorCode.BAD_REQUEST, {
+        message: 'Already swiped on this user',
+      })
     }
 
     // 2. Record the swipe
@@ -108,7 +116,7 @@ export const matchService = {
         }
 
         const res = await matchCollection.insertOne(match)
-        
+
         return {
           isMatch: true,
           matchId: res.insertedId.toHexString(),

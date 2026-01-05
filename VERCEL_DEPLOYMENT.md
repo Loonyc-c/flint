@@ -99,21 +99,41 @@ The shared code is automatically copied during build via:
 
 ## Environment Variables
 
-### Backend Required Variables:
+**📖 See [ENVIRONMENT_VARIABLES.md](./ENVIRONMENT_VARIABLES.md) for complete guide**
 
+### Quick Answer:
+
+**For Single Project Deployment (Recommended):**
+- ✅ **YES, combine ALL environment variables** from frontend and backend into one Vercel project
+- Frontend variables must be prefixed with `NEXT_PUBLIC_` (exposed to browser)
+- Backend variables should NOT have `NEXT_PUBLIC_` prefix (server-side only)
+
+### Required Variables:
+
+**Frontend (NEXT_PUBLIC_* - exposed to browser):**
 ```
-MONGODB_URI=your_mongodb_connection_string
-JWT_SECRET=your_jwt_secret
-JWT_REFRESH_SECRET=your_refresh_secret
+NEXT_PUBLIC_API_URL=https://your-domain.vercel.app
+NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-google-client-id
+```
+
+**Backend (Server-side only):**
+```
 CLIENT_URL=https://your-frontend-domain.vercel.app
-# Add other backend environment variables
+MONGO_URL=mongodb+srv://user:pass@cluster.mongodb.net
+MONGO_DB=your-database-name
+JWT_SECRET=your-jwt-secret-min-32-chars
+GOOGLE_CLIENT_ID=your-google-client-id
+EMAIL_USER=your-email@gmail.com
+EMAIL_PASS=your-app-password
 ```
 
-### Frontend Required Variables:
-
+**Optional (but recommended):**
 ```
-NEXT_PUBLIC_API_URL=https://your-backend-domain.vercel.app
-# Add other frontend environment variables
+CLOUDINARY_CLOUD_NAME=your-cloud-name
+CLOUDINARY_API_KEY=your-api-key
+CLOUDINARY_API_SECRET=your-api-secret
+AGORA_APP_ID=your-agora-app-id
+AGORA_APP_CERTIFICATE=your-agora-certificate
 ```
 
 ## Build Process
