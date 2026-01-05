@@ -22,7 +22,7 @@ export const Tabs = ({
   containerClassName,
   activeTabClassName,
   tabClassName,
-  contentClassName,
+  contentClassName
 }: TabsProps) => {
   const [active, setActive] = useState(propTabs[0])
 
@@ -34,7 +34,7 @@ export const Tabs = ({
           containerClassName
         )}
       >
-        {propTabs.map((tab) => {
+        {propTabs.map(tab => {
           const isActive = active.value === tab.value
           return (
             <button
@@ -51,7 +51,9 @@ export const Tabs = ({
             >
               {isActive && (
                 <motion.div
-                  layoutId="clickedbutton"
+                  {...({
+                    layoutId: 'clickedbutton'
+                  } as any)}
                   transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
                   className={cn(
                     'absolute inset-0 rounded-full bg-gray-200 dark:bg-zinc-800',
@@ -73,10 +75,7 @@ export const Tabs = ({
         })}
       </div>
 
-      <FadeInDiv
-        active={active}
-        className={cn('pt-6 sm:pt-8 w-full', contentClassName)}
-      />
+      <FadeInDiv active={active} className={cn('pt-6 sm:pt-8 w-full', contentClassName)} />
     </>
   )
 }
@@ -103,4 +102,3 @@ const FadeInDiv = ({ className, active }: FadeInDivProps) => {
     </div>
   )
 }
-
