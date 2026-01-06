@@ -5,17 +5,23 @@ import path from 'path'
 let app: ((req: unknown, res: unknown) => void) | null = null
 let getDbConnection: (() => Promise<void>) | null = null
 
+// Use indirect require to bypass Turbopack static analysis
+// eslint-disable-next-line @typescript-eslint/no-implied-eval
+const dynamicRequire = new Function('modulePath', 'return require(modulePath)') as (path: string) => unknown
+
 async function loadBackend() {
   if (!app) {
     try {
       // Use absolute path resolution for the backend dist
       const backendDistPath = path.join(process.cwd(), 'backend-dist')
-      
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      app = require(path.join(backendDistPath, 'app.cjs')).default
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const db = require(path.join(backendDistPath, 'data', 'db', 'index.cjs'))
-      getDbConnection = db.getDbConnection
+
+      const appModule = dynamicRequire(path.join(backendDistPath, 'app.cjs')) as { default: typeof app }
+      app = appModule.default
+
+      const dbModule = dynamicRequire(path.join(backendDistPath, 'data', 'db', 'index.cjs')) as {
+        getDbConnection: typeof getDbConnection
+      }
+      getDbConnection = dbModule.getDbConnection
     } catch (error) {
       console.error('Failed to load backend:', error)
       throw error
@@ -33,11 +39,10 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
     // Strip /api to get /v1/...
     const expressPath = url.pathname.replace(/^\/api/, '') + url.search
 
-    const body = req.method !== 'GET' && req.method !== 'HEAD'
-      ? await req.json().catch(() => ({}))
-      : undefined
+    const body =
+      req.method !== 'GET' && req.method !== 'HEAD' ? await req.json().catch(() => ({})) : undefined
 
-    return new Promise((resolve) => {
+    return new Promise(resolve => {
       // Create Express-compatible request object
       const expressReq = {
         method: req.method,
@@ -47,7 +52,7 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
         headers: Object.fromEntries(req.headers),
         body,
         params: {},
-        get: (name: string) => req.headers.get(name),
+        get: (name: string) => req.headers.get(name)
       }
 
       // Create Express-compatible response object
@@ -89,7 +94,7 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
           sent = true
           resolve(new NextResponse(data || null, { status: statusCode, headers }))
           return this
-        },
+        }
       }
 
       app(expressReq, expressRes)
@@ -97,7 +102,10 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
   } catch (error) {
     console.error('API route error:', error)
     return NextResponse.json(
-      { success: false, error: { code: 500, message: 'Internal Server Error', isReadableMessage: false } },
+      {
+        success: false,
+        error: { code: 500, message: 'Internal Server Error', isReadableMessage: false }
+      },
       { status: 500 }
     )
   }
@@ -130,15 +138,14 @@ export async function OPTIONS() {
       'Access-Control-Allow-Origin': process.env.CLIENT_URL || '*',
       'Access-Control-Allow-Methods': 'GET, POST, PUT, PATCH, DELETE, OPTIONS',
       'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-      'Access-Control-Allow-Credentials': 'true',
-    },
+      'Access-Control-Allow-Credentials': 'true'
+    }
   })
 }
 
 // Disable body parsing - we handle it ourselves
 export const config = {
   api: {
-    bodyParser: false,
-  },
+    bodyParser: false
+  }
 }
-
