@@ -7,7 +7,9 @@ let getDbConnection: (() => Promise<void>) | null = null
 
 // Use indirect require to bypass Turbopack static analysis
 // eslint-disable-next-line @typescript-eslint/no-implied-eval
-const dynamicRequire = new Function('modulePath', 'return require(modulePath)') as (path: string) => unknown
+const dynamicRequire = new Function('modulePath', 'return require(modulePath)') as (
+  path: string
+) => unknown
 
 async function loadBackend() {
   if (!app) {
@@ -15,7 +17,9 @@ async function loadBackend() {
       // Use absolute path resolution for the backend dist
       const backendDistPath = path.join(process.cwd(), 'backend-dist')
 
-      const appModule = dynamicRequire(path.join(backendDistPath, 'app.cjs')) as { default: typeof app }
+      const appModule = dynamicRequire(path.join(backendDistPath, 'app.cjs')) as {
+        default: typeof app
+      }
       app = appModule.default
 
       const dbModule = dynamicRequire(path.join(backendDistPath, 'data', 'db', 'index.cjs')) as {

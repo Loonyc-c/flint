@@ -24,7 +24,14 @@ const nextConfig: NextConfig = {
     ]
   },
   // Mark backend dependencies as external to avoid bundling issues
-  serverExternalPackages: ['express', 'mongodb', 'bcrypt', 'jsonwebtoken', 'nodemailer', 'google-auth-library']
+  serverExternalPackages: [
+    'express',
+    'mongodb',
+    'bcrypt',
+    'jsonwebtoken',
+    'nodemailer',
+    'google-auth-library'
+  ]
 }
 
 export default nextConfig
