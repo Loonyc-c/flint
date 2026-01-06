@@ -1,9 +1,9 @@
 {
   "version": 2,
-  "installCommand": "cd .. && npm install --prefix shared && npm install --prefix frontend && npm install --prefix backend",
-  "buildCommand": "cd .. && cd frontend && npm run copy:shared && npm run build",
+  "installCommand": "npm install --prefix shared && npm install --prefix frontend && npm install --prefix backend",
+  "buildCommand": "cd frontend && npm run copy:shared && npm run build",
   "framework": "nextjs",
-  "outputDirectory": ".next",
+  "outputDirectory": "frontend/.next",
   "regions": ["sfo1"],
   "cleanUrls": true,
   "rewrites": [
