@@ -1,5 +1,6 @@
 {
   "version": 2,
+  "framework": null,
   "installCommand": "npm install --prefix shared && npm install --prefix frontend && npm install --prefix backend",
   "buildCommand": "cd frontend && npm run copy:shared && npm run build",
   "outputDirectory": "frontend/.next",
