@@ -1,30 +1,24 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createRequire } from 'module'
 import path from 'path'
 
 // Cache for loaded modules
 let app: ((req: unknown, res: unknown) => void) | null = null
 let getDbConnection: (() => Promise<void>) | null = null
 
-// Use indirect require to bypass Turbopack static analysis
-// eslint-disable-next-line @typescript-eslint/no-implied-eval
-const dynamicRequire = new Function('modulePath', 'return require(modulePath)') as (
-  path: string
-) => unknown
-
 async function loadBackend() {
   if (!app) {
     try {
+      // Create a require function that works in ES modules
+      const require = createRequire(import.meta.url)
+      
       // Use absolute path resolution for the backend dist
       const backendDistPath = path.join(process.cwd(), 'backend-dist')
 
-      const appModule = dynamicRequire(path.join(backendDistPath, 'app.cjs')) as {
-        default: typeof app
-      }
+      const appModule = require(path.join(backendDistPath, 'app.cjs'))
       app = appModule.default
 
-      const dbModule = dynamicRequire(path.join(backendDistPath, 'data', 'db', 'index.cjs')) as {
-        getDbConnection: typeof getDbConnection
-      }
+      const dbModule = require(path.join(backendDistPath, 'data', 'db', 'index.cjs'))
       getDbConnection = dbModule.getDbConnection
     } catch (error) {
       console.error('Failed to load backend:', error)
