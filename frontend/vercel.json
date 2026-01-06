@@ -1,0 +1,6 @@
+{
+  "version": 2,
+  "buildCommand": "npm run copy:shared && npm run build",
+  "outputDirectory": ".next"
+}
+
