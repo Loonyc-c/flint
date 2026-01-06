@@ -126,10 +126,7 @@ export const authService: AuthService = {
       const userCollection = await getUserCollection()
 
       // Check for existing user within transaction to prevent race condition
-      const existingUser = await userCollection.findOne(
-        { 'auth.email': email },
-        { session },
-      )
+      const existingUser = await userCollection.findOne({ 'auth.email': email }, { session })
 
       if (existingUser) {
         throw new ServiceException('err.user.already_exists', ErrorCode.BAD_REQUEST)
@@ -254,6 +251,28 @@ export const authService: AuthService = {
 
   handleGoogleAuth: async (googleToken) => {
     try {
+      // Diagnostic: decode token payload (unverified) to inspect aud/iss/exp
+      const snippet = googleToken?.slice(0, 12) ?? ''
+      try {
+        const parts = googleToken.split('.')
+        if (parts.length === 3) {
+          const payloadJson = Buffer.from(parts[1], 'base64').toString('utf8')
+          const payload = JSON.parse(payloadJson)
+          console.info('Google token decode', {
+            tokenSnippet: snippet,
+            aud: payload.aud,
+            iss: payload.iss,
+            exp: payload.exp,
+            email: payload.email,
+            clientEnv: GOOGLE_CLIENT_ID,
+          })
+        } else {
+          console.info('Google token malformed parts', { tokenSnippet: snippet })
+        }
+      } catch (decodeErr) {
+        console.warn('Google token decode failed', { tokenSnippet: snippet, decodeErr })
+      }
+
       const ticket = await googleClient.verifyIdToken({
         idToken: googleToken,
         audience: GOOGLE_CLIENT_ID,
@@ -319,6 +338,11 @@ export const authService: AuthService = {
       if (error instanceof ServiceException) {
         throw error
       }
+      console.warn('Google verify failed', {
+        message: (error as Error)?.message,
+        tokenSnippet: googleToken?.slice(0, 12),
+        clientEnv: GOOGLE_CLIENT_ID,
+      })
       throw new ServiceException('err.auth.invalid_token', ErrorCode.UNAUTHORIZED)
     }
   },
