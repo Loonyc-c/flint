@@ -13,11 +13,6 @@
     "dev:backend": "cd backend && npm run dev",
     "lint:all": "cd frontend && npm run lint && cd ../backend && npm run lint"
   },
-  "workspaces": [
-    "frontend",
-    "backend",
-    "shared"
-  ],
   "dependencies": {
     "@vercel/node": "^3.0.0",
     "next": "^15.3.4"
