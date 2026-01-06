@@ -31,7 +31,11 @@ const nextConfig: NextConfig = {
     'jsonwebtoken',
     'nodemailer',
     'google-auth-library'
-  ]
+  ],
+  // Include backend-dist files in the serverless function bundle
+  outputFileTracingIncludes: {
+    '/api/v1/[...path]': ['./backend-dist/**/*']
+  }
 }
 
 export default nextConfig
