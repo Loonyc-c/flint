@@ -9,6 +9,13 @@ const { getDbConnection } = require('../../backend/dist/data/db/index.cjs')
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
     await getDbConnection()
+
+    // Strip /api prefix so Express routes match correctly
+    // Vercel rewrites /v1/* to /api/v1/*, but Express expects /v1/*
+    if (req.url?.startsWith('/api')) {
+      req.url = req.url.replace(/^\/api/, '')
+    }
+
     return app(req, res)
   } catch (error) {
     console.error('Failed to connect to MongoDB in Serverless Function', error)
