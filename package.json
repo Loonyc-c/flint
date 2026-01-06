@@ -19,7 +19,8 @@
     "shared"
   ],
   "dependencies": {
-    "@vercel/node": "^3.0.0"
+    "@vercel/node": "^3.0.0",
+    "next": "^15.3.4"
   }
 }
 

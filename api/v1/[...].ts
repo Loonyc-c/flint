@@ -1,10 +1,10 @@
 import { VercelRequest, VercelResponse } from '@vercel/node'
 
-// Import from the pre-built backend bundle
-// @ts-expect-error - Importing from compiled output
-import app from '../../backend/dist/app.cjs'
-// @ts-expect-error - Importing from compiled output  
-import { getDbConnection } from '../../backend/dist/data/db/index.cjs'
+// Import from the pre-built backend bundle (built by tsup during Vercel build)
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const app = require('../../backend/dist/app.cjs').default
+// eslint-disable-next-line @typescript-eslint/no-require-imports
+const { getDbConnection } = require('../../backend/dist/data/db/index.cjs')
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
