@@ -31,6 +31,16 @@ export interface SwipeResponse {
   matchId?: string
 }
 
+export interface MatchWithUser {
+  id: string
+  createdAt: Date
+  otherUser: {
+    id: string
+    firstName: string
+    lastName: string
+  }
+}
+
 export interface UserProfile {
   id: string
   firstName: string

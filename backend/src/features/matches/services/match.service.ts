@@ -6,7 +6,13 @@ import {
 import { withMongoTransaction } from '@/data/db'
 import { DbInteraction } from '@/data/db/types/interaction'
 import { DbMatch } from '@/data/db/types/match'
-import { InteractionType, LOOKING_FOR, SwipeResponse, UserProfile } from '@shared/types'
+import {
+  InteractionType,
+  LOOKING_FOR,
+  MatchWithUser,
+  SwipeResponse,
+  UserProfile,
+} from '@shared/types'
 import { ObjectId } from 'mongodb'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
@@ -24,7 +30,7 @@ export const matchService = {
       return []
     }
 
-    const { lookingFor , ageRange  } = currentUser.preferences ?? {}
+    const { lookingFor, ageRange } = currentUser.preferences ?? {}
 
     const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
 
@@ -171,7 +177,7 @@ export const matchService = {
     })
   },
 
-  getMatches: async (userId: string): Promise<any[]> => {
+  getMatches: async (userId: string): Promise<MatchWithUser[]> => {
     const userObjectId = new ObjectId(userId)
     const matchCollection = await getMatchCollection()
     const userCollection = await getUserCollection()
@@ -211,6 +217,6 @@ export const matchService = {
           },
         }
       })
-      .filter((r) => r !== null)
+      .filter((r): r is MatchWithUser => r !== null)
   },
 }

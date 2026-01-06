@@ -21,6 +21,7 @@ export type {
 export type {
   Interaction,
   Match,
+  MatchWithUser,
   SwipeRequest,
   SwipeResponse,
   UserProfile
