@@ -1,7 +1,13 @@
 {
   "version": 2,
+  "buildCommand": "npm run copy:shared",
   "rewrites": [
-    { "source": "/v1/(.*)", "destination": "/api" }
-  ]
+    { "source": "/(.*)", "destination": "/api/index" }
+  ],
+  "functions": {
+    "api/index.ts": {
+      "runtime": "nodejs18.x"
+    }
+  }
 }
 
