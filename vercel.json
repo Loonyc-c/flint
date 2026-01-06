@@ -1,20 +1,6 @@
 {
   "version": 2,
   "installCommand": "npm install && npm install --prefix shared && npm install --prefix frontend && npm install --prefix backend",
-  "buildCommand": "cd backend && npm run build && cd ../frontend && npm run copy:shared && npm run build",
-  "outputDirectory": "frontend/.next",
-  "regions": ["sfo1"],
-  "cleanUrls": true,
-  "rewrites": [
-    {
-      "source": "/v1/:path*",
-      "destination": "/api/v1/:path*"
-    }
-  ],
-  "functions": {
-    "api/v1/[...].ts": {
-      "memory": 1024,
-      "maxDuration": 30
-    }
-  }
+  "buildCommand": "cd backend && npm run build && cp -r dist ../frontend/backend-dist && cd ../frontend && npm run copy:shared && npm run build",
+  "outputDirectory": "frontend/.next"
 }

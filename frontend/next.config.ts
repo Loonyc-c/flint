@@ -22,7 +22,9 @@ const nextConfig: NextConfig = {
         destination: '/api/v1/:path*'
       }
     ]
-  }
+  },
+  // Mark backend dependencies as external to avoid bundling issues
+  serverExternalPackages: ['express', 'mongodb', 'bcrypt', 'jsonwebtoken', 'nodemailer', 'google-auth-library']
 }
 
 export default nextConfig

@@ -43,3 +43,6 @@ next-env.d.ts
 
 # generated shared types (copied from ../shared)
 /src/shared-types
+
+# backend dist (copied during Vercel build)
+/backend-dist
