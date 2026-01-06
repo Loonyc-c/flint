@@ -1,5 +1,6 @@
 'use client'
 
+import MainHeader from '@/components/header'
 import { Tabs } from '@/components/ui/tabs'
 import FindMatch from '@/features/home/components/FindMatch'
 import MatchingPref from '@/features/home/components/MatchingPref'
@@ -8,24 +9,25 @@ import SubscriptionRedirect from '@/features/home/components/SubscriptionRedirec
 const HomePage = () => {
   const tabs = [
     {
-      title: "Find Match",
-      value: "Find Match",
-      content: <FindMatch />,
+      title: 'Find Match',
+      value: 'Find Match',
+      content: <FindMatch />
     },
     {
-      title: "Matching Preferences",
-      value: "Matching Preferences",
-      content: <MatchingPref />,
+      title: 'Matching Preferences',
+      value: 'Matching Preferences',
+      content: <MatchingPref />
     },
     {
-      title: "Subscription",
-      value: "Subscription",
-      content: <SubscriptionRedirect />,
-    },
+      title: 'Subscription',
+      value: 'Subscription',
+      content: <SubscriptionRedirect />
+    }
   ]
 
- return (
+  return (
     <>
+      <MainHeader />
       <div className="p-10 flex justify-center items-center h-fit">
         <div className="perspective-[1000px] relative flex flex-col max-w-5xl justify-center items-center w-full">
           <Tabs tabs={tabs} />
