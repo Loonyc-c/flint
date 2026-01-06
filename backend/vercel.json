@@ -1,13 +1,12 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
-  "functions": {
-    "api/index.ts": {
-      "includeFiles": "./dist/**"
+  "buildCommand": "npm run copy:shared",
+  "builds": [
+    {
+      "src": "api/index.ts",
+      "use": "@vercel/node"
     }
-  },
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.ts" }
-  ]
+  ],
+  "routes": [{ "src": "/(.*)", "dest": "/api/index.ts" }]
 }
 
