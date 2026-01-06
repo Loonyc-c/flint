@@ -17,7 +17,6 @@ function loadBackend() {
     
     let loadedApp = null
     let loadedDb = null
-    let usedPath = ''
     
     for (const distPath of possiblePaths) {
       try {
@@ -28,7 +27,6 @@ function loadBackend() {
         
         loadedApp = appModule.default
         loadedDb = dbModule.getDbConnection
-        usedPath = distPath
         console.log('Successfully loaded backend from:', distPath)
         break
       } catch (e) {
