@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  // Rewrite /v1/* API requests to the serverless function
+  async rewrites() {
+    return [
+      {
+        source: '/v1/:path*',
+        destination: '/api/v1/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
