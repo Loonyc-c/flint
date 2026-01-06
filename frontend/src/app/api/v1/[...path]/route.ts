@@ -14,7 +14,7 @@ async function loadBackend() {
       // Use eval to completely hide from bundler analysis
       // eslint-disable-next-line no-eval
       const loadModule = eval('require')
-      
+
       // Backend dist is copied to frontend/backend-dist and included via vercel.json includeFiles
       const cwd = process.cwd()
       const backendDistPath = [cwd, 'backend-dist'].join('/')
