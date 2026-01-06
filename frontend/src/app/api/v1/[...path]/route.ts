@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { createRequire } from 'module'
-import path from 'path'
+
+// Force Node.js runtime (not Edge)
+export const runtime = 'nodejs'
+export const dynamic = 'force-dynamic'
 
 // Cache for loaded modules
 let app: ((req: unknown, res: unknown) => void) | null = null
@@ -9,16 +11,21 @@ let getDbConnection: (() => Promise<void>) | null = null
 async function loadBackend() {
   if (!app) {
     try {
-      // Create a require function that works in ES modules
-      const require = createRequire(import.meta.url)
+      // Dynamically construct path to avoid Turbopack static analysis
+      const backendDir = ['backend', 'dist'].join('-')
+      const cwd = process.cwd()
       
-      // Use absolute path resolution for the backend dist
-      const backendDistPath = path.join(process.cwd(), 'backend-dist')
+      // Use eval to completely hide from bundler analysis
+      // eslint-disable-next-line no-eval
+      const loadModule = eval('require')
+      
+      const appPath = [cwd, backendDir, 'app.cjs'].join('/')
+      const dbPath = [cwd, backendDir, 'data', 'db', 'index.cjs'].join('/')
 
-      const appModule = require(path.join(backendDistPath, 'app.cjs'))
+      const appModule = loadModule(appPath)
       app = appModule.default
 
-      const dbModule = require(path.join(backendDistPath, 'data', 'db', 'index.cjs'))
+      const dbModule = loadModule(dbPath)
       getDbConnection = dbModule.getDbConnection
     } catch (error) {
       console.error('Failed to load backend:', error)
