@@ -29,9 +29,9 @@ function loadBackend() {
   for (const distPath of candidateDistPaths) {
     try {
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      appModule = require(path.join(distPath, 'app.cjs'))
+      appModule = require(path.join(distPath, 'app.js'))
       // eslint-disable-next-line @typescript-eslint/no-require-imports
-      dbModule = require(path.join(distPath, 'data', 'db', 'index.cjs'))
+      dbModule = require(path.join(distPath, 'data', 'db', 'index.js'))
       console.log('Loaded backend from', distPath)
       break
     } catch (err) {
@@ -63,9 +63,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(204).end()
     }
 
-    const { app, getDbConnection } = loadBackend()
-    await getDbConnection()
-    return app(req, res)
+    const loaded = loadBackend()
+    const app = loaded.app
+    const getDbConnection = loaded.getDbConnection
+    await getDbConnection?.()
+    return app?.(req, res)
   } catch (error) {
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     const stack = error instanceof Error ? error.stack : undefined
