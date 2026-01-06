@@ -11,16 +11,16 @@ let getDbConnection: (() => Promise<void>) | null = null
 async function loadBackend() {
   if (!app) {
     try {
-      // Dynamically construct path to avoid Turbopack static analysis
-      const backendDir = ['backend', 'dist'].join('-')
-      const cwd = process.cwd()
-      
       // Use eval to completely hide from bundler analysis
       // eslint-disable-next-line no-eval
       const loadModule = eval('require')
       
-      const appPath = [cwd, backendDir, 'app.cjs'].join('/')
-      const dbPath = [cwd, backendDir, 'data', 'db', 'index.cjs'].join('/')
+      // Backend dist is copied to .next/server/backend-dist during build
+      const cwd = process.cwd()
+      const backendDistPath = [cwd, '.next', 'server', 'backend-dist'].join('/')
+
+      const appPath = [backendDistPath, 'app.cjs'].join('/')
+      const dbPath = [backendDistPath, 'data', 'db', 'index.cjs'].join('/')
 
       const appModule = loadModule(appPath)
       app = appModule.default
