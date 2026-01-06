@@ -1,15 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "npm run build",
   "rewrites": [
     { "source": "/v1/(.*)", "destination": "/api" }
-  ],
-  "functions": {
-    "api/index.ts": {
-      "memory": 1024,
-      "maxDuration": 30,
-      "includeFiles": "dist/**"
-    }
-  }
+  ]
 }
 
