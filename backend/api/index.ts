@@ -15,10 +15,13 @@ function loadBackend() {
   const candidateDistPaths = [
     path.join(process.cwd(), 'dist'),
     path.join(process.cwd(), 'api', 'dist'),
+  path.join(process.cwd(), 'user', 'dist'),
+  path.join(process.cwd(), '.vercel', 'output', 'functions', 'api', 'index.func', 'dist'),
     path.join(__dirname, 'dist'),
     path.join(__dirname, '..', 'dist'),
-    '/var/task/dist',
-    '/var/task/api/dist'
+  '/var/task/dist',
+  '/var/task/api/dist',
+  '/var/task/user/dist'
   ]
 
   let appModule: any = null
