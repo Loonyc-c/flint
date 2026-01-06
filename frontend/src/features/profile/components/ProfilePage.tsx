@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { profileCreationSchema, ProfileCreationFormData } from '@shared/validations'
+import { profileUpdateSchema, ProfileCreationFormData } from '@shared/validations'
 import { getProfile, updateProfile } from '@/features/profile/api/profile'
 import { toast } from 'react-toastify'
 import { calculateProfileCompleteness } from '@shared/lib'
@@ -31,7 +31,7 @@ export const ProfilePage = () => {
     setValue,
     formState: { errors }
   } = useForm<ProfileCreationFormData>({
-    resolver: zodResolver(profileCreationSchema),
+    resolver: zodResolver(profileUpdateSchema),
     defaultValues: {
       nickName: '',
       age: 18,

@@ -11,7 +11,7 @@
 *   **Name:** Flint
 *   **Goal:** A dating application (Tinder-like) with real-time video and voice calling capabilities.
 *   **Type:** Monorepo-style Monolith (Frontend + Backend + Shared Code).
-*   **Current Date:** January 5, 2026.
+*   **Current Date:** January 6, 2026.
 
 ## 2. Tech Stack
 ### Backend (`/backend`)
@@ -25,7 +25,7 @@
 ### Frontend (`/frontend`)
 *   **Framework:** Next.js 16 (App Router)
 *   **Language:** TypeScript
-*   **Styling:** Tailwind CSS 4, Shadcn UI
+*   **Styling:** Tailwind CSS 4, Shadcn UI, Framer Motion (for Swipes)
 *   **State/Management:** React Hook Form, Zod, **UserContext (Custom Provider)**
 *   **HTTP Client:** Custom `apiRequest` wrapper with auto-injection of `Authorization` headers.
 
@@ -77,25 +77,26 @@ backend/
 ---
 
 ## 4. Current System State (Last Updated: Jan 6, 2026)
-**Auth & Profile Systems Hardened:**
-1.  **Backend Security:** Reset tokens are now hashed. Email uniqueness is enforced at the service level.
-2.  **User Context:** Frontend now decodes JWT metadata upon login and persists state via `UserProvider`.
-3.  **Standardized UI:** Auth forms refactored into a generic `AuthFormWrapper` with `FormInput` components.
-4.  **Profile Dashboard:** Implemented a modern, non-linear "Shiny" Profile Page (`/profile`) with animated completeness meter and modular UI components.
-5.  **Matchmaking Optimized:**
-    *   **Performance:** `getCandidates` now uses a MongoDB aggregation pipeline to prevent "N+1" memory issues during discovery.
-    *   **Logic:** Discovery now respects user `preferences` (gender and age range).
-    *   **Atomicity:** `swipe` method refactored to use MongoDB Transactions, preventing race conditions and duplicate match records.
-6.  **Deployment Ready:** Both `frontend` and `backend` are configured for Vercel deployment.
+**Discovery UI & Shared Hardening:**
+1.  **Shared Logic Decoupling:** Removed `mongodb` driver dependency from `shared/validations` to fix frontend build errors (`child_process` not found). `ObjectId` validation now uses a lightweight regex.
+2.  **Swipe Feature Implemented:**
+    *   **API Layer:** Created `frontend/src/features/swipe/api/swipe.ts` for candidate fetching and swipe interactions.
+    *   **Logic:** Created `useSwipe` hook to manage the discovery state and candidate stack.
+    *   **UI:** Implemented `SwipeCard` with Framer Motion animations (LIKE/DISLIKE stamps) and photo carousel navigation.
+    *   **Audio:** Built a generic `CustomAudioPlayer` with waveform animation for voice intros and question prompts.
+3.  **Backend Data Enrichment:** `matchService` refactored to return full `UserProfile` objects during discovery, ensuring the frontend has access to age, bio, interests, and voice intros.
+4.  **Deployment Hardening:**
+    *   `frontend/vercel.json` updated with explicit `outputDirectory` to prevent path resolution errors in monorepo deployments.
+    *   Fixed a critical typo in `ProfilePage.tsx` resolving schema import mismatches.
+5.  **Monolith Deployment Strategy:** Root `vercel.json` is the source of truth for Vercel. Root Directory in Vercel settings MUST be set to `.` (empty) to allow shared code access during build.
 
 ## 5. Next Development Steps
 1.  **Media Integration:**
     *   Integrate Cloudinary for real Photo and Voice uploads (replacing current local mocks).
 2.  **Profile Auto-Save:**
     *   Implement debounced auto-save on the Profile Dashboard.
-3.  **Matching & Discovery UI:**
-    *   Build the Tinder-style discovery card stack.
-    *   Implement swipe actions (Like/Dislike) with mutual match detection.
+3.  **Match Detection UI:**
+    *   Create the "It's a Match!" overlay/notification when a swipe results in a mutual connection.
 4.  **Real-Time Chat:**
     *   Initialize Socket.IO in `backend/src/features/chat`.
 
@@ -104,3 +105,4 @@ backend/
 *   **No Mongoose:** Native Driver ONLY.
 *   **Arrow Functions:** Required for all backend functions and frontend components.
 *   **Completeness Rule:** Always respect the 80% threshold for matching features.
+*   **Vercel Context:** Always remember that `copy-shared.sh` runs during build and requires the correct Vercel Root Directory setting.
