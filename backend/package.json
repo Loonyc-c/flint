@@ -8,6 +8,7 @@
     "copy:shared": "bash scripts/copy-shared.sh",
     "postinstall": "npm run copy:shared",
     "prebuild": "npm run copy:shared",
+    "build": "npm run copy:shared && tsup",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",
     "format": "prettier --write \"**/*.ts\""
@@ -53,6 +54,7 @@
     "eslint-plugin-prettier": "^5.5.4",
     "nodemon": "^3.1.10",
     "prettier": "^3.7.4",
+    "tsup": "^8.5.1",
     "tsx": "^4.21.0",
     "typescript-eslint": "^8.51.0"
   }

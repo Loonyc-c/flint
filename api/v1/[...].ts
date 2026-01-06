@@ -1,6 +1,10 @@
-import app from '../../backend/src/app'
-import { getDbConnection } from '../../backend/src/data/db'
 import { VercelRequest, VercelResponse } from '@vercel/node'
+
+// Import from the pre-built backend bundle
+// @ts-expect-error - Importing from compiled output
+import app from '../../backend/dist/app.cjs'
+// @ts-expect-error - Importing from compiled output  
+import { getDbConnection } from '../../backend/dist/data/db/index.cjs'
 
 export default async (req: VercelRequest, res: VercelResponse) => {
   try {
@@ -11,4 +15,3 @@ export default async (req: VercelRequest, res: VercelResponse) => {
     res.status(500).json({ success: false, error: 'Internal Server Error' })
   }
 }
-
