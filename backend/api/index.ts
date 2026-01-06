@@ -14,9 +14,11 @@ function loadBackend() {
   // Try multiple possible dist locations used by Vercel bundling
   const candidateDistPaths = [
     path.join(process.cwd(), 'dist'),
+    path.join(process.cwd(), 'api', 'dist'),
     path.join(__dirname, 'dist'),
     path.join(__dirname, '..', 'dist'),
-    '/var/task/dist'
+    '/var/task/dist',
+    '/var/task/api/dist'
   ]
 
   let appModule: any = null
