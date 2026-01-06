@@ -15,12 +15,15 @@ async function loadBackend() {
       // eslint-disable-next-line no-eval
       const loadModule = eval('require')
       
-      // Backend dist is copied to .next/server/backend-dist during build
+      // Backend dist is copied to frontend/backend-dist and included via vercel.json includeFiles
       const cwd = process.cwd()
-      const backendDistPath = [cwd, '.next', 'server', 'backend-dist'].join('/')
+      const backendDistPath = [cwd, 'backend-dist'].join('/')
 
       const appPath = [backendDistPath, 'app.cjs'].join('/')
       const dbPath = [backendDistPath, 'data', 'db', 'index.cjs'].join('/')
+
+      console.log('Loading backend from:', backendDistPath)
+      console.log('CWD:', cwd)
 
       const appModule = loadModule(appPath)
       app = appModule.default
@@ -29,6 +32,7 @@ async function loadBackend() {
       getDbConnection = dbModule.getDbConnection
     } catch (error) {
       console.error('Failed to load backend:', error)
+      console.error('CWD was:', process.cwd())
       throw error
     }
   }

@@ -1,6 +1,11 @@
 {
   "version": 2,
   "installCommand": "npm install && npm install --prefix shared && npm install --prefix frontend && npm install --prefix backend",
-  "buildCommand": "cd backend && npm run build && cd ../frontend && npm run copy:shared && npm run build && cp -r ../backend/dist .next/server/backend-dist",
-  "outputDirectory": "frontend/.next"
+  "buildCommand": "cd backend && npm run build && cp -r dist ../frontend/backend-dist && cd ../frontend && npm run copy:shared && npm run build",
+  "outputDirectory": "frontend/.next",
+  "functions": {
+    "frontend/.next/server/**/*.js": {
+      "includeFiles": "frontend/backend-dist/**"
+    }
+  }
 }
