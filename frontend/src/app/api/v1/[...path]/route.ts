@@ -46,7 +46,12 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
     const body =
       req.method !== 'GET' && req.method !== 'HEAD' ? await req.json().catch(() => ({})) : undefined
 
-    return new Promise(resolve => {
+    return new Promise((resolve, reject) => {
+      // Set a timeout to catch hanging requests
+      const timeout = setTimeout(() => {
+        reject(new Error('Request timeout - Express handler did not respond'))
+      }, 25000)
+
       // Create Express-compatible request object
       const expressReq = {
         method: req.method,
@@ -81,6 +86,7 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
         json(data: unknown) {
           if (sent) return this
           sent = true
+          clearTimeout(timeout)
           headers['content-type'] = 'application/json'
           resolve(new NextResponse(JSON.stringify(data), { status: statusCode, headers }))
           return this
@@ -88,6 +94,7 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
         send(data: unknown) {
           if (sent) return this
           sent = true
+          clearTimeout(timeout)
           const body = typeof data === 'object' ? JSON.stringify(data) : String(data)
           if (typeof data === 'object') headers['content-type'] = 'application/json'
           resolve(new NextResponse(body, { status: statusCode, headers }))
@@ -96,19 +103,34 @@ async function handleRequest(req: NextRequest): Promise<NextResponse> {
         end(data?: string) {
           if (sent) return this
           sent = true
+          clearTimeout(timeout)
           resolve(new NextResponse(data || null, { status: statusCode, headers }))
           return this
         }
       }
 
-      app(expressReq, expressRes)
+      try {
+        app(expressReq, expressRes)
+      } catch (expressError) {
+        clearTimeout(timeout)
+        reject(expressError)
+      }
     })
   } catch (error) {
-    console.error('API route error:', error)
+    const errorMessage = error instanceof Error ? error.message : 'Unknown error'
+    const errorStack = error instanceof Error ? error.stack : undefined
+    console.error('API route error:', errorMessage, errorStack)
+
+    // Return more detailed error in development-like scenarios
     return NextResponse.json(
       {
         success: false,
-        error: { code: 500, message: 'Internal Server Error', isReadableMessage: false }
+        error: {
+          code: 500,
+          message: errorMessage,
+          isReadableMessage: false,
+          debug: errorStack?.split('\n').slice(0, 5)
+        }
       },
       { status: 500 }
     )
