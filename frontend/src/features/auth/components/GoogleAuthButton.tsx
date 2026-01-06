@@ -36,9 +36,9 @@ const GoogleAuthButton = () => {
         setAuthToken(accessToken)
 
         toast.success('Logged in successfully!')
-        router.push('/main') // Redirect to home page or dashboard
+        router.push('/home') // Redirect to home page after successful login
       } catch (err) {
-        console.error('Google login error:', err)
+        // Requirement 14: Removed detailed error logging
         if (err instanceof ApiError) {
           toast.error(err.message)
         } else {
@@ -78,4 +78,4 @@ const GoogleAuthButton = () => {
   )
 }
 
-export default GoogleAuthButton;
+export default GoogleAuthButton

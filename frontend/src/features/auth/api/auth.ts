@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api-client'
+// Requirement 5: Import GoogleLoginRequest from shared types instead of local definition
 import {
   LoginRequest,
   LoginResponse,
@@ -7,7 +8,8 @@ import {
   ForgetPasswordRequest,
   ForgetPasswordResponse,
   ResetPasswordRequest,
-  ResetPasswordResponse
+  ResetPasswordResponse,
+  GoogleLoginRequest
 } from '@shared/types'
 
 export const login = async (data: LoginRequest): Promise<LoginResponse> => {
@@ -43,9 +45,8 @@ export const resetPassword = async (
   })
 }
 
-export interface GoogleLoginRequest {
-  token: string
-}
+// Re-export GoogleLoginRequest for backwards compatibility
+export type { GoogleLoginRequest }
 
 export const loginWithGoogle = async (token: string): Promise<LoginResponse> => {
   return apiRequest<LoginResponse>('/auth/google', {

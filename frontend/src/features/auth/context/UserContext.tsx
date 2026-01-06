@@ -8,21 +8,8 @@ import React, {
   useCallback,
 } from "react";
 import { jwtDecode } from "jwt-decode";
-import { User } from "@shared/types";
-
-interface AuthTokenPayload {
-  sub: string;
-  iss: string;
-  aud: string | string[];
-  iat: number;
-  exp: number;
-  data: {
-    userId: string;
-    firstName: string;
-    lastName: string;
-    email: string;
-  };
-}
+// Requirement 4: Import AuthTokenPayload from shared types instead of local definition
+import { User, AuthTokenPayload } from "@shared/types";
 
 interface UserContextType {
   user: User | null;
@@ -50,7 +37,7 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
-      console.log({ decoded });
+      // Requirement 9: Removed console.log({ decoded }) to prevent logging sensitive user data
 
       setUser({
         id: decoded.data.userId,
@@ -59,8 +46,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         email: decoded.data.email,
         name: `${decoded.data.lastName} ${decoded.data.firstName}`,
       });
-    } catch (error) {
-      console.error("Error decoding token:", error);
+    } catch {
+      // Requirement 14: Removed console.error to prevent logging sensitive error details
       localStorage.removeItem(STORAGE_KEY);
       setUser(null);
     }

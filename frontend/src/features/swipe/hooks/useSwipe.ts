@@ -1,12 +1,12 @@
 import { useState, useCallback, useEffect } from 'react'
-import { UserProfile, InteractionType } from '@shared/types'
+import { User, InteractionType } from '@shared/types'
 import { getCandidates, swipe } from '../api/swipe'
 import { useUser } from '@/features/auth/context/UserContext'
 
 export const useSwipe = () => {
-  const { user} = useUser()
-  console.log({user})
-  const [candidates, setCandidates] = useState<UserProfile[]>([])
+  const { user } = useUser()
+  // Requirement 14: Removed console.log({ user }) to prevent logging sensitive data
+  const [candidates, setCandidates] = useState<User[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [currentIndex, setCurrentIndex] = useState(0)
 
@@ -17,8 +17,8 @@ export const useSwipe = () => {
       const data = await getCandidates(user.id)
       setCandidates(data)
       setCurrentIndex(0)
-    } catch (error) {
-      console.error('Failed to fetch candidates:', error)
+    } catch {
+      // Requirement 14: Removed detailed error logging
     } finally {
       setIsLoading(false)
     }
@@ -35,7 +35,7 @@ export const useSwipe = () => {
       setCurrentIndex((prev) => prev + 1)
       return response
     } catch (error) {
-      console.error('Failed to swipe:', error)
+      // Requirement 14: Removed detailed error logging, re-throwing for caller to handle
       throw error
     }
   }

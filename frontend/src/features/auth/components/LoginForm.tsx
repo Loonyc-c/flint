@@ -43,10 +43,10 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       if (onSuccess) {
         onSuccess();
       } else {
-        router.push("/main");
+        router.push("/home");
       }
     } catch (err) {
-      console.error("Login error:", err);
+      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
         toast.error(err.message);
       } else if (err instanceof Error) {

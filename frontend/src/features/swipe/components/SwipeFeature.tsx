@@ -1,19 +1,24 @@
-"use client";
+'use client'
 
-import React from "react";
-import { useSwipe } from "../hooks/useSwipe";
-import { SwipeCard } from "./SwipeCard";
-import { Loader2 } from "lucide-react";
+import React from 'react'
+import { InteractionType } from '@shared/types'
+import { useSwipe } from '../hooks/useSwipe'
+import { SwipeCard } from './SwipeCard'
+import { Loader2 } from 'lucide-react'
 
 export const SwipeFeature: React.FC = () => {
-  const { nextCandidate, isLoading, handleSwipe, hasMore, fetchCandidates } = useSwipe();
+  const { nextCandidate, isLoading, handleSwipe, hasMore, fetchCandidates } = useSwipe()
+
+  const handleSwipeWrapper = async (targetId: string, type: InteractionType): Promise<void> => {
+    await handleSwipe(targetId, type)
+  }
 
   if (isLoading && !nextCandidate) {
     return (
       <div className="flex items-center justify-center min-h-[600px]">
         <Loader2 className="w-12 h-12 animate-spin text-brand" />
       </div>
-    );
+    )
   }
 
   if (!hasMore && !isLoading) {
@@ -28,18 +33,14 @@ export const SwipeFeature: React.FC = () => {
           Refresh
         </button>
       </div>
-    );
+    )
   }
 
   return (
     <div className="flex justify-center p-4">
       {nextCandidate && (
-        <SwipeCard
-          key={nextCandidate.id}
-          candidate={nextCandidate}
-          onSwipe={handleSwipe}
-        />
+        <SwipeCard key={nextCandidate.id} candidate={nextCandidate} onSwipe={handleSwipeWrapper} />
       )}
     </div>
-  );
-};
+  )
+}

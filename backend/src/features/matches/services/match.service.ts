@@ -6,13 +6,7 @@ import {
 import { withMongoTransaction } from '@/data/db'
 import { DbInteraction } from '@/data/db/types/interaction'
 import { DbMatch } from '@/data/db/types/match'
-import {
-  InteractionType,
-  LOOKING_FOR,
-  MatchWithUser,
-  SwipeResponse,
-  UserProfile,
-} from '@shared/types'
+import { InteractionType, LOOKING_FOR, MatchWithUser, SwipeResponse, User } from '@shared/types'
 import { ObjectId } from 'mongodb'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
@@ -21,7 +15,7 @@ import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 const MIN_PROFILE_COMPLETION = 80
 
 export const matchService = {
-  getCandidates: async (userId: string, { limit = 20 }): Promise<UserProfile[]> => {
+  getCandidates: async (userId: string, { limit = 20 }): Promise<User[]> => {
     const userObjectId = new ObjectId(userId)
     const userCollection = await getUserCollection()
 
@@ -74,9 +68,13 @@ export const matchService = {
 
     return candidates.map((user) => ({
       id: user._id.toHexString(),
+      email: user.auth.email,
       firstName: user.auth.firstName,
       lastName: user.auth.lastName,
-      ...user.profile,
+      name: `${user.auth.firstName} ${user.auth.lastName}`,
+      profile: user.profile,
+      createdAt: user.createdAt,
+      updatedAt: user.updatedAt,
     }))
   },
 
@@ -125,6 +123,10 @@ export const matchService = {
         targetId: targetObjectId,
         type,
         createdAt: new Date(),
+        updatedAt: new Date(),
+        isDeleted: false as const,
+        createdBy: actorId,
+        updatedBy: actorId,
       }
 
       await interactionCollection.insertOne(interaction, { session })
@@ -140,13 +142,16 @@ export const matchService = {
         )
 
         if (reverseInteraction) {
-          const sortedUserIds = [actorObjectId, targetObjectId].sort((a, b) =>
-            a.toHexString().localeCompare(b.toHexString()),
-          )
+          // Requirement 1: Convert ObjectId[] to string[] for DbMatch.users storage
+          // Sort by hex string for consistent ordering
+          const sortedUserIdStrings = [actorObjectId, targetObjectId]
+            .map((id) => id.toHexString())
+            .sort((a, b) => a.localeCompare(b))
 
           const existingMatch = await matchCollection.findOne(
             {
-              users: { $all: sortedUserIds, $size: 2 },
+              // Query using string IDs since users are stored as strings
+              users: { $all: sortedUserIdStrings, $size: 2 },
             },
             { session },
           )
@@ -159,9 +164,13 @@ export const matchService = {
           }
 
           const match: DbMatch = {
-            users: sortedUserIds,
+            // Store user IDs as strings per user preference
+            users: sortedUserIdStrings,
             createdAt: new Date(),
             updatedAt: new Date(),
+            isDeleted: false as const,
+            createdBy: actorId,
+            updatedBy: actorId,
           }
 
           const res = await matchCollection.insertOne(match, { session })
@@ -178,22 +187,27 @@ export const matchService = {
   },
 
   getMatches: async (userId: string): Promise<MatchWithUser[]> => {
-    const userObjectId = new ObjectId(userId)
+    const userIdString = userId
     const matchCollection = await getMatchCollection()
     const userCollection = await getUserCollection()
 
-    const matches = await matchCollection.find({ users: userObjectId }).toArray()
+    // Requirement 1: Query using string userId since users are stored as strings
+    const matches = await matchCollection.find({ users: userIdString }).toArray()
 
     if (matches.length === 0) {
       return []
     }
 
-    const otherUserIds = matches
-      .map((match) => match.users.find((id) => !id.equals(userObjectId)))
-      .filter((id): id is ObjectId => !!id)
+    // Requirement 1: users are strings, find the other user's ID string
+    const otherUserIdStrings = matches
+      .map((match) => match.users.find((id) => id !== userIdString))
+      .filter((id): id is string => !!id)
+
+    // Convert string IDs to ObjectId for MongoDB query
+    const otherUserObjectIds = otherUserIdStrings.map((id) => new ObjectId(id))
 
     const otherUsers = await userCollection
-      .find({ _id: { $in: otherUserIds } })
+      .find({ _id: { $in: otherUserObjectIds } })
       .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1 })
       .toArray()
 
@@ -201,10 +215,11 @@ export const matchService = {
 
     return matches
       .map((match) => {
-        const otherUserId = match.users.find((id) => !id.equals(userObjectId))
+        // users are strings, find the other user's ID
+        const otherUserId = match.users.find((id) => id !== userIdString)
         if (!otherUserId) return null
 
-        const otherUser = userMap.get(otherUserId.toHexString())
+        const otherUser = userMap.get(otherUserId)
         if (!otherUser) return null
 
         return {

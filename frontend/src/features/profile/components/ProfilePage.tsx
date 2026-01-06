@@ -51,8 +51,9 @@ export const ProfilePage = () => {
         if (data.isComplete && data.profile) {
           reset(data.profile)
         }
-      } catch (err) {
-        console.error('Failed to fetch profile', err)
+      } catch {
+        // Requirement 14: Removed detailed error logging
+        // Profile fetch errors are handled by showing empty form
       }
     }
     fetchProfile()

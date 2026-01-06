@@ -13,7 +13,7 @@
     }
   ],
   "functions": {
-    "backend/api/index.ts": {
+    "api/v1/[...].ts": {
       "memory": 1024,
       "maxDuration": 30
     }

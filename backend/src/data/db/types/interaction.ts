@@ -1,8 +1,8 @@
-import { ObjectId } from 'mongodb'
-import { InteractionType } from '@shared/types'
+import { ObjectId, WithId } from 'mongodb'
+import { BaseCollection, InteractionType } from '@shared/types'
 
-export interface DbInteraction {
-  _id?: ObjectId
+export type Interaction = WithId<DbInteraction>
+export type DbInteraction = BaseCollection & {
   actorId: ObjectId
   targetId: ObjectId
   type: InteractionType

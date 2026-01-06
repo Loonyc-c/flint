@@ -1,5 +1,6 @@
 import { CLIENT, TOKEN_ISSUER } from '@/data/constants'
 import { getUserCollection } from '@/data/db/collection'
+import { withMongoTransaction } from '@/data/db'
 import { User } from '@/data/db/types/user'
 import { isNil, isNonEmptyString } from '@/utils'
 import dayjs from 'dayjs'
@@ -10,7 +11,7 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 import sendEmail from './email.service'
-import { LOOKING_FOR, SUBSCRIPTION_PLANS } from '@/shared-types/types'
+import { LOOKING_FOR, SUBSCRIPTION_PLANS } from '@shared/types'
 import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 
 const JWT_SECRET = process.env.JWT_SECRET
@@ -86,8 +87,9 @@ export const authService: AuthService = {
         throw new ServiceException('err.auth.invalid_token', ErrorCode.UNAUTHORIZED)
       }
       return verifiedToken
-    } catch (e: unknown) {
-      console.error(e)
+    } catch {
+      // Requirement 14: Remove console.error for security - token verification failures
+      // are expected during normal operation (expired tokens, invalid tokens)
       return undefined
     }
   },
@@ -111,51 +113,61 @@ export const authService: AuthService = {
 
     return user
   },
+  // Requirement 3: Use MongoDB transaction to prevent race condition in user creation
+  // This ensures atomicity - check and insert happen in same transaction
   createUser: async (input) => {
     const { firstName, lastName, email, password } = input
 
-    const userCollection = await getUserCollection()
-    const existingUser = await userCollection.findOne({ 'auth.email': email })
-
-    if (existingUser) {
-      throw new ServiceException('err.user.already_exists', ErrorCode.BAD_REQUEST)
-    }
-
+    // Hash password outside transaction to minimize transaction duration
     const salt = await bcrypt.genSalt(10)
     const hashedPassword = await bcrypt.hash(password, salt)
 
-    const doc: DbUser = {
-      auth: {
-        firstName,
-        lastName,
-        email,
-        password: hashedPassword,
-      },
-      subScription: {
-        plan: SUBSCRIPTION_PLANS.FREE,
+    return await withMongoTransaction(async (session) => {
+      const userCollection = await getUserCollection()
+
+      // Check for existing user within transaction to prevent race condition
+      const existingUser = await userCollection.findOne(
+        { 'auth.email': email },
+        { session },
+      )
+
+      if (existingUser) {
+        throw new ServiceException('err.user.already_exists', ErrorCode.BAD_REQUEST)
+      }
+
+      const doc: DbUser = {
+        auth: {
+          firstName,
+          lastName,
+          email,
+          password: hashedPassword,
+        },
+        subScription: {
+          plan: SUBSCRIPTION_PLANS.FREE,
+          isActive: true,
+        },
+        preferences: {
+          ageRange: DEFAULT_AGE_RANGE,
+          lookingFor: LOOKING_FOR.ALL,
+        },
+        profileCompletion: 0,
+        isDeleted: false as const,
         isActive: true,
-      },
-      preferences: {
-        ageRange: DEFAULT_AGE_RANGE,
-        lookingFor: LOOKING_FOR.ALL,
-      },
-      profileCompletion: 0,
-      isDeleted: false as const,
-      isActive: true,
-      updatedAt: new Date(),
-      createdAt: new Date(),
-      updatedBy: 'system',
-      createdBy: 'system',
-    }
+        updatedAt: new Date(),
+        createdAt: new Date(),
+        updatedBy: 'system',
+        createdBy: 'system',
+      }
 
-    const res = await userCollection.insertOne(doc)
-    if (!res.acknowledged) {
-      throw new ServiceException('err.system.internal_error', ErrorCode.INTERNAL_ERROR)
-    }
+      const res = await userCollection.insertOne(doc, { session })
+      if (!res.acknowledged) {
+        throw new ServiceException('err.system.internal_error', ErrorCode.INTERNAL_ERROR)
+      }
 
-    return {
-      id: res.insertedId.toHexString(),
-    }
+      return {
+        id: res.insertedId.toHexString(),
+      }
+    })
   },
 
   forgetPassword: async (email) => {
@@ -302,7 +314,11 @@ export const authService: AuthService = {
 
       return { user, isNewUser }
     } catch (error) {
-      console.error('Google auth error:', error)
+      // Requirement 14: Remove detailed error logging for security
+      // Error details could expose sensitive information
+      if (error instanceof ServiceException) {
+        throw error
+      }
       throw new ServiceException('err.auth.invalid_token', ErrorCode.UNAUTHORIZED)
     }
   },

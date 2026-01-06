@@ -37,7 +37,7 @@ const ForgetPasswordForm = () => {
       setEmailSent(true);
       toast.success("Password reset email sent! Check your inbox.");
     } catch (err) {
-      console.error("Password reset request error:", err);
+      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
         toast.error(err.message);
       } else if (err instanceof Error) {

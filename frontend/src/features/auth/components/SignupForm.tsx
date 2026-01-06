@@ -35,8 +35,8 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
     setIsLoading(true);
 
     try {
-      const response = await signup(data);
-      console.log("Signup successful:", response);
+      await signup(data);
+      // Requirement 14: Removed console.log with response data
       toast.success("Account created successfully!");
       if (onSuccess) {
         onSuccess();
@@ -44,7 +44,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         router.push("/auth");
       }
     } catch (err) {
-      console.error("Signup error:", err);
+      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
         toast.error(err.message);
       } else if (err instanceof Error) {

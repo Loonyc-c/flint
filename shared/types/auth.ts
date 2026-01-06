@@ -3,7 +3,7 @@
  * Single source of truth for all auth-related types across frontend and backend
  */
 
-import { UserProfile } from './match'
+import { UserProfile } from './user'
 
 /**
  * User data structure
@@ -104,13 +104,29 @@ export interface ResetPasswordResponse {
 
 /**
  * Auth Token Payload
- * Decoded JWT token structure
+ * Decoded JWT token structure - used for token verification and user context
+ * Requirement 4: Standardized AuthTokenPayload type for frontend and backend
  */
 export interface AuthTokenPayload {
-  id: string
-  email: string
+  sub: string
+  iss: string
+  aud: string | string[]
   iat: number
   exp: number
+  data: {
+    userId: string
+    firstName: string
+    lastName: string
+    email: string
+  }
+}
+
+/**
+ * Google Login Request
+ * Requirement 5: Moved from frontend to shared types
+ */
+export interface GoogleLoginRequest {
+  token: string
 }
 
 /**

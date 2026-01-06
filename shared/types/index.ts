@@ -15,17 +15,12 @@ export type {
   ResetPasswordResponse,
   AuthTokenPayload,
   ApiResponse,
-  AuthError
+  AuthError,
+  GoogleLoginRequest
 } from './auth'
 
-export type {
-  Interaction,
-  Match,
-  MatchWithUser,
-  SwipeRequest,
-  SwipeResponse,
-  UserProfile
-} from './match'
+export type { Interaction, Match, MatchWithUser, SwipeRequest, SwipeResponse } from './match'
 export { InteractionType } from './match'
 export * from './enums'
-export * from './profile'
+export * from './base'
+export * from './user'

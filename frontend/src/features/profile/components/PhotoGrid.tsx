@@ -20,11 +20,9 @@ export const PhotoGrid = ({ photos, onAddPhoto }: PhotoGridProps) => {
         {[0, 1, 2, 3, 4, 5].map(idx => (
           <motion.div
             key={idx}
-            {...({
-              whileTap: { scale: 0.95 },
-              onClick: () => onAddPhoto?.(idx),
-              className: 'aspect-[3/4] rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-center relative overflow-hidden group cursor-pointer hover:border-brand/50 transition-all shadow-xs',
-            } as any)}
+            whileTap={{ scale: 0.95 }}
+            onClick={() => onAddPhoto?.(idx)}
+            className="aspect-3/4 rounded-2xl border-2 border-dashed border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 flex items-center justify-center relative overflow-hidden group cursor-pointer hover:border-brand/50 transition-all shadow-xs"
           >
             {photos?.[idx] ? (
               <Image src={photos[idx]} fill className="object-cover" alt={`Profile ${idx + 1}`} />

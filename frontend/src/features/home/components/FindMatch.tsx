@@ -1,20 +1,14 @@
-"use client";
+'use client'
 
-import { Card } from "@/components/ui/card";
-import {
-  Phone,
-  Users,
-  Sparkles,
-  Smile,
-  Brain,
-  Coffee,
-  Lock,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { Card } from '@/components/ui/card'
+import { Phone, Users, Sparkles, Smile, Brain, Coffee, Lock } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { useRouter } from 'next/navigation'
 
 const FindMatch = () => {
-  const isJoiningQueue = false;
-  const hasSubscription = false; // Mocked for UI
+  const router = useRouter()
+  const isJoiningQueue = false
+  const hasSubscription = false // Mocked for UI
 
   return (
     <div className="w-full flex justify-center">
@@ -44,9 +38,7 @@ const FindMatch = () => {
                 <Phone className="h-8 w-8" />
               </div>
               <div className="text-center">
-                <h4 className="font-semibold text-lg mb-2 dark:text-white">
-                  Live Call
-                </h4>
+                <h4 className="font-semibold text-lg mb-2 dark:text-white">Live Call</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Connect instantly via voice call
                 </p>
@@ -57,14 +49,15 @@ const FindMatch = () => {
             </button>
 
             {/* Swipe Card */}
-            <div className="cursor-pointer bg-white dark:bg-neutral-800 border-2 border-gray-200 dark:border-neutral-700 hover:border-[#2E2E2E] dark:hover:border-[#2E2E2E] rounded-2xl p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg group">
+            <div
+              className="cursor-pointer bg-white dark:bg-neutral-800 border-2 border-gray-200 dark:border-neutral-700 hover:border-[#2E2E2E] dark:hover:border-[#2E2E2E] rounded-2xl p-6 flex flex-col items-center gap-4 transition-all hover:shadow-lg group"
+              onClick={() => router.push('/swipe')}
+            >
               <div className="rounded-full bg-[#2E2E2E] group-hover:bg-[#272727] w-16 h-16 text-white flex justify-center items-center transition-colors">
                 <Users className="h-8 w-8" />
               </div>
               <div className="text-center">
-                <h4 className="font-semibold text-lg mb-2 dark:text-white">
-                  Swipe
-                </h4>
+                <h4 className="font-semibold text-lg mb-2 dark:text-white">Swipe</h4>
                 <p className="text-sm text-gray-600 dark:text-gray-400">
                   Discover profiles at your own pace
                 </p>
@@ -83,12 +76,9 @@ const FindMatch = () => {
               {!hasSubscription && (
                 <div className="absolute inset-0 bg-gray-900/50 backdrop-blur-sm rounded-none flex flex-col items-center justify-center gap-3 z-10">
                   <Lock className="w-12 h-12 text-white" />
-                  <p className="text-white font-semibold text-lg">
-                    Premium Feature
-                  </p>
+                  <p className="text-white font-semibold text-lg">Premium Feature</p>
                   <p className="text-white/80 text-sm max-w-xs">
-                    Upgrade to access AI Wingman and get personalized
-                    conversation help
+                    Upgrade to access AI Wingman and get personalized conversation help
                   </p>
                   <Button className="bg-brand hover:bg-brand/90 text-white rounded-lg transition-colors">
                     View Plans
@@ -100,14 +90,11 @@ const FindMatch = () => {
                 <div className="w-12 h-12 sm:w-14 sm:h-14 rounded-full bg-[#B33A2E]/90 text-white flex items-center justify-center">
                   <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
                 </div>
-                <h3 className="text-lg sm:text-xl font-semibold">
-                  AI Wingman Ready
-                </h3>
+                <h3 className="text-lg sm:text-xl font-semibold">AI Wingman Ready</h3>
               </div>
 
               <p className="text-[#2c2c2c] dark:text-gray-300 text-sm leading-relaxed max-w-184">
-                Get real-time suggestions and icebreakers tailored to your
-                matches.
+                Get real-time suggestions and icebreakers tailored to your matches.
               </p>
 
               <div className="w-full grid grid-cols-3 gap-3 sm:gap-4">
@@ -143,7 +130,7 @@ const FindMatch = () => {
         </div>
       </section>
     </div>
-  );
-};
+  )
+}
 
-export default FindMatch;
+export default FindMatch

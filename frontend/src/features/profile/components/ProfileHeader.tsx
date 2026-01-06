@@ -31,14 +31,12 @@ export const ProfileHeader = ({ completeness }: ProfileHeaderProps) => {
           </div>
           <div className="w-32 h-1.5 bg-neutral-100 dark:bg-neutral-800 rounded-full overflow-hidden">
             <motion.div
-              {...({
-                initial: { width: 0 },
-                animate: { width: `${completeness}%` },
-                className: cn(
-                  'h-full transition-colors duration-500',
-                  completeness >= 80 ? 'bg-green-500' : 'bg-brand'
-                ),
-              } as any)}
+              initial={{ width: 0 }}
+              animate={{ width: `${completeness}%` }}
+              className={cn(
+                'h-full transition-colors duration-500',
+                completeness >= 80 ? 'bg-green-500' : 'bg-brand'
+              )}
             />
           </div>
         </div>

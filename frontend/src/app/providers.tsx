@@ -4,6 +4,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
 import { UserProvider } from '@/features/auth/context/UserContext'
+import { AuthGuard } from '@/components/auth/AuthGuard'
 
 export const Providers = ({ children }: { children: React.ReactNode }) => {
   const googleClientId = process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID
@@ -14,7 +15,10 @@ export const Providers = ({ children }: { children: React.ReactNode }) => {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <UserProvider>
-        {children}
+        {/* AuthGuard wraps children to enforce route protection */}
+        <AuthGuard>
+          {children}
+        </AuthGuard>
         <ToastContainer
           position="top-right"
           autoClose={5000}

@@ -41,8 +41,8 @@ export const profileService = {
     }
   },
 
+  // Requirement 8: Removed debug console.log statements that were logging sensitive user data
   getProfile: async (userId: string): Promise<ProfileResponse> => {
-    console.log('service connected', {userId})
     const userCollection = await getUserCollection()
     const user = await userCollection.findOne({ _id: new ObjectId(userId) })
 
@@ -50,9 +50,8 @@ export const profileService = {
       throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
     }
 
-    const isComplete = isNonEmptyValue(user.profile) && isNonEmptyValue(user.preferences) 
-    
-    console.log({isComplete})
+    const isComplete = isNonEmptyValue(user.profile) && isNonEmptyValue(user.preferences)
+
     if (!isComplete || isNil(user.profile)) {
       return { isComplete: false }
     }
@@ -67,8 +66,6 @@ export const profileService = {
       voiceIntro: user.profile.voiceIntro,
       questions: user.profile.questions,
     }
-
-    console.log({profileData})
 
     return {
       isComplete: true,

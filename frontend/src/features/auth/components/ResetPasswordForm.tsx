@@ -49,7 +49,7 @@ const ResetPasswordForm = () => {
       setPasswordResetSuccess(true);
       toast.success("Your password has been reset successfully!");
     } catch (err) {
-      console.error("Password reset error:", err);
+      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
         toast.error(err.message);
       } else if (err instanceof Error) {

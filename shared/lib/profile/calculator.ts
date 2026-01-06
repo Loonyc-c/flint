@@ -1,13 +1,13 @@
-import { ProfileUpdateRequest } from '../../types/profile'
+import { ProfileUpdateRequest } from '../../types/user'
 
 /**
  * Calculates the profile completeness score based on filled fields.
- * 
+ *
  * Base Requirements (Must exist to be valid profile): 50 points
  * - Nickname, Age, Gender
  * - At least 1 Photo
  * - Voice Intro
- * 
+ *
  * Bonus Points (To reach 80% threshold):
  * - Photo #2: +10
  * - Photo #3: +10
@@ -15,7 +15,7 @@ import { ProfileUpdateRequest } from '../../types/profile'
  * - Bio: +5
  * - Interests: +5
  * - Preferences (Implicitly checked): +5
- * 
+ *
  * @param profile The user profile data
  * @returns Score from 0 to 100
  */
@@ -24,11 +24,12 @@ export const calculateProfileCompleteness = (profile: ProfileUpdateRequest): num
 
   // 1. Base Requirements (Assuming validation passed, these exist)
   // If validation hasn't passed, this shouldn't be called, but we check anyway.
-  const hasBase = 
-    profile.nickName && 
-    profile.age && 
-    profile.gender && 
-    profile.photos && profile.photos.length >= 1 &&
+  const hasBase =
+    profile.nickName &&
+    profile.age &&
+    profile.gender &&
+    profile.photos &&
+    profile.photos.length >= 1 &&
     profile.voiceIntro
 
   if (hasBase) {
@@ -59,7 +60,7 @@ export const calculateProfileCompleteness = (profile: ProfileUpdateRequest): num
   }
 
   // 6. Preferences (Assumed set during creation)
-  // Since this calculator takes ProfileCreationRequest, preferences might not be strictly part of it 
+  // Since this calculator takes ProfileCreationRequest, preferences might not be strictly part of it
   // depending on how we structured the type, but let's assume if they made a profile, they have default preferences.
   score += 5
 

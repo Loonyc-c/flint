@@ -23,7 +23,9 @@ export const QuestionsSection = ({ questions, onEditSlot, error }: QuestionsSect
     <section className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
       <div className="flex items-center gap-2 mb-6">
         <MessageSquareQuote className="w-4 h-4 text-brand" />
-        <h2 className="font-bold text-sm uppercase tracking-widest text-neutral-500">Q&A Prompts</h2>
+        <h2 className="font-bold text-sm uppercase tracking-widest text-neutral-500">
+          Q&A Prompts
+        </h2>
       </div>
       <div className="space-y-3">
         {[0, 1, 2].map(i => {
@@ -31,16 +33,14 @@ export const QuestionsSection = ({ questions, onEditSlot, error }: QuestionsSect
           return (
             <motion.div
               key={i}
-              {...({
-                whileTap: { scale: 0.98 },
-                onClick: () => onEditSlot(i),
-                className: cn(
-                  'p-5 rounded-2xl border transition-all cursor-pointer group',
-                  selectedQ
-                    ? 'border-brand/20 bg-brand/5'
-                    : 'border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-black hover:border-brand/30'
-                )
-              } as any)}
+              whileTap={{ scale: 0.98 }}
+              onClick={() => onEditSlot(i)}
+              className={cn(
+                'p-5 rounded-2xl border transition-all cursor-pointer group',
+                selectedQ
+                  ? 'border-brand/20 bg-brand/5'
+                  : 'border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-black hover:border-brand/30'
+              )}
             >
               {selectedQ ? (
                 <div className="flex items-start justify-between gap-4">
@@ -82,21 +82,17 @@ export const QuestionsModal = ({
       {slotIndex !== null && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
           <motion.div
-            {...({
-              initial: { opacity: 0 },
-              animate: { opacity: 1 },
-              exit: { opacity: 0 },
-              onClick: onClose,
-              className: 'absolute inset-0 bg-black/80 backdrop-blur-md',
-            } as any)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={onClose}
+            className="absolute inset-0 bg-black/80 backdrop-blur-md"
           />
           <motion.div
-            {...({
-              initial: { y: '100%' },
-              animate: { y: 0 },
-              exit: { y: '100%' },
-              className: 'relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-[40px] sm:rounded-3xl p-8 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col',
-            } as any)}
+            initial={{ y: '100%' }}
+            animate={{ y: 0 }}
+            exit={{ y: '100%' }}
+            className="relative w-full max-w-lg bg-white dark:bg-neutral-900 rounded-t-[40px] sm:rounded-3xl p-8 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col"
           >
             <div className="flex items-center justify-between mb-8">
               <div>

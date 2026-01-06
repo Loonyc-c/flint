@@ -4,7 +4,8 @@ import { ServiceException } from '@/features/error'
 import { HttpStatus } from '@/data/constants'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { TranslationKey } from '@/features/localization/types'
-import { objectIdSchema } from '@/shared-types/validations'
+// Requirement 7: Standardized import to use @shared/validations for consistency
+import { objectIdSchema } from '@shared/validations'
 
 const handler = async (event: NormalizedEvent) => {
   const {

@@ -22,6 +22,7 @@ export {
 
 export {
   swipeSchema,
+  listSchema,
   type SwipeFormData
 } from './match.validation'
 

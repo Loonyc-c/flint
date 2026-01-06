@@ -5,14 +5,14 @@ import { HttpStatus } from '@/data/constants'
 import { loginSchema } from '@shared/validations'
 import { authService } from '@/features/auth'
 import { TranslationKey } from '@/features/localization/types'
+import { LoginResponse } from '@shared/types'
 
-const handler = async (event: NormalizedEvent) => {
+const handler = async (event: NormalizedEvent): Promise<LoginResponse> => {
   const { body } = event
 
   try {
     const { email, password } = loginSchema.parse(body)
     const user = await authService.authenticateUser(email, password)
-    const name = `${user.auth.lastName} ${user.auth.firstName}`
 
     const accessToken = authService.generateToken(user._id.toHexString(), {
       userId: user._id.toHexString(),
@@ -21,9 +21,17 @@ const handler = async (event: NormalizedEvent) => {
       email: user.auth.email,
       subScription: user.subScription,
     })
+
+    // Requirement 2: Return response matching LoginResponse type from shared/types
     return {
       accessToken,
-      name,
+      user: {
+        id: user._id.toHexString(),
+        email: user.auth.email,
+        firstName: user.auth.firstName,
+        lastName: user.auth.lastName,
+        name: `${user.auth.firstName} ${user.auth.lastName}`,
+      },
     }
   } catch (e: unknown) {
     if (e instanceof ServiceException) {

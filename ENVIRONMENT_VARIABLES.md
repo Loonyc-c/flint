@@ -47,7 +47,7 @@ MONGO_DB=your-database-name
 
 # Authentication
 JWT_SECRET=your-super-secret-jwt-key-min-32-chars
-JWT_REFRESH_SECRET=your-refresh-secret-key-min-32-chars
+# Note: JWT_REFRESH_SECRET removed as it is not currently used in the codebase
 
 # Google OAuth (Backend)
 GOOGLE_CLIENT_ID=your-google-client-id

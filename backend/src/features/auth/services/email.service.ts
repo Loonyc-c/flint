@@ -19,6 +19,15 @@ const transporterDoc = {
 
 const transporter = nodemailer.createTransport(transporterDoc)
 
+// Requirement 12: Helper function to sanitize email addresses for logging
+// This protects PII in production logs while still allowing debugging
+const sanitizeEmail = (email: string): string => {
+  const [localPart, domain] = email.split('@')
+  if (!domain) return '***'
+  const visibleChars = Math.min(3, localPart.length)
+  return `${localPart.substring(0, visibleChars)}***@${domain}`
+}
+
 const sendEmail = async (input: Req) => {
   const { text, to, subject, html } = input
   if (isNil(to)) {
@@ -33,9 +42,11 @@ const sendEmail = async (input: Req) => {
       text,
       html,
     })
-    console.info(`Email sent to ${to} with subject "${subject}"`)
+    // Requirement 12: Log with sanitized email to protect PII
+    console.info(`Email sent to ${sanitizeEmail(to)} with subject "${subject}"`)
   } catch (e: unknown) {
-    console.error('Error sending email:', e)
+    // Requirement 14: Keep error logging but sanitize the email address
+    console.error(`Error sending email to ${sanitizeEmail(to)}:`, e instanceof Error ? e.message : 'Unknown error')
     throw e
   }
 }

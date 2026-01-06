@@ -1,6 +1,7 @@
 import { NormalizedEvent } from '@/shared/api/types'
 import { matchService } from '@/features/matches/services/match.service'
-import { objectIdSchema } from '@/shared-types/validations'
+// Requirement 7: Standardized import to use @shared/validations for consistency
+import { objectIdSchema } from '@shared/validations'
 import { ServiceException } from '@/features/error'
 import { HttpStatus } from '@/data/constants'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
