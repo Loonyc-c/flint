@@ -76,16 +76,17 @@ backend/
 
 ---
 
-## 4. Current System State (Last Updated: Jan 5, 2026)
+## 4. Current System State (Last Updated: Jan 6, 2026)
 **Auth & Profile Systems Hardened:**
 1.  **Backend Security:** Reset tokens are now hashed. Email uniqueness is enforced at the service level.
 2.  **User Context:** Frontend now decodes JWT metadata upon login and persists state via `UserProvider`.
 3.  **Standardized UI:** Auth forms refactored into a generic `AuthFormWrapper` with `FormInput` components.
-4.  **Profile Dashboard:** Implemented a modern, non-linear "Shiny" Profile Page (`/profile`) with:
-    *   Real-time completeness meter (animated via `framer-motion`).
-    *   Modular architecture (PhotoGrid, InterestsModal, QuestionsModal, etc.).
-    *   Integration with backend `GET/PUT /v1/profile` endpoints.
-5.  **Deployment Ready:** Both `frontend` and `backend` are configured with `vercel.json` and optimized `next.config.ts` for immediate Vercel deployment.
+4.  **Profile Dashboard:** Implemented a modern, non-linear "Shiny" Profile Page (`/profile`) with animated completeness meter and modular UI components.
+5.  **Matchmaking Optimized:**
+    *   **Performance:** `getCandidates` now uses a MongoDB aggregation pipeline to prevent "N+1" memory issues during discovery.
+    *   **Logic:** Discovery now respects user `preferences` (gender and age range).
+    *   **Atomicity:** `swipe` method refactored to use MongoDB Transactions, preventing race conditions and duplicate match records.
+6.  **Deployment Ready:** Both `frontend` and `backend` are configured for Vercel deployment.
 
 ## 5. Next Development Steps
 1.  **Media Integration:**

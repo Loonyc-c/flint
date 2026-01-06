@@ -31,14 +31,16 @@ export const QuestionsSection = ({ questions, onEditSlot, error }: QuestionsSect
           return (
             <motion.div
               key={i}
-              whileTap={{ scale: 0.98 }}
-              onClick={() => onEditSlot(i)}
-              className={cn(
-                'p-5 rounded-2xl border transition-all cursor-pointer group',
-                selectedQ
-                  ? 'border-brand/20 bg-brand/5'
-                  : 'border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-black hover:border-brand/30'
-              )}
+              {...({
+                whileTap: { scale: 0.98 },
+                onClick: () => onEditSlot(i),
+                className: cn(
+                  'p-5 rounded-2xl border transition-all cursor-pointer group',
+                  selectedQ
+                    ? 'border-brand/20 bg-brand/5'
+                    : 'border-neutral-100 dark:border-neutral-800 bg-neutral-50 dark:bg-black hover:border-brand/30'
+                )
+              } as any)}
             >
               {selectedQ ? (
                 <div className="flex items-start justify-between gap-4">
