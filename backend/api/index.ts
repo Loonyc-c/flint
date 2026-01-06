@@ -11,14 +11,35 @@ const ALLOWED_HEADERS = 'Content-Type,Authorization'
 function loadBackend() {
   if (cachedApp && cachedGetDbConnection) return { app: cachedApp, getDbConnection: cachedGetDbConnection }
 
-  const distPath = path.join(__dirname, '..', 'dist')
+  // Try multiple possible dist locations used by Vercel bundling
+  const candidateDistPaths = [
+    path.join(process.cwd(), 'dist'),
+    path.join(__dirname, 'dist'),
+    path.join(__dirname, '..', 'dist'),
+    '/var/task/dist'
+  ]
 
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const appModule = require(path.join(distPath, 'app.cjs'))
+  let appModule: any = null
+  let dbModule: any = null
+  for (const distPath of candidateDistPaths) {
+    try {
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      appModule = require(path.join(distPath, 'app.cjs'))
+      // eslint-disable-next-line @typescript-eslint/no-require-imports
+      dbModule = require(path.join(distPath, 'data', 'db', 'index.cjs'))
+      console.log('Loaded backend from', distPath)
+      break
+    } catch (err) {
+      console.log('Failed to load backend from', distPath)
+      continue
+    }
+  }
+
+  if (!appModule || !dbModule) {
+    throw new Error(`Cannot load backend dist. Tried: ${candidateDistPaths.join(', ')}, cwd=${process.cwd()}, dirname=${__dirname}`)
+  }
+
   cachedApp = appModule.default
-
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const dbModule = require(path.join(distPath, 'data', 'db', 'index.cjs'))
   cachedGetDbConnection = dbModule.getDbConnection
 
   return { app: cachedApp, getDbConnection: cachedGetDbConnection }
