@@ -1,7 +1,7 @@
 {
   "version": 2,
+  "installCommand": "ls -la && npm install --prefix shared && npm install --prefix frontend && npm install --prefix backend",
   "buildCommand": "cd frontend && npm run copy:shared && npm run build",
-  "installCommand": "cd shared && npm install && cd ../frontend && npm install && cd ../backend && npm install",
   "framework": "nextjs",
   "outputDirectory": "frontend/.next",
   "regions": ["sfo1"],
