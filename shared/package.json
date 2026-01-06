@@ -13,6 +13,7 @@
     "./lib/*": "./lib/*"
   },
   "dependencies": {
+    "mongodb": "^6.21.0",
     "zod": "^4.3.5"
   }
 }

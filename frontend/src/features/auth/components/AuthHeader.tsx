@@ -1,9 +1,10 @@
-'use client'
+"use client";
 
-import Link from 'next/link'
-import Image from 'next/image'
-import { Button } from '@/components/ui/button'
-import MainLogo from '@/components/ui/Logo'
+import Link from "next/link";
+import Image from "next/image";
+import { Button } from "@/components/ui/button";
+import MainLogo from "@/components/ui/logo";
+
 const AuthHeader = () => {
   return (
     <header
@@ -38,13 +39,15 @@ const AuthHeader = () => {
           </li>
           <li>
             <Link href="/main">
-              <Button className="bg-brand hover:bg-brand-400 text-white">Get Started</Button>
+              <Button className="bg-brand hover:bg-brand-400 text-white">
+                Get Started
+              </Button>
             </Link>
           </li>
         </ul>
       </nav>
     </header>
-  )
-}
+  );
+};
 
-export default AuthHeader
+export default AuthHeader;

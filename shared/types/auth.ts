@@ -3,6 +3,8 @@
  * Single source of truth for all auth-related types across frontend and backend
  */
 
+import { UserProfile } from './match'
+
 /**
  * User data structure
  */
@@ -12,6 +14,7 @@ export interface User {
   firstName: string
   lastName: string
   name?: string
+  profile?: UserProfile
   createdAt?: Date
   updatedAt?: Date
 }

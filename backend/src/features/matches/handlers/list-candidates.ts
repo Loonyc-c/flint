@@ -1,20 +1,25 @@
 import { NormalizedEvent } from '@/shared/api/types'
-import { profileService } from '@/features/profile/services/profile.service'
-import { User } from '@/data/db/types/user'
-import { profileCreationSchema } from '@shared/validations'
+import { matchService } from '@/features/matches/services/match.service'
+import { objectIdSchema } from '@/shared-types/validations'
 import { ServiceException } from '@/features/error'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
 import { TranslationKey } from '@/features/localization/types'
+import { listSchema } from '@/shared-types/validations/match.validation'
 
 const handler = async (event: NormalizedEvent) => {
-  const user = event.user as User
-  const body = profileCreationSchema.parse(event.body)
+  const {
+    pathParameters: { id },
+    body,
+  } = event
 
+  const _id = objectIdSchema.parse(id)
+
+  const req = listSchema.parse(body)
   try {
-    const result = await profileService.createProfile(user._id.toHexString(), body)
+    const candidates = await matchService.getCandidates(_id, req)
 
-    return result
+    return candidates
   } catch (e: unknown) {
     if (e instanceof ServiceException) {
       throw new ApiException(HttpStatus.BAD_REQUEST, ApiErrorCode.BAD_REQUEST, {

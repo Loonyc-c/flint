@@ -10,11 +10,12 @@ import { InteractionType, LOOKING_FOR, SwipeResponse, UserProfile } from '@share
 import { ObjectId } from 'mongodb'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
+import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 
 const MIN_PROFILE_COMPLETION = 80
 
 export const matchService = {
-  getCandidates: async (userId: string, limit: number = 20): Promise<UserProfile[]> => {
+  getCandidates: async (userId: string, { limit = 20 }): Promise<UserProfile[]> => {
     const userObjectId = new ObjectId(userId)
     const userCollection = await getUserCollection()
 
@@ -23,8 +24,9 @@ export const matchService = {
       return []
     }
 
-    const { lookingFor = LOOKING_FOR.ALL, ageRange = 5 } = currentUser.preferences ?? {}
-    const userAge = currentUser.profile?.age ?? 25
+    const { lookingFor , ageRange  } = currentUser.preferences ?? {}
+
+    const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
 
     const pipeline = [
       {
@@ -46,10 +48,7 @@ export const matchService = {
             {
               $match: {
                 $expr: {
-                  $and: [
-                    { $eq: ['$actorId', userObjectId] },
-                    { $eq: ['$targetId', '$$targetId'] },
-                  ],
+                  $and: [{ $eq: ['$actorId', userObjectId] }, { $eq: ['$targetId', '$$targetId'] }],
                 },
               },
             },
@@ -71,6 +70,7 @@ export const matchService = {
       id: user._id.toHexString(),
       firstName: user.auth.firstName,
       lastName: user.auth.lastName,
+      ...user.profile,
     }))
   },
 

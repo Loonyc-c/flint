@@ -18,7 +18,9 @@ const handler = async (event: NormalizedEvent) => {
       userId: user._id.toHexString(),
       firstName: user.auth.firstName,
       lastName: user.auth.lastName,
-      email: user.auth.email    })
+      email: user.auth.email,
+      subScription: user.subScription,
+    })
     return {
       accessToken,
       name,

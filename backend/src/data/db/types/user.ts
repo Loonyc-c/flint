@@ -13,8 +13,8 @@ export type DbUser = BaseCollection & {
     passwordResetExpires?: Date
   }
   profile?: UserProfile
-  subScription?: SubScription
-  preferences?: UserPreferences
+  subScription: SubScription
+  preferences: UserPreferences
   contactInfo?: UserContactInfo
-  profileCompletion?: number
+  profileCompletion: number
 }

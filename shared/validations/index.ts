@@ -16,7 +16,8 @@ export {
   type SignupFormData,
   type ForgetPasswordFormData,
   type ResetPasswordFormData,
-  googleSchema
+  googleSchema,
+  objectIdSchema
 } from './auth.validation'
 
 export {
@@ -25,6 +26,6 @@ export {
 } from './match.validation'
 
 export {
-  profileCreationSchema,
+  profileUpdateSchema,
   type ProfileCreationFormData
 } from './profile.validation'

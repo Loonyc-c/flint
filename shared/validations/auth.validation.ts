@@ -6,6 +6,11 @@
 
 import { z } from 'zod'
 
+
+type IsNil = (value: unknown) => value is null | undefined
+export const isNil: IsNil = (value): value is null | undefined => {
+  return value === null || value === undefined
+}
 /**
  * Regex patterns for validation
  * Keep in sync with backend constants
@@ -134,3 +139,6 @@ export const baseSchemas = {
 export const googleSchema = z.object({
   token: z.string().min(1, 'Google token is required')
 })
+
+
+export const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, 'String must be valid ObjectId')

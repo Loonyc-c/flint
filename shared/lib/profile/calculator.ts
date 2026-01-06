@@ -1,4 +1,4 @@
-import { ProfileCreationRequest } from '../../types/profile'
+import { ProfileUpdateRequest } from '../../types/profile'
 
 /**
  * Calculates the profile completeness score based on filled fields.
@@ -19,7 +19,7 @@ import { ProfileCreationRequest } from '../../types/profile'
  * @param profile The user profile data
  * @returns Score from 0 to 100
  */
-export const calculateProfileCompleteness = (profile: ProfileCreationRequest): number => {
+export const calculateProfileCompleteness = (profile: ProfileUpdateRequest): number => {
   let score = 0
 
   // 1. Base Requirements (Assuming validation passed, these exist)

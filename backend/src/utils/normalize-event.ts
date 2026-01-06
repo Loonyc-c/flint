@@ -39,6 +39,7 @@ const normalizeEvent = (req: Request): NormalizedEvent => {
     queryStringParameters: queryStringParameters ?? {},
     httpMethod,
     headers: normalizedHeaders,
+    authorizerContext: req.authorizerContext,
     ...rest,
   }
 }

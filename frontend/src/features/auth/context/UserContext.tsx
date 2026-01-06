@@ -50,6 +50,8 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         return;
       }
 
+      console.log({ decoded });
+
       setUser({
         id: decoded.data.userId,
         firstName: decoded.data.firstName,
@@ -100,7 +102,6 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
     </UserContext.Provider>
   );
 };
-
 export const useUser = () => {
   const context = useContext(UserContext);
   if (context === undefined) {

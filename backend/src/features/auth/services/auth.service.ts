@@ -10,6 +10,8 @@ import bcrypt from 'bcryptjs'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 import sendEmail from './email.service'
+import { LOOKING_FOR, SUBSCRIPTION_PLANS } from '@/shared-types/types'
+import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 
 const JWT_SECRET = process.env.JWT_SECRET
 if (!JWT_SECRET) {
@@ -21,6 +23,12 @@ export type AuthorizerPayload = {
   firstName: string
   lastName: string
   email: string
+  subScription: {
+    plan: SUBSCRIPTION_PLANS
+    startDate?: Date
+    enDate?: Date
+    isActive: boolean
+  }
 }
 
 export interface AuthToken {
@@ -123,6 +131,15 @@ export const authService: AuthService = {
         email,
         password: hashedPassword,
       },
+      subScription: {
+        plan: SUBSCRIPTION_PLANS.FREE,
+        isActive: true,
+      },
+      preferences: {
+        ageRange: DEFAULT_AGE_RANGE,
+        lookingFor: LOOKING_FOR.ALL,
+      },
+      profileCompletion: 0,
       isDeleted: false as const,
       isActive: true,
       updatedAt: new Date(),
@@ -236,7 +253,7 @@ export const authService: AuthService = {
         isNil(payload) ||
         isNil(payload.email) ||
         isNil(payload.given_name) ||
-        isNil(payload.family_name) 
+        isNil(payload.family_name)
       ) {
         throw new ServiceException('err.auth.invalid_token', ErrorCode.BAD_REQUEST)
       }
@@ -256,6 +273,15 @@ export const authService: AuthService = {
             email,
             password: '',
           },
+          subScription: {
+            plan: SUBSCRIPTION_PLANS.FREE,
+            isActive: true,
+          },
+          preferences: {
+            ageRange: DEFAULT_AGE_RANGE,
+            lookingFor: LOOKING_FOR.ALL,
+          },
+          profileCompletion: 0,
           isDeleted: false as const,
           isActive: true,
           updatedAt: new Date(),

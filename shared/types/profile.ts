@@ -5,7 +5,7 @@ export interface QuestionAnswer {
   audioUrl: string
 }
 
-export interface ProfileCreationRequest {
+export interface ProfileUpdateRequest {
   nickName: string
   age: number
   gender: USER_GENDER
@@ -18,5 +18,5 @@ export interface ProfileCreationRequest {
 
 export interface ProfileResponse {
   isComplete: boolean
-  profile?: ProfileCreationRequest
+  profile?: ProfileUpdateRequest
 }

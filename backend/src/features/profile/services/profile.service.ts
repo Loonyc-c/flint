@@ -1,53 +1,13 @@
 import { getUserCollection } from '@/data/db/collection'
 import { DbUser } from '@/data/db/types/user'
-import { LOOKING_FOR, ProfileCreationRequest, ProfileResponse } from '@shared/types'
+import {  ProfileUpdateRequest, ProfileResponse } from '@shared/types'
 import { calculateProfileCompleteness } from '@shared/lib'
 import { ObjectId } from 'mongodb'
 import { ErrorCode, ServiceException } from '@/features/error'
-import { isNil } from '@/utils'
+import { isNil, isNonEmptyValue } from '@/utils'
 
 export const profileService = {
-  createProfile: async (userId: string, data: ProfileCreationRequest): Promise<ProfileResponse> => {
-    const userCollection = await getUserCollection()
-    const userObjectId = new ObjectId(userId)
-
-    const user = await userCollection.findOne({ _id: userObjectId })
-    if (isNil(user)) {
-      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
-    }
-
-    const completionScore = calculateProfileCompleteness(data)
-
-    const preferences = user.preferences ?? {
-      ageRange: 5,
-      lookingFor: LOOKING_FOR.ALL,
-    }
-
-    const updates: Partial<DbUser> = {
-      profile: {
-        nickName: data.nickName,
-        age: data.age,
-        gender: data.gender,
-        bio: data.bio,
-        interest: data.interests,
-        photos: data.photos,
-        voiceIntro: data.voiceIntro,
-        questions: data.questions,
-      },
-      preferences,
-      profileCompletion: completionScore,
-      updatedAt: new Date(),
-    }
-
-    await userCollection.updateOne({ _id: userObjectId }, { $set: updates })
-
-    return {
-      isComplete: true,
-      profile: data,
-    }
-  },
-
-  updateProfile: async (userId: string, data: ProfileCreationRequest): Promise<ProfileResponse> => {
+  updateProfile: async (userId: string, data: ProfileUpdateRequest): Promise<ProfileResponse> => {
     const userCollection = await getUserCollection()
     const userObjectId = new ObjectId(userId)
 
@@ -82,6 +42,7 @@ export const profileService = {
   },
 
   getProfile: async (userId: string): Promise<ProfileResponse> => {
+    console.log('service connected', {userId})
     const userCollection = await getUserCollection()
     const user = await userCollection.findOne({ _id: new ObjectId(userId) })
 
@@ -89,13 +50,14 @@ export const profileService = {
       throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
     }
 
-    const isComplete = !!user.profile && !!user.preferences
-
-    if (!isComplete || !user.profile) {
+    const isComplete = isNonEmptyValue(user.profile) && isNonEmptyValue(user.preferences) 
+    
+    console.log({isComplete})
+    if (!isComplete || isNil(user.profile)) {
       return { isComplete: false }
     }
 
-    const profileData: ProfileCreationRequest = {
+    const profileData: ProfileUpdateRequest = {
       nickName: user.profile.nickName,
       age: user.profile.age,
       gender: user.profile.gender,
@@ -105,6 +67,8 @@ export const profileService = {
       voiceIntro: user.profile.voiceIntro,
       questions: user.profile.questions,
     }
+
+    console.log({profileData})
 
     return {
       isComplete: true,
