@@ -1,0 +1,7 @@
+src/**/*.ts
+!src/**/*.d.ts
+api/**/*.ts
+scripts/
+tsconfig.json
+*.md
+
