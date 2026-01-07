@@ -2,11 +2,19 @@ import { VercelRequest, VercelResponse } from '@vercel/node'
 import app from '../src/app'
 import { getDbConnection } from '../src/data/db'
 
-const ALLOWED_ORIGIN = process.env.CLIENT_URL || '*'
+const ALLOWED_ORIGINS = (process.env.CLIENT_URL || 'http://localhost:3000')
+  .split(',')
+  .map((o) => o.trim())
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // Get origin from request
+  const origin = req.headers.origin || ''
+  const isAllowed = ALLOWED_ORIGINS.includes(origin)
+
   // Set CORS headers for all requests
-  res.setHeader('Access-Control-Allow-Origin', ALLOWED_ORIGIN)
+  if (isAllowed) {
+    res.setHeader('Access-Control-Allow-Origin', origin)
+  }
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type,Authorization')
