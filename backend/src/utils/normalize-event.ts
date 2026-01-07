@@ -4,9 +4,9 @@ import { Request } from 'express'
 import type { NormalizedEvent } from '@/shared/api/types'
 
 const normalizeEvent = (req: Request): NormalizedEvent => {
-  const { body, params: pathParameters, method: httpMethodRaw, headers, ...rest } = req
+  const { body, params: pathParameters, method: httpMethodRaw, headers, query, ...rest } = req
 
-  const queryStringParameters = req.query as Record<string, string | string[] | undefined>
+  const queryStringParameters = query as Record<string, string | string[] | undefined>
 
   const headersInLowerCase: Record<string, string> = {}
   let acceptLanguageHeader: string | undefined
@@ -37,6 +37,7 @@ const normalizeEvent = (req: Request): NormalizedEvent => {
     body: body ?? {},
     pathParameters: pathParameters ?? {},
     queryStringParameters: queryStringParameters ?? {},
+    query: queryStringParameters ?? {},
     httpMethod,
     headers: normalizedHeaders,
     authorizerContext: req.authorizerContext,

@@ -17,7 +17,7 @@ export type UserProfile = {
 export type SubScription = {
   plan: SUBSCRIPTION_PLANS
   startDate?: Date
-  enDate?: Date
+  endDate?: Date
   isActive: boolean
 }
 

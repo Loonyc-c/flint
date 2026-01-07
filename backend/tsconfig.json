@@ -7,16 +7,18 @@
     "moduleResolution": "node",
     "noUnusedLocals": true,
     "noUnusedParameters": true,
-    "outDir": "lib",
+    "outDir": "dist",
     "sourceMap": true,
     "target": "esnext",
     "strict": true,
     "strictNullChecks": true,
-    "baseUrl": "src",
+    "skipLibCheck": true, // workspace- ээс болоод frontend-ийн react-dom backend node_modules- ороод build error.
+    "baseUrl": ".",
     "paths": {
-      "@/*": ["*"],
-      "@shared/*": ["shared-types/*"]
+      "@/*": ["src/*"],
+      "@shared/*": ["src/shared-types/*"]
     }
   },
-  "exclude": ["node_modules"]
+  "include": ["src/**/*", "api/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

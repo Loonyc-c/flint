@@ -2,12 +2,10 @@
   "version": 2,
   "buildCommand": "npm run build",
   "functions": {
-    "api/index.ts": {
-      "includeFiles": "./dist/**"
+    "api/*.js": {
+      "runtime": "nodejs20.x",
+      "maxDuration": 10
     }
   },
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.ts" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/api/index" }]
 }
-
