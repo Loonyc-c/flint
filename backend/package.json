@@ -9,6 +9,7 @@
     "postinstall": "npm run copy:shared",
     "prebuild": "npm run copy:shared",
     "build": "npm run copy:shared && tsc && tsc-alias",
+    "vercel-build": "npm run copy:shared && tsc && tsc-alias && cp dist/api/index.js api/index.js && cp dist/api/index.js.map api/index.js.map",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
     "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint . --fix",
     "format": "prettier --write \"**/*.ts\""
