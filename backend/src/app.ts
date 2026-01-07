@@ -21,13 +21,23 @@ const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
   .map((o) => o.trim().replace(/\/$/, ''))
   .filter(Boolean)
 
+console.log('=== EXPRESS APP CORS DEBUG ===')
+console.log('CLIENT_URL:', process.env.CLIENT_URL)
+console.log('Parsed origins:', rawOrigins)
+
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
+    console.log('Express CORS check - Origin:', origin)
     // Allow server-to-server or same-origin (no origin header)
-    if (!origin) return callback(null, true)
+    if (!origin) {
+      console.log('No origin header - allowing')
+      return callback(null, true)
+    }
     const normalized = origin.replace(/\/$/, '')
     const allowed = rawOrigins.includes(normalized)
+    console.log('Normalized origin:', normalized, 'Allowed:', allowed)
     if (allowed) return callback(null, true)
+    console.log('❌ Origin rejected by Express CORS')
     return callback(new Error('Not allowed by CORS'))
   },
   credentials: true,
