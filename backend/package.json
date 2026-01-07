@@ -17,10 +17,12 @@
   "author": "",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": "20.x"
+  },
   "dependencies": {
     "@flint/shared": "*",
     "@types/bcryptjs": "^2.4.6",
-    "@vercel/node": "^3.0.0",
     "agora-token": "^2.0.5",
     "bcryptjs": "^3.0.3",
     "cloudinary": "^2.7.0",
