@@ -3,8 +3,8 @@ import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/features/auth/context/UserContext'
-import MainLogo from './ui/logo'
 import Link from 'next/link'
+import MainLogo from './ui/logo'
 
 const MainHeader = () => {
   const { user, logout } = useUser()
