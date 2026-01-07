@@ -1,9 +1,10 @@
 {
   "version": 2,
   "buildCommand": "npm run build",
+  "outputDirectory": "dist",
   "functions": {
     "api/*.js": {
-      "runtime": "nodejs20.x",
+      "runtime": "@vercel/node@20.x",
       "maxDuration": 10
     }
   },
