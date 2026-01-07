@@ -11,9 +11,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const origin = req.headers.origin || ''
   const isAllowed = ALLOWED_ORIGINS.includes(origin)
 
+  // DEBUG LOGGING
+  console.log('=== CORS DEBUG ===')
+  console.log('CLIENT_URL env:', process.env.CLIENT_URL)
+  console.log('ALLOWED_ORIGINS:', ALLOWED_ORIGINS)
+  console.log('Request origin:', origin)
+  console.log('Is allowed:', isAllowed)
+  console.log('Request method:', req.method)
+  console.log('Request path:', req.url)
+
   // Set CORS headers for all requests
   if (isAllowed) {
     res.setHeader('Access-Control-Allow-Origin', origin)
+    console.log('✅ Set Access-Control-Allow-Origin:', origin)
+  } else {
+    console.log('❌ Origin not allowed!')
   }
   res.setHeader('Access-Control-Allow-Credentials', 'true')
   res.setHeader('Access-Control-Allow-Methods', 'GET,POST,PUT,DELETE,PATCH,OPTIONS')
@@ -21,6 +33,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   // Handle preflight OPTIONS request
   if (req.method === 'OPTIONS') {
+    console.log('Handling OPTIONS preflight')
     return res.status(204).end()
   }
 
