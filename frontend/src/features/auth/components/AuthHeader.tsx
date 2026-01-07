@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
-import MainLogo from '@/components/ui/Logo'
+import MainLogo from '@/components/ui/logo'
 
 const AuthHeader = () => {
   return (

@@ -64,6 +64,13 @@ if (!GOOGLE_CLIENT_ID) {
 }
 const googleClient = new OAuth2Client(GOOGLE_CLIENT_ID)
 
+const sanitizeEmail = (email: string): string => {
+  const [localPart, domain] = email.split('@')
+  if (!domain) return '***'
+  const visibleChars = Math.min(3, localPart.length)
+  return `${localPart.substring(0, visibleChars)}***@${domain}`
+}
+
 export const authService: AuthService = {
   generateToken: (userId, payload) => {
     const tokenPayload = {
@@ -75,7 +82,7 @@ export const authService: AuthService = {
       data: payload,
     }
 
-    return jwt.sign(tokenPayload, JWT_SECRET)
+    return jwt.sign(tokenPayload, JWT_SECRET, { algorithm: 'HS256' })
   },
   extractToken: (token) => {
     if (!isNonEmptyString(token)) {
@@ -263,7 +270,7 @@ export const authService: AuthService = {
             aud: payload.aud,
             iss: payload.iss,
             exp: payload.exp,
-            email: payload.email,
+            email: payload.email ? sanitizeEmail(payload.email) : undefined,
             clientEnv: GOOGLE_CLIENT_ID,
           })
         } else {

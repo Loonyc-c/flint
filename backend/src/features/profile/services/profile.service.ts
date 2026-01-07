@@ -11,11 +11,6 @@ export const profileService = {
     const userCollection = await getUserCollection()
     const userObjectId = new ObjectId(userId)
 
-    const user = await userCollection.findOne({ _id: userObjectId })
-    if (isNil(user)) {
-      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
-    }
-
     const completionScore = calculateProfileCompleteness(data)
 
     const updates: Partial<DbUser> = {
@@ -33,7 +28,15 @@ export const profileService = {
       updatedAt: new Date(),
     }
 
-    await userCollection.updateOne({ _id: userObjectId }, { $set: updates })
+    const result = await userCollection.findOneAndUpdate(
+      { _id: userObjectId },
+      { $set: updates },
+      { returnDocument: 'after' },
+    )
+
+    if (isNil(result)) {
+      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+    }
 
     return {
       isComplete: true,

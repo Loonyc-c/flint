@@ -9,8 +9,8 @@
     "postinstall": "npm run copy:shared",
     "prebuild": "npm run copy:shared",
     "build": "npm run copy:shared && tsup",
-    "lint": "eslint .",
-    "lint:fix": "eslint . --fix",
+    "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
+    "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint . --fix",
     "format": "prettier --write \"**/*.ts\""
   },
   "keywords": [],
@@ -40,7 +40,8 @@
     "twilio": "^5.9.0",
     "typescript": "^5.9.3",
     "validator": "^13.15.20",
-    "zod": "^4.3.4"
+    "zod": "^4.3.4",
+    "@flint/shared": "*"
   },
   "devDependencies": {
     "@types/express": "^5.0.6",

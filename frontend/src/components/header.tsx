@@ -3,7 +3,7 @@ import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useUser } from '@/features/auth/context/UserContext'
-import MainLogo from './ui/Logo'
+import MainLogo from './ui/logo'
 import Link from 'next/link'
 
 const MainHeader = () => {
@@ -44,9 +44,11 @@ const MainHeader = () => {
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
               {user?.profile?.photos?.[1] ? (
-                <img
+                <Image
                   src={user.profile.photos[1]}
-                  alt={user.name}
+                  alt={user.name || 'User Profile'}
+                  width={40}
+                  height={40}
                   className="h-10 w-10 rounded-full object-cover border-2 border-brand hover:border-brand/70 transition-colors"
                 />
               ) : (
