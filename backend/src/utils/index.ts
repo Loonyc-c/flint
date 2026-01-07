@@ -24,3 +24,5 @@ type IsNonEmptyString = (value: string | null | undefined) => value is string
 export const isNonEmptyString: IsNonEmptyString = (value): value is string => {
   return (value ?? '').trim() !== ''
 }
+
+export const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms))
