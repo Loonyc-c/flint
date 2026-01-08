@@ -50,6 +50,19 @@ const corsOptions: cors.CorsOptions = {
 app.use(cors(corsOptions))
 app.use(express.json())
 
+// Health check and API info endpoint
+app.get('/', (_req, res) => {
+  res.json({
+    status: 'ok',
+    message: 'Flint Backend API',
+    version: '1.0.0',
+    endpoints: {
+      auth: '/v1/auth',
+      docs: 'API endpoints are available under /v1/*',
+    },
+  })
+})
+
 app.use('/v1/auth', authLimiter)
 app.use('/v1', publicRouter)
 app.use('/v1', protectedRouter)
