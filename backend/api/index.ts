@@ -1,3 +1,13 @@
+import 'module-alias/register'
+import * as tsConfigPaths from 'tsconfig-paths'
+import * as tsConfig from '../tsconfig.json'
+import path from 'path'
+
+tsConfigPaths.register({
+  baseUrl: path.join(__dirname, '..'),
+  paths: tsConfig.compilerOptions.paths,
+})
+
 import { VercelRequest, VercelResponse } from '@vercel/node'
 import app from '../src/app'
 import { getDbConnection } from '../src/data/db'

@@ -1,5 +1,3 @@
-src/**/*.ts
-!src/**/*.d.ts
-api/**/*.ts
+dist
+node_modules
 *.md
-

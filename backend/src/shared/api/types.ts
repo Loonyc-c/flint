@@ -1,4 +1,4 @@
-import { HttpResponseHeader } from '@/data/constants'
+import { HttpResponseHeader, HttpStatus } from '@/data/constants'
 
 export type QueryParams = Record<string, string | string[] | undefined>
 
@@ -18,8 +18,6 @@ export interface NormalizedEvent<T = unknown> {
 }
 
 export type ApiHandlerResponse<Resp> = Promise<Resp | { response: Resp; headers?: ResponseHeaders }>
-
-import { HttpStatus } from '@/data/constants'
 
 export type ApiErrorHandler = (
   err: unknown,

@@ -1,7 +1,6 @@
 {
-  "buildCommand": null,
-  "installCommand": "npm install",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index" }
+    { "source": "/v1/(.*)", "destination": "/api" },
+    { "source": "/(.*)", "destination": "/api" }
   ]
 }

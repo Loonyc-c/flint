@@ -9,6 +9,8 @@ import protectedRouter from '@/routes/protected'
 
 const app = express()
 
+app.set('trust proxy', 1)
+
 console.log('[Express App] Initializing...')
 
 const authLimiter = rateLimit({

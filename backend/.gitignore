@@ -158,3 +158,5 @@ $RECYCLE.BIN/
 # generated shared types (copied from ../shared)
 /src/shared-types
 
+.vercel
+.env*.local
