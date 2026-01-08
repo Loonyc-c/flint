@@ -9,7 +9,7 @@
     "postinstall": "npm run copy:shared",
     "prebuild": "npm run copy:shared",
     "build": "npm run copy:shared && tsc && tsc-alias",
-    "vercel-build": "npm run copy:shared && tsc && tsc-alias && cp -r dist/api . && cp -r dist/src . && mkdir -p public && echo 'Backend Service Connected to public/index.html as entry point !' > public/index.html",
+    "vercel-build": "npm run copy:shared && tsc && tsc-alias",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
     "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint . --fix",
     "format": "prettier --write \"**/*.ts\""
