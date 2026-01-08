@@ -1,9 +1,25 @@
-import * as tsConfigPaths from 'tsconfig-paths'
-import * as tsConfig from '../tsconfig.json'
+// Configure path aliases for runtime resolution
 import path from 'path'
 
+const basePath = path.join(__dirname, '..')
+
+// Try to use module-alias, but fall back to tsconfig-paths only if it fails
+// (module-alias may fail in Vercel if package.json isn't in expected location)
+let moduleAlias: any
+try {
+  moduleAlias = require('module-alias')
+  moduleAlias.addAlias('@', path.join(basePath, 'src'))
+  moduleAlias.addAlias('@shared', path.join(basePath, 'src/shared-types'))
+} catch (error) {
+  // module-alias initialization failed, will rely on tsconfig-paths only
+  console.warn('[Path Aliases] module-alias initialization failed, using tsconfig-paths only:', error)
+}
+
+// Register tsconfig-paths (primary or fallback path resolution)
+import * as tsConfigPaths from 'tsconfig-paths'
+import * as tsConfig from '../tsconfig.json'
 tsConfigPaths.register({
-  baseUrl: path.join(__dirname, '..'),
+  baseUrl: basePath,
   paths: tsConfig.compilerOptions.paths,
 })
 
