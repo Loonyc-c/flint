@@ -1,4 +1,3 @@
-import 'module-alias/register'
 import * as tsConfigPaths from 'tsconfig-paths'
 import * as tsConfig from '../tsconfig.json'
 import path from 'path'
