@@ -9,6 +9,8 @@ import protectedRouter from '@/routes/protected'
 
 const app = express()
 
+console.log('[Express App] Initializing...')
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 100, // Limit each IP to 100 requests per window
@@ -21,13 +23,20 @@ const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
   .map((o) => o.trim().replace(/\/$/, ''))
   .filter(Boolean)
 
+console.log('[Express App] Allowed Origins:', rawOrigins)
+
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
+    console.log(`[CORS Check] Origin: '${origin}'`)
     // Allow server-to-server or same-origin (no origin header)
     if (!origin) return callback(null, true)
     const normalized = origin.replace(/\/$/, '')
     const allowed = rawOrigins.includes(normalized)
-    if (allowed) return callback(null, true)
+    if (allowed) {
+      console.log('[CORS Check] Allowed')
+      return callback(null, true)
+    }
+    console.error(`[CORS Check] Blocked: '${origin}'`)
     return callback(new Error('Not allowed by CORS'))
   },
   credentials: true,
