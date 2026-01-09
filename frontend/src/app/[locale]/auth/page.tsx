@@ -1,24 +1,26 @@
-"use client";
+'use client'
 
-import LoginForm from "@/features/auth/components/LoginForm";
-import SignupForm from "@/features/auth/components/SignupForm";
-import { Tabs } from "@/components/ui/tabs";
-import AuthHeader from "@/features/auth/components/AuthHeader";
+import LoginForm from '@/features/auth/components/LoginForm'
+import SignupForm from '@/features/auth/components/SignupForm'
+import { Tabs } from '@/components/ui/tabs'
+import AuthHeader from '@/features/auth/components/AuthHeader'
 
+/**
+ * Authentication page with login and signup tabs.
+ */
 const AuthPage = () => {
   const tabs = [
     {
-      title: "Login",
-      value: "Login",
-      content: <LoginForm />,
+      title: 'Login',
+      value: 'Login',
+      content: <LoginForm />
     },
     {
-      title: "SignUp",
-      value: "SignUp",
-      content: <SignupForm />,
-    },
-  ];
-  // Todo Google authentication
+      title: 'SignUp',
+      value: 'SignUp',
+      content: <SignupForm />
+    }
+  ]
 
   return (
     <>
@@ -29,7 +31,7 @@ const AuthPage = () => {
         </div>
       </div>
     </>
-  );
-};
+  )
+}
 
-export default AuthPage;
+export default AuthPage

@@ -1,75 +1,84 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { requestForgetPassword } from "@/features/auth/api/auth";
-import {
-  ForgetPasswordFormData,
-  forgetPasswordSchema,
-} from "@shared/validations";
-import { ApiError } from "@/lib/api-client";
-import { toast } from "react-toastify";
-import Link from "next/link";
-import { BottomGradient } from "@/utils";
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import Link from 'next/link'
+import { toast } from 'react-toastify'
+import { requestForgetPassword } from '@/features/auth/api/auth'
+import { ForgetPasswordFormData, forgetPasswordSchema } from '@shared/validations'
+import { ApiError } from '@/lib/api-client'
+import { AuthFormWrapper } from './AuthFormWrapper'
+import { FormInput } from '@/components/ui/form-input'
+import { BottomGradient } from '@/utils'
 
-import { AuthFormWrapper } from "./AuthFormWrapper";
-import { FormInput } from "@/components/ui/form-input";
+// =============================================================================
+// Sub-Components
+// =============================================================================
+
+interface EmailSentViewProps {
+  email: string
+}
+
+const EmailSentView = ({ email }: EmailSentViewProps) => (
+  <AuthFormWrapper title="Check Your Email">
+    <div className="my-8 text-center">
+      <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+        If an account exists with <strong>{email}</strong>, you will receive a password reset link
+        shortly.
+      </p>
+      <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
+        Didn&apos;t receive the email? Check your spam folder or try again.
+      </p>
+      <Link
+        href="/auth"
+        className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer inline-block"
+      >
+        ← Back to Login
+      </Link>
+    </div>
+  </AuthFormWrapper>
+)
+
+// =============================================================================
+// Main Component
+// =============================================================================
 
 const ForgetPasswordForm = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const [isLoading, setIsLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
+    getValues
   } = useForm<ForgetPasswordFormData>({
-    resolver: zodResolver(forgetPasswordSchema),
-  });
+    resolver: zodResolver(forgetPasswordSchema)
+  })
 
   const onSubmit = async (data: ForgetPasswordFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await requestForgetPassword(data);
-      setEmailSent(true);
-      toast.success("Password reset email sent! Check your inbox.");
+      await requestForgetPassword(data)
+      setEmailSent(true)
+      toast.success('Password reset email sent! Check your inbox.')
     } catch (err) {
-      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error('An unexpected error occurred. Please try again.')
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (emailSent) {
-    return (
-      <AuthFormWrapper title="Check Your Email">
-        <div className="my-8 text-center">
-          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            If an account exists with <strong>{getValues("email")}</strong>,
-            you will receive a password reset link shortly.
-          </p>
-          <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
-            Didn&apos;t receive the email? Check your spam folder or try again.
-          </p>
-          <Link
-            href="/auth"
-            className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer inline-block"
-          >
-            ← Back to Login
-          </Link>
-        </div>
-      </AuthFormWrapper>
-    );
+    return <EmailSentView email={getValues('email')} />
   }
 
   return (
@@ -85,7 +94,7 @@ const ForgetPasswordForm = () => {
           type="email"
           error={errors.email}
           disabled={isLoading}
-          {...register("email")}
+          {...register('email')}
           containerClassName="mb-4"
         />
 
@@ -94,7 +103,7 @@ const ForgetPasswordForm = () => {
           type="submit"
           disabled={isLoading}
         >
-          Sending...
+          {isLoading ? 'Sending...' : 'Send Reset Link →'}
           <BottomGradient />
         </button>
       </form>
@@ -108,7 +117,7 @@ const ForgetPasswordForm = () => {
         </Link>
       </div>
     </AuthFormWrapper>
-  );
-};
+  )
+}
 
-export default ForgetPasswordForm;
+export default ForgetPasswordForm

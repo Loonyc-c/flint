@@ -1,10 +1,15 @@
-import React from 'react'
+'use client'
+
 import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
 import { useRouter, Link } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
 import MainLogo from './ui/logo'
 
+/**
+ * Main header component displayed on authenticated pages.
+ * Provides navigation and user profile access.
+ */
 const MainHeader = () => {
   const { user, logout } = useUser()
   const router = useRouter()
@@ -15,15 +20,7 @@ const MainHeader = () => {
   }
 
   return (
-    <header
-      className="
-        sticky top-0 z-50 w-full
-        bg-background/90 backdrop-blur
-        border-b border-border
-        px-5 py-4 flex items-center justify-between
-        pt-[env(safe-area-inset-top)]
-      "
-    >
+    <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur border-b border-border px-5 py-4 flex items-center justify-between pt-[env(safe-area-inset-top)]">
       <Link className="flex items-center gap-4" href="/">
         <MainLogo />
         <Image

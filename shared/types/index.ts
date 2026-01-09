@@ -24,3 +24,7 @@ export { InteractionType } from './match'
 export * from './enums'
 export * from './base'
 export * from './user'
+
+// i18n types and utilities
+export type { Locale, Messages, TranslationKey } from './i18n'
+export { SUPPORTED_LOCALES, DEFAULT_LOCALE, isValidLocale, parseLocale } from './i18n'

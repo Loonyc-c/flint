@@ -1,12 +1,17 @@
 'use client'
-import { useState } from 'react'
+
+import { useState, type ReactNode } from 'react'
 import { motion } from 'framer-motion'
 import { cn } from '@/lib/utils'
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface Tab {
   title: string
   value: string
-  content: React.ReactNode
+  content: ReactNode
 }
 
 interface TabsProps {
@@ -17,6 +22,38 @@ interface TabsProps {
   contentClassName?: string
 }
 
+interface FadeInDivProps {
+  className?: string
+  active: Tab
+}
+
+// =============================================================================
+// Sub-Components
+// =============================================================================
+
+const FadeInDiv = ({ className, active }: FadeInDivProps) => (
+  <div className={cn('w-full', className)}>
+    <motion.div
+      key={active.value}
+      layoutId={active.value}
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -20 }}
+      transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
+      className="w-full"
+    >
+      {active.content}
+    </motion.div>
+  </div>
+)
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+/**
+ * Animated tabs component with smooth transitions between content.
+ */
 export const Tabs = ({
   tabs: propTabs,
   containerClassName,
@@ -75,28 +112,5 @@ export const Tabs = ({
 
       <FadeInDiv active={active} className={cn('pt-6 sm:pt-8 w-full', contentClassName)} />
     </>
-  )
-}
-
-interface FadeInDivProps {
-  className?: string
-  active: Tab
-}
-
-const FadeInDiv = ({ className, active }: FadeInDivProps) => {
-  return (
-    <div className={cn('w-full', className)}>
-      <motion.div
-        key={active.value}
-        layoutId={active.value}
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -20 }}
-        transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
-        className="w-full"
-      >
-        {active.content}
-      </motion.div>
-    </div>
   )
 }

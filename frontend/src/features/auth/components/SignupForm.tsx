@@ -1,61 +1,65 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'react-toastify'
+import { signup } from '@/features/auth/api/auth'
+import { SignupFormData, signupSchema } from '@shared/validations'
+import { ApiError } from '@/lib/api-client'
+import GoogleAuthButton from './GoogleAuthButton'
+import { AuthFormWrapper } from './AuthFormWrapper'
+import { FormInput } from '@/components/ui/form-input'
+import { BottomGradient } from '@/utils'
 
-import { signup } from "@/features/auth/api/auth";
-import { SignupFormData, signupSchema } from "@shared/validations";
-import { ApiError } from "@/lib/api-client";
-import { toast } from "react-toastify";
-import GoogleAuthButton from "./GoogleAuthButton";
-
-import { AuthFormWrapper } from "./AuthFormWrapper";
-import { FormInput } from "@/components/ui/form-input";
-import { BottomGradient } from "@/utils";
+// =============================================================================
+// Types
+// =============================================================================
 
 interface SignupFormProps {
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
+// =============================================================================
+// Component
+// =============================================================================
+
 const SignupForm = ({ onSuccess }: SignupFormProps) => {
-  const router = useRouter();
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
+  const [isLoading, setIsLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors }
   } = useForm<SignupFormData>({
-    resolver: zodResolver(signupSchema),
-  });
+    resolver: zodResolver(signupSchema)
+  })
 
   const onSubmit = async (data: SignupFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await signup(data);
-      // Requirement 14: Removed console.log with response data
-      toast.success("Account created successfully!");
+      await signup(data)
+      toast.success('Account created successfully!')
       if (onSuccess) {
-        onSuccess();
+        onSuccess()
       } else {
-        router.push("/auth");
+        router.push('/auth')
       }
     } catch (err) {
-      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error('An unexpected error occurred. Please try again.')
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <AuthFormWrapper title="Welcome to Flint">
@@ -68,7 +72,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
             type="text"
             error={errors.firstName}
             disabled={isLoading}
-            {...register("firstName")}
+            {...register('firstName')}
           />
           <FormInput
             id="signup-lastname"
@@ -77,7 +81,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
             type="text"
             error={errors.lastName}
             disabled={isLoading}
-            {...register("lastName")}
+            {...register('lastName')}
           />
         </div>
         <FormInput
@@ -87,7 +91,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
           type="email"
           error={errors.email}
           disabled={isLoading}
-          {...register("email")}
+          {...register('email')}
           containerClassName="mb-4"
         />
         <FormInput
@@ -97,7 +101,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
           type="password"
           error={errors.password}
           disabled={isLoading}
-          {...register("password")}
+          {...register('password')}
           containerClassName="mb-4"
         />
         <button
@@ -105,7 +109,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
           type="submit"
           disabled={isLoading}
         >
-          {isLoading ? "Signing up..." : "Sign up →"}
+          {isLoading ? 'Signing up...' : 'Sign up →'}
           <BottomGradient />
         </button>
         <div className="bg-linear-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-px w-full" />
@@ -113,7 +117,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         <GoogleAuthButton />
       </form>
     </AuthFormWrapper>
-  );
-};
+  )
+}
 
-export default SignupForm;
+export default SignupForm

@@ -1,40 +1,67 @@
 'use client'
 
-import React, { useState, useMemo, useCallback } from 'react'
+import { useState } from 'react'
 import { motion, AnimatePresence, useAnimation, useMotionValue } from 'framer-motion'
 import { Heart, X } from 'lucide-react'
 import Image from 'next/image'
 import { User, InteractionType } from '@shared/types'
 import { CustomAudioPlayer } from '@/components/ui/custom-audio-player'
 
+// =============================================================================
+// Types
+// =============================================================================
+
 interface SwipeCardProps {
   candidate: User
   onSwipe: (targetId: string, type: InteractionType) => Promise<void>
 }
 
-export const SwipeCard: React.FC<SwipeCardProps> = ({ candidate, onSwipe }) => {
-  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0)
-  const [stampType, setStampType] = useState<'SMASH' | 'PASS' | null>(null)
+type StampType = 'SMASH' | 'PASS' | null
+
+// =============================================================================
+// Sub-Components
+// =============================================================================
+
+interface StampOverlayProps {
+  stampType: StampType
+}
+
+const StampOverlay = ({ stampType }: StampOverlayProps) => (
+  <AnimatePresence>
+    {stampType && (
+      <motion.div
+        initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
+        animate={{ opacity: 1, scale: 1.2, rotate: stampType === 'PASS' ? -15 : 15 }}
+        className="absolute inset-0 z-50 flex items-center justify-center pointer-events-none"
+      >
+        <div
+          className={`border-10 rounded-3xl px-8 py-4 ${
+            stampType === 'SMASH'
+              ? 'border-green-500 text-green-500'
+              : 'border-red-500 text-red-500'
+          }`}
+        >
+          <span className="text-6xl font-black">{stampType}</span>
+        </div>
+      </motion.div>
+    )}
+  </AnimatePresence>
+)
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
+/**
+ * Card component displaying a candidate's profile for swiping.
+ * Includes photo, info, audio player, and action buttons.
+ */
+export const SwipeCard = ({ candidate, onSwipe }: SwipeCardProps) => {
+  const [stampType, setStampType] = useState<StampType>(null)
   const controls = useAnimation()
   const opacity = useMotionValue(1)
 
-  const photos = useMemo(() => candidate.profile?.photos || [], [candidate.profile?.photos])
-
-  const nextPhoto = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      setCurrentPhotoIndex(prev => (prev + 1) % photos.length)
-    },
-    [photos.length]
-  )
-
-  const prevPhoto = useCallback(
-    (e: React.MouseEvent) => {
-      e.stopPropagation()
-      setCurrentPhotoIndex(prev => (prev - 1 + photos.length) % photos.length)
-    },
-    [photos.length]
-  )
+  const photo = candidate.profile?.photo
 
   const handleAction = async (type: InteractionType) => {
     setStampType(type === InteractionType.LIKE ? 'SMASH' : 'PASS')
@@ -54,11 +81,11 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ candidate, onSwipe }) => {
       style={{ opacity }}
       className="relative w-full max-w-md mx-auto bg-white dark:bg-neutral-800 rounded-3xl shadow-2xl overflow-hidden h-[650px] flex flex-col"
     >
-      {/* Photo Carousel */}
+      {/* Profile Photo */}
       <div className="relative h-[400px] bg-neutral-200 dark:bg-neutral-700">
-        {photos.length > 0 ? (
+        {photo ? (
           <Image
-            src={photos[currentPhotoIndex]}
+            src={photo}
             alt={candidate.profile?.nickName || 'Profile photo'}
             fill
             className="object-cover"
@@ -69,46 +96,7 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ candidate, onSwipe }) => {
           </div>
         )}
 
-        {/* Photo Navigation */}
-        {photos.length > 1 && (
-          <>
-            <div className="absolute top-4 left-0 right-0 flex gap-1 px-4 z-20">
-              {photos.map((_: string, index: number) => (
-                <div
-                  key={index}
-                  className={`flex-1 h-1 rounded-full transition-all ${
-                    index === currentPhotoIndex ? 'bg-white' : 'bg-white/30'
-                  }`}
-                />
-              ))}
-            </div>
-            <div className="absolute inset-0 flex">
-              <div className="w-1/2 h-full cursor-pointer" onClick={prevPhoto} />
-              <div className="w-1/2 h-full cursor-pointer" onClick={nextPhoto} />
-            </div>
-          </>
-        )}
-
-        {/* Stamp Overlay */}
-        <AnimatePresence>
-          {stampType && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.5, rotate: -20 }}
-              animate={{ opacity: 1, scale: 1.2, rotate: stampType === 'PASS' ? -15 : 15 }}
-              className={`absolute inset-0 z-50 flex items-center justify-center pointer-events-none`}
-            >
-              <div
-                className={`border-10px rounded-3xl px-8 py-4 ${
-                  stampType === 'SMASH'
-                    ? 'border-green-500 text-green-500'
-                    : 'border-red-500 text-red-500'
-                }`}
-              >
-                <span className="text-6xl font-black">{stampType}</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+        <StampOverlay stampType={stampType} />
       </div>
 
       {/* Info Section */}
@@ -161,13 +149,13 @@ export const SwipeCard: React.FC<SwipeCardProps> = ({ candidate, onSwipe }) => {
       <div className="p-6 border-t border-neutral-100 dark:border-neutral-700 flex justify-center gap-8">
         <button
           onClick={() => handleAction(InteractionType.DISLIKE)}
-          className="w-16 h-16 rounded-full bg-white dark:bg-neutral-700 shadow-lg flex items-center justify-center text-gray-600 hover:scale-110 transition-transform"
+          className="w-16 h-16 rounded-full bg-white dark:bg-neutral-700 shadow-lg flex items-center justify-center text-gray-600 hover:scale-110 transition-transform cursor-pointer"
         >
           <X className="w-8 h-8" />
         </button>
         <button
           onClick={() => handleAction(InteractionType.LIKE)}
-          className="w-16 h-16 rounded-full bg-linear-to-br from-[#B33A2E] to-[#CF5144] shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform"
+          className="w-16 h-16 rounded-full bg-linear-to-br from-[#B33A2E] to-[#CF5144] shadow-lg flex items-center justify-center text-white hover:scale-110 transition-transform cursor-pointer"
         >
           <Heart className="w-8 h-8 fill-white" />
         </button>

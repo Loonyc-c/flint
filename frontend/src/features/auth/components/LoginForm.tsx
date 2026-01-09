@@ -1,63 +1,70 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useRouter } from "next/navigation";
-import Link from "next/link";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { login } from "@/features/auth/api/auth";
-import { LoginFormData, loginSchema } from "@shared/validations";
-import { ApiError } from "@/lib/api-client";
-import { toast } from "react-toastify";
-import GoogleAuthButton from "./GoogleAuthButton";
-import { AuthFormWrapper } from "./AuthFormWrapper";
-import { FormInput } from "@/components/ui/form-input";
-import { BottomGradient } from "@/utils";
-import { useUser } from "../context/UserContext";
+import { useState } from 'react'
+import { useRouter } from 'next/navigation'
+import Link from 'next/link'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { toast } from 'react-toastify'
+import { login } from '@/features/auth/api/auth'
+import { LoginFormData, loginSchema } from '@shared/validations'
+import { ApiError } from '@/lib/api-client'
+import GoogleAuthButton from './GoogleAuthButton'
+import { AuthFormWrapper } from './AuthFormWrapper'
+import { FormInput } from '@/components/ui/form-input'
+import { BottomGradient } from '@/utils'
+import { useUser } from '../context/UserContext'
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface LoginFormProps {
-  onSuccess?: () => void;
+  onSuccess?: () => void
 }
 
+// =============================================================================
+// Component
+// =============================================================================
+
 const LoginForm = ({ onSuccess }: LoginFormProps) => {
-  const router = useRouter();
-  const { login: setAuthToken } = useUser();
-  const [isLoading, setIsLoading] = useState(false);
+  const router = useRouter()
+  const { login: setAuthToken } = useUser()
+  const [isLoading, setIsLoading] = useState(false)
 
   const {
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors }
   } = useForm<LoginFormData>({
-    resolver: zodResolver(loginSchema),
-  });
+    resolver: zodResolver(loginSchema)
+  })
 
   const onSubmit = async (data: LoginFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      const { accessToken } = await login(data);
-      setAuthToken(accessToken);
-      
-      toast.success("Login successful!");
+      const { accessToken } = await login(data)
+      setAuthToken(accessToken)
+
+      toast.success('Login successful!')
       if (onSuccess) {
-        onSuccess();
+        onSuccess()
       } else {
-        router.push("/home");
+        router.push('/home')
       }
     } catch (err) {
-      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error('An unexpected error occurred. Please try again.')
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   return (
     <AuthFormWrapper title="Log into Flint">
@@ -69,7 +76,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           type="email"
           error={errors.email}
           disabled={isLoading}
-          {...register("email")}
+          {...register('email')}
           containerClassName="mb-4"
         />
         <FormInput
@@ -79,7 +86,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           type="password"
           error={errors.password}
           disabled={isLoading}
-          {...register("password")}
+          {...register('password')}
           containerClassName="mb-4"
         />
 
@@ -97,7 +104,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           type="submit"
           disabled={isLoading}
         >
-          {isLoading ? "Logging in..." : "Login →"}
+          {isLoading ? 'Logging in...' : 'Login →'}
           <BottomGradient />
         </button>
 
@@ -106,7 +113,7 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
         <GoogleAuthButton />
       </form>
     </AuthFormWrapper>
-  );
-};
+  )
+}
 
-export default LoginForm;
+export default LoginForm

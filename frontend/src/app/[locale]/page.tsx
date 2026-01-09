@@ -5,22 +5,17 @@ import { useRouter } from '@/i18n/routing'
 import { useTranslations } from 'next-intl'
 
 /**
- * Root Page
- *
- * This page redirects authenticated users to /home.
- * Unauthenticated users will be redirected to /auth by the AuthGuard.
+ * Root page that redirects users appropriately.
+ * Authenticated users go to /home, unauthenticated users are handled by AuthGuard.
  */
 const RootPage = () => {
   const router = useRouter()
   const t = useTranslations('HomePage')
 
   useEffect(() => {
-    // Redirect to home page for authenticated users
-    // The AuthGuard handles the redirect to /auth for unauthenticated users
     router.replace('/home')
   }, [router])
 
-  // Show loading state while redirecting
   return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">

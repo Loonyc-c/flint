@@ -1,17 +1,33 @@
-import {getRequestConfig} from 'next-intl/server';
-import {routing} from './routing';
+import { getRequestConfig } from 'next-intl/server'
+import { routing, isValidLocale, type Locale } from './routing'
 
-export default getRequestConfig(async ({requestLocale}) => {
-  // This typically corresponds to the `[locale]` segment
-  let locale = await requestLocale;
+// =============================================================================
+// Message Loader
+// =============================================================================
 
-  // Ensure that a valid locale is used
-  if (!locale || !routing.locales.includes(locale as any)) {
-    locale = routing.defaultLocale;
-  }
+/**
+ * Type-safe message loader for i18n.
+ * Dynamically imports the correct JSON file based on locale.
+ */
+const loadMessages = async (locale: Locale): Promise<Record<string, unknown>> =>
+  (await import(`../messages/${locale}.json`)).default
+
+// =============================================================================
+// Request Configuration
+// =============================================================================
+
+/**
+ * Server-side request configuration for next-intl.
+ * Handles locale detection and message loading.
+ */
+export default getRequestConfig(async ({ requestLocale }) => {
+  const requestedLocale = await requestLocale
+
+  // Ensure valid locale with proper type narrowing
+  const locale: Locale = isValidLocale(requestedLocale) ? requestedLocale : routing.defaultLocale
 
   return {
     locale,
-    messages: (await import(`../messages/${locale}.json`)).default
-  };
-});
+    messages: await loadMessages(locale)
+  }
+})
