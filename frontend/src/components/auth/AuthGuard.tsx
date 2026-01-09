@@ -3,6 +3,7 @@
 import { useEffect, type ReactNode } from 'react'
 import { usePathname, useRouter } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 
 // =============================================================================
 // Constants
@@ -35,22 +36,6 @@ const isPublicRoute = (pathname: string): boolean =>
 interface AuthGuardProps {
   children: ReactNode
 }
-
-// =============================================================================
-// Loading Component
-// =============================================================================
-
-const LoadingSpinner = () => (
-  <div className="min-h-screen flex items-center justify-center bg-background">
-    <div className="flex flex-col items-center gap-4">
-      <div className="relative">
-        <div className="w-12 h-12 rounded-full border-4 border-muted" />
-        <div className="absolute top-0 left-0 w-12 h-12 rounded-full border-4 border-transparent border-t-brand animate-spin" />
-      </div>
-      <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
-    </div>
-  </div>
-)
 
 // =============================================================================
 // Component

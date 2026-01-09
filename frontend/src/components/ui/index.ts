@@ -16,6 +16,6 @@ export { CustomAudioPlayer } from './custom-audio-player'
 export { FormInput } from './form-input'
 export { Input } from './input'
 export { Label } from './label'
+export { LoadingSpinner } from './loading-spinner'
 export { default as MainLogo } from './logo'
 export { Tabs } from './tabs'
-

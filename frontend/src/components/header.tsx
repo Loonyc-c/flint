@@ -37,7 +37,7 @@ const MainHeader = () => {
           <li>
             <Link
               href="/profile"
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
             >
               {user?.profile?.photo ? (
                 <Image

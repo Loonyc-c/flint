@@ -12,7 +12,7 @@ import { useAuthenticatedUser } from '@/features/auth/context/UserContext'
 import { ProfileAvatar } from './ProfileAvatar'
 import { BasicInfoSection, BioSection } from './BasicInfoSections'
 import { InterestsSection, InterestsModal } from './InterestsSection'
-import { QuestionsSection, QuestionsModal } from './QuestionsSection'
+import { QuestionsSection } from './QuestionsSection'
 import { VoiceIntroWidget } from './VoiceIntroWidget'
 import { uploadImageToCloudinary } from '@/lib/cloudinary'
 
@@ -31,7 +31,6 @@ export const ProfilePage = () => {
   const [completeness, setCompleteness] = useState(0)
   const [isSaving, setIsSaving] = useState(false)
   const [showInterestsModal, setShowInterestsModal] = useState(false)
-  const [activeQuestionSlot, setActiveQuestionSlot] = useState<number | null>(null)
 
   // Store pending photo file for upload on save (cost-efficient: only upload when user saves)
   const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null)
@@ -46,13 +45,21 @@ export const ProfilePage = () => {
     formState: { errors }
   } = useForm<ProfileCreationFormData>({
     resolver: zodResolver(profileUpdateSchema),
+    // In ProfilePage component, update the default values:
     defaultValues: {
       nickName: '',
       age: 18,
       bio: '',
       interests: [],
       photo: '',
-      questions: []
+      voiceIntro: '', // Add default value
+      questions: Array(3)
+        .fill(null)
+        .map(() => ({
+          questionId: '',
+          audioUrl: '', // Provide empty string default
+          audioFile: undefined
+        }))
     }
   })
 
@@ -64,10 +71,28 @@ export const ProfilePage = () => {
       try {
         const data = await getProfile(user.id)
         if (data.isComplete && data.profile) {
-          reset(data.profile)
+          // Ensure that the questions array always has 3 elements
+          const questionsWithDefaults = data.profile.questions || []
+          while (questionsWithDefaults.length < 3) {
+            questionsWithDefaults.push({ questionId: '', audioUrl: '', audioFile: undefined })
+          }
+          if (questionsWithDefaults.length > 3) {
+            questionsWithDefaults.splice(3)
+          }
+          reset({ ...data.profile, questions: questionsWithDefaults })
+        } else {
+          // If profile is not complete or not present, ensure default questions are set
+          reset({
+            ...formData, // Use current formData as base
+            questions: Array(3).fill({ questionId: '', audioUrl: '', audioFile: undefined })
+          })
         }
       } catch {
-        // Profile fetch errors result in empty form display
+        // Profile fetch errors result in empty form display, ensure default questions are set
+        reset({
+          ...formData, // Use current formData as base
+          questions: Array(3).fill({ questionId: '', audioUrl: '', audioFile: undefined })
+        })
       }
     }
     fetchProfile()
@@ -89,14 +114,6 @@ export const ProfilePage = () => {
       ? current.filter(i => i !== interest)
       : [...current, interest]
     setValue('interests', updated, { shouldValidate: true })
-  }
-
-  const selectQuestion = (questionId: string) => {
-    if (activeQuestionSlot === null) return
-    const currentQuestions = [...(formData.questions || [])]
-    currentQuestions[activeQuestionSlot] = { questionId, audioUrl: '' }
-    setValue('questions', currentQuestions, { shouldValidate: true })
-    setActiveQuestionSlot(null)
   }
 
   // Cleanup preview URL on unmount or when preview changes
@@ -171,8 +188,25 @@ export const ProfilePage = () => {
         setValue('photo', finalPhotoUrl, { shouldValidate: true })
       }
 
-      // Save profile with the final photo URL
-      await updateProfile(user.id, { ...data, photo: finalPhotoUrl })
+      // Process question audios for upload
+      const questionsToSave = await Promise.all(
+        data.questions.map(async qa => {
+          const audioFile = (qa as unknown as { audioFile?: File | Blob }).audioFile
+          if (audioFile && audioFile instanceof Blob) {
+            console.log(`Uploading audio for question ${qa.questionId}... (not yet implemented)`)
+            return { questionId: qa.questionId, audioUrl: qa.audioUrl || '' }
+          }
+          return { questionId: qa.questionId, audioUrl: qa.audioUrl || '' }
+        })
+      )
+
+      // Save profile with all required fields
+      await updateProfile(user.id, {
+        ...data,
+        photo: finalPhotoUrl,
+        questions: questionsToSave,
+        voiceIntro: data.voiceIntro || '' // Ensure voiceIntro is always a string
+      })
       toast.success('Profile updated!')
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Save failed'
@@ -184,7 +218,7 @@ export const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32">
-      <main className="max-w-2xl mx-auto p-4 space-y-6 mt-4">
+      <main className="max-w-2xl mx-auto p-4 space-y-6 ">
         {/* Hidden File Input */}
         <input
           type="file"
@@ -213,7 +247,9 @@ export const ProfilePage = () => {
 
         <QuestionsSection
           questions={formData.questions || []}
-          onEditSlot={setActiveQuestionSlot}
+          onUpdateQuestions={updatedQuestions =>
+            setValue('questions', updatedQuestions, { shouldValidate: true })
+          }
           error={errors.questions?.message}
         />
 
@@ -236,13 +272,6 @@ export const ProfilePage = () => {
         onClose={() => setShowInterestsModal(false)}
         selectedInterests={formData.interests || []}
         onToggle={toggleInterest}
-      />
-
-      <QuestionsModal
-        slotIndex={activeQuestionSlot}
-        onClose={() => setActiveQuestionSlot(null)}
-        onSelect={selectQuestion}
-        selectedQuestionIds={(formData.questions || []).map(q => q.questionId)}
       />
     </div>
   )

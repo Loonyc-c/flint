@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import { toast } from 'react-toastify'
 import { requestForgetPassword } from '@/features/auth/api/auth'
 import { type ForgetPasswordFormData, forgetPasswordSchema } from '@shared/validations'

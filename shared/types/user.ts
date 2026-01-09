@@ -8,10 +8,7 @@ export type UserProfile = {
   interests: INTERESTS[]
   photo: string
   voiceIntro: string
-  questions: {
-    questionId: string
-    audioUrl: string
-  }[]
+  questions: QuestionAnswer[]
 }
 
 export type Subscription = {
@@ -42,7 +39,8 @@ export type UserContactInfo = {
 
 export interface QuestionAnswer {
   questionId: string
-  audioUrl: string
+  audioUrl?: string // Optional
+  audioFile?: Blob | string
 }
 
 export interface ProfileUpdateRequest {
@@ -52,10 +50,9 @@ export interface ProfileUpdateRequest {
   bio: string
   interests: INTERESTS[]
   photo: string
-  voiceIntro: string
+  voiceIntro?: string // Optional
   questions: QuestionAnswer[]
 }
-
 export interface ProfileResponse {
   isComplete: boolean
   profile?: ProfileUpdateRequest

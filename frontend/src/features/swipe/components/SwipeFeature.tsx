@@ -1,19 +1,13 @@
 'use client'
 
 import { type InteractionType } from '@shared/types'
-import { Loader2 } from 'lucide-react'
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
 import { useSwipe } from '../hooks/useSwipe'
 import { SwipeCard } from './SwipeCard'
 
 // =============================================================================
 // Sub-Components
 // =============================================================================
-
-const LoadingState = () => (
-  <div className="flex items-center justify-center min-h-[600px]">
-    <Loader2 className="w-12 h-12 animate-spin text-brand" />
-  </div>
-)
 
 interface EmptyStateProps {
   onRefresh: () => void
@@ -48,7 +42,7 @@ export const SwipeFeature = () => {
   }
 
   if (isLoading && !nextCandidate) {
-    return <LoadingState />
+    return <LoadingSpinner fullScreen={false} minHeight="min-h-[600px]" />
   }
 
   if (!hasMore && !isLoading) {
