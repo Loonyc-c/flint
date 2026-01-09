@@ -2,7 +2,7 @@ declare global {
   namespace Express {
     interface Request {
       authorizerContext?: {
-        payload: string
+        payload: any
         principalId: string
       }
     }

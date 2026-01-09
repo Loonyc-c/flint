@@ -5,8 +5,8 @@ export type UserProfile = {
   age: number
   gender: USER_GENDER
   bio: string
-  interest: INTERESTS[]
-  photos: string[]
+  interests: INTERESTS[]
+  photo: string
   voiceIntro: string
   questions: {
     questionId: string
@@ -14,7 +14,7 @@ export type UserProfile = {
   }[]
 }
 
-export type SubScription = {
+export type Subscription = {
   plan: SUBSCRIPTION_PLANS
   startDate?: Date
   endDate?: Date
@@ -51,7 +51,7 @@ export interface ProfileUpdateRequest {
   gender: USER_GENDER
   bio: string
   interests: INTERESTS[]
-  photos: string[]
+  photo: string
   voiceIntro: string
   questions: QuestionAnswer[]
 }

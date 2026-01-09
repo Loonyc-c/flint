@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
 
 /**
  * Root Page
@@ -11,6 +12,7 @@ import { useRouter } from 'next/navigation'
  */
 const RootPage = () => {
   const router = useRouter()
+  const t = useTranslations('HomePage')
 
   useEffect(() => {
     // Redirect to home page for authenticated users
@@ -20,13 +22,13 @@ const RootPage = () => {
 
   // Show loading state while redirecting
   return (
-    <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-black">
+    <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="flex flex-col items-center gap-4">
         <div className="relative">
-          <div className="w-12 h-12 rounded-full border-4 border-neutral-200 dark:border-neutral-800" />
+          <div className="w-12 h-12 rounded-full border-4 border-muted" />
           <div className="absolute top-0 left-0 w-12 h-12 rounded-full border-4 border-transparent border-t-brand animate-spin" />
         </div>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 animate-pulse">Loading...</p>
+        <p className="text-sm text-muted-foreground animate-pulse">{t('loading')}</p>
       </div>
     </div>
   )

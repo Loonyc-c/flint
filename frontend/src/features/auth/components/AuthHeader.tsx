@@ -1,6 +1,6 @@
 'use client'
 
-import Link from 'next/link'
+import { Link } from '@/i18n/routing'
 import Image from 'next/image'
 import { Button } from '@/components/ui/button'
 import MainLogo from '@/components/ui/logo'
@@ -10,8 +10,8 @@ const AuthHeader = () => {
     <header
       className="
         sticky top-0 z-50 w-full
-        bg-white/90 dark:bg-neutral-900/90 backdrop-blur supports-backdrop-filter:bg-white/70 dark:supports-backdrop-filter:bg-neutral-900/70
-        border-b border-neutral-200 dark:border-neutral-700
+        bg-background/90 backdrop-blur
+        border-b border-border
         px-5 py-4 flex items-center justify-between
         pt-[env(safe-area-inset-top)]
       "
@@ -32,13 +32,13 @@ const AuthHeader = () => {
           <li>
             <Link
               href="/"
-              className="text-neutral-700 dark:text-neutral-300 hover:text-brand transition-colors"
+              className="text-muted-foreground hover:text-primary transition-colors"
             >
               Home
             </Link>
           </li>
           <li>
-            <Link href="/main">
+            <Link href="/home">
               <Button className="bg-brand hover:bg-brand-400 text-white">Get Started</Button>
             </Link>
           </li>

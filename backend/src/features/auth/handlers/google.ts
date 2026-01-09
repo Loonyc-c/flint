@@ -5,7 +5,6 @@ import { ServiceException } from '@/features/error'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
 import { TranslationKey } from '@/features/localization/types'
-import { SUBSCRIPTION_PLANS } from '@/shared-types/types/enums'
 
 const handler = async (event: NormalizedEvent) => {
   const { body } = event
@@ -21,10 +20,7 @@ const handler = async (event: NormalizedEvent) => {
       firstName: user.auth.firstName,
       lastName: user.auth.lastName,
       email: user.auth.email,
-      subScription: {
-        plan: SUBSCRIPTION_PLANS.FREE,
-        isActive: false,
-      },
+      subscription: user.subscription,
     })
 
     return {

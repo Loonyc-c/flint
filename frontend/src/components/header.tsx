@@ -1,9 +1,8 @@
 import React from 'react'
 import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, Link } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
-import Link from 'next/link'
 import MainLogo from './ui/logo'
 
 const MainHeader = () => {
@@ -19,8 +18,8 @@ const MainHeader = () => {
     <header
       className="
         sticky top-0 z-50 w-full
-        bg-white/90 dark:bg-neutral-900/90 backdrop-blur
-        border-b border-neutral-200 dark:border-neutral-700
+        bg-background/90 backdrop-blur
+        border-b border-border
         px-5 py-4 flex items-center justify-between
         pt-[env(safe-area-inset-top)]
       "
@@ -43,9 +42,9 @@ const MainHeader = () => {
               href="/profile"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity"
             >
-              {user?.profile?.photos?.[1] ? (
+              {user?.profile?.photo ? (
                 <Image
-                  src={user.profile.photos[1]}
+                  src={user.profile.photo}
                   alt={user.name || 'User Profile'}
                   width={40}
                   height={40}
@@ -62,7 +61,7 @@ const MainHeader = () => {
           <li>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
               <span>Sign out</span>

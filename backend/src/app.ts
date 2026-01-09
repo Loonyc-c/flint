@@ -1,7 +1,10 @@
 import 'dotenv/config'
 import express from 'express'
 import cors from 'cors'
+import helmet from 'helmet'
 import { rateLimit } from 'express-rate-limit'
+import { Redis } from 'ioredis'
+import { RedisStore } from 'rate-limit-redis'
 import { createErrorhandler } from '@/shared/api/handler'
 import { apiErrorHandler } from '@/shared/api/error'
 import publicRouter from '@/routes/public'
@@ -11,13 +14,50 @@ const app = express()
 
 app.set('trust proxy', 1)
 
+// Security Headers
+app.use(helmet())
+
 console.log('[Express App] Initializing...')
+
+// Initialize Redis Client for Rate Limiting
+const redisClient = process.env.REDIS_URL ? new Redis(process.env.REDIS_URL) : undefined
+
+if (redisClient) {
+  console.log('[Express App] Redis connected for rate limiting')
+} else {
+  console.warn('[Express App] REDIS_URL not set, falling back to memory rate limiting (not recommended for serverless)')
+}
 
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 100, // Limit each IP to 100 requests per window
   standardHeaders: 'draft-7',
   legacyHeaders: false,
+  store: redisClient
+    ? new RedisStore({
+        sendCommand: async (...args: string[]) => {
+          const [command, ...params] = args
+          const result = await redisClient.call(command, ...params)
+          return result as any
+        },
+      })
+    : undefined,
+})
+
+const generalLimiter = rateLimit({
+  windowMs: 1 * 60 * 1000, // 1 minute
+  limit: 60, // Limit each IP to 60 requests per minute
+  standardHeaders: 'draft-7',
+  legacyHeaders: false,
+  store: redisClient
+    ? new RedisStore({
+        sendCommand: async (...args: string[]) => {
+          const [command, ...params] = args
+          const result = await redisClient.call(command, ...params)
+          return result as any
+        },
+      })
+    : undefined,
 })
 
 const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000')
@@ -29,13 +69,11 @@ console.log('[Express App] Allowed Origins:', rawOrigins)
 
 const corsOptions: cors.CorsOptions = {
   origin: (origin, callback) => {
-    console.log(`[CORS Check] Origin: '${origin}'`)
     // Allow server-to-server or same-origin (no origin header)
     if (!origin) return callback(null, true)
     const normalized = origin.replace(/\/$/, '')
     const allowed = rawOrigins.includes(normalized)
     if (allowed) {
-      console.log('[CORS Check] Allowed')
       return callback(null, true)
     }
     console.error(`[CORS Check] Blocked: '${origin}'`)
@@ -49,6 +87,7 @@ const corsOptions: cors.CorsOptions = {
 
 app.use(cors(corsOptions))
 app.use(express.json())
+app.use('/v1', generalLimiter)
 
 // Health check and API info endpoint
 app.get('/', (_req, res) => {

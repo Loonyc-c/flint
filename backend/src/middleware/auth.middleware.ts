@@ -25,7 +25,7 @@ export const authorizer = async (req: Request, _res: Response, next: NextFunctio
     }
 
     req.authorizerContext = {
-      payload: JSON.stringify(token.data),
+      payload: token.data,
       principalId: token.sub,
     }
 

@@ -10,15 +10,17 @@ import { calculateProfileCompleteness } from '@shared/lib'
 import { INTERESTS } from '@shared/types/enums'
 
 import { ProfileHeader } from './ProfileHeader'
-import { PhotoGrid } from './PhotoGrid'
+import { ProfileAvatar } from './ProfileAvatar'
 import { BasicInfoSection, BioSection } from './BasicInfoSections'
 import { InterestsSection, InterestsModal } from './InterestsSection'
 import { QuestionsSection, QuestionsModal } from './QuestionsSection'
 import { VoiceIntroWidget } from './VoiceIntroWidget'
 import { useAuthenticatedUser } from '@/features/auth/context/UserContext'
+import { useRef } from 'react'
 
 export const ProfilePage = () => {
   const { user } = useAuthenticatedUser()
+  const fileInputRef = useRef<HTMLInputElement>(null)
 
   const [completeness, setCompleteness] = useState(0)
   const [isSaving, setIsLoading] = useState(false)
@@ -39,7 +41,7 @@ export const ProfilePage = () => {
       age: 18,
       bio: '',
       interests: [],
-      photos: [],
+      photo: '',
       questions: []
     }
   })
@@ -100,12 +102,35 @@ export const ProfilePage = () => {
     }
   }
 
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      // Create a fake local URL for preview
+      // In a real app, you'd upload to S3/Cloudinary here and get a URL back
+      const objectUrl = URL.createObjectURL(file)
+      setValue('photo', objectUrl, { shouldValidate: true })
+    }
+  }
+
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32">
-      <ProfileHeader completeness={completeness} />
+      <ProfileHeader />
 
       <main className="max-w-2xl mx-auto p-4 space-y-6 mt-4">
-        <PhotoGrid photos={formData.photos || []} />
+        {/* Hidden File Input */}
+        <input 
+          type="file" 
+          ref={fileInputRef} 
+          className="hidden" 
+          accept="image/*"
+          onChange={handlePhotoUpload}
+        />
+        
+        <ProfileAvatar 
+          photo={formData.photo || ''} 
+          completeness={completeness}
+          onEdit={() => fileInputRef.current?.click()}
+        />
 
         <BasicInfoSection register={register} errors={errors} />
 

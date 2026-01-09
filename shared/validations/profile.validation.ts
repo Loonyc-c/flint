@@ -19,7 +19,7 @@ export const profileUpdateSchema = z.object({
   gender: GenderEnum,
   bio: z.string().max(500, "Bio must be under 500 characters"),
   interests: z.array(InterestEnum).min(3, "Select at least one interest"),
-  photos: z.array(z.string().url()).min(1, "Upload at least one photo"),
+  photo: z.string(),
   voiceIntro: z.string().url("Invalid voice intro URL"),
   questions: z
     .array(questionAnswerSchema)

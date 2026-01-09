@@ -18,6 +18,7 @@ export const matchService = {
   getCandidates: async (userId: string, { limit = 20 }): Promise<User[]> => {
     const userObjectId = new ObjectId(userId)
     const userCollection = await getUserCollection()
+    const interactionCollection = await getInteractionCollection()
 
     const currentUser = await userCollection.findOne({ _id: userObjectId })
     if (!currentUser?.profileCompletion || currentUser.profileCompletion < MIN_PROFILE_COMPLETION) {
@@ -25,40 +26,25 @@ export const matchService = {
     }
 
     const { lookingFor, ageRange } = currentUser.preferences ?? {}
-
     const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
+
+    // Pre-fetch interacted user IDs to optimize query
+    const interactions = await interactionCollection
+      .find({ actorId: userObjectId })
+      .project({ targetId: 1 })
+      .toArray()
+    const interactedUserIds = interactions.map((i) => i.targetId)
 
     const pipeline = [
       {
         $match: {
-          _id: { $ne: userObjectId },
+          _id: { $ne: userObjectId, $nin: interactedUserIds },
           profileCompletion: { $gte: MIN_PROFILE_COMPLETION },
           'profile.gender': lookingFor === LOOKING_FOR.ALL ? { $exists: true } : lookingFor,
           'profile.age': {
             $gte: userAge - ageRange,
             $lte: userAge + ageRange,
           },
-        },
-      },
-      {
-        $lookup: {
-          from: 'interactions',
-          let: { targetId: '$_id' },
-          pipeline: [
-            {
-              $match: {
-                $expr: {
-                  $and: [{ $eq: ['$actorId', userObjectId] }, { $eq: ['$targetId', '$$targetId'] }],
-                },
-              },
-            },
-          ],
-          as: 'existingInteractions',
-        },
-      },
-      {
-        $match: {
-          existingInteractions: { $size: 0 },
         },
       },
       { $limit: limit },

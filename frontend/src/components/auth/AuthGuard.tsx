@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { usePathname, useRouter } from 'next/navigation'
+import { usePathname, useRouter } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
 
 /**
@@ -78,14 +78,14 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
   // 2. We haven't completed auth checks/redirects (!isReady)
   if (isLoading || !isReady) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-neutral-50 dark:bg-black">
+      <div className="min-h-screen flex items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-4">
           {/* Animated loading spinner */}
           <div className="relative">
-            <div className="w-12 h-12 rounded-full border-4 border-neutral-200 dark:border-neutral-800" />
+            <div className="w-12 h-12 rounded-full border-4 border-muted" />
             <div className="absolute top-0 left-0 w-12 h-12 rounded-full border-4 border-transparent border-t-brand animate-spin" />
           </div>
-          <p className="text-sm text-neutral-500 dark:text-neutral-400 animate-pulse">Loading...</p>
+          <p className="text-sm text-muted-foreground animate-pulse">Loading...</p>
         </div>
       </div>
     )

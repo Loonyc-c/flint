@@ -19,8 +19,8 @@ export const profileService = {
         age: data.age,
         gender: data.gender,
         bio: data.bio,
-        interest: data.interests,
-        photos: data.photos,
+        interests: data.interests,
+        photo: data.photo,
         voiceIntro: data.voiceIntro,
         questions: data.questions,
       },
@@ -44,7 +44,6 @@ export const profileService = {
     }
   },
 
-  // Requirement 8: Removed debug console.log statements that were logging sensitive user data
   getProfile: async (userId: string): Promise<ProfileResponse> => {
     const userCollection = await getUserCollection()
     const user = await userCollection.findOne({ _id: new ObjectId(userId) })
@@ -64,8 +63,8 @@ export const profileService = {
       age: user.profile.age,
       gender: user.profile.gender,
       bio: user.profile.bio,
-      interests: user.profile.interest,
-      photos: user.profile.photos,
+      interests: user.profile.interests,
+      photo: user.profile.photo,
       voiceIntro: user.profile.voiceIntro,
       questions: user.profile.questions,
     }

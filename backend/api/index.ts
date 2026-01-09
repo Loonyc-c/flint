@@ -39,6 +39,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return app(req, res)
   } catch (error) {
     console.error('[Vercel Handler] CRITICAL ERROR:', error)
+    const isDev = process.env.NODE_ENV === 'development'
     const message = error instanceof Error ? error.message : 'Internal Server Error'
     const stack = error instanceof Error ? error.stack : undefined
     console.error('Serverless function error:', message, stack)
@@ -47,9 +48,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       success: false,
       error: {
         code: 500,
-        message,
+        message: isDev ? message : 'Internal Server Error',
         isReadableMessage: false,
-        debug: stack?.split('\n').slice(0, 5),
+        ...(isDev && { debug: stack?.split('\n').slice(0, 5) }),
       },
     })
   }

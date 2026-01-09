@@ -24,7 +24,7 @@ export type AuthorizerPayload = {
   firstName: string
   lastName: string
   email: string
-  subScription: {
+  subscription: {
     plan: SUBSCRIPTION_PLANS
     startDate?: Date
     enDate?: Date
@@ -146,7 +146,7 @@ export const authService: AuthService = {
           email,
           password: hashedPassword,
         },
-        subScription: {
+        subscription: {
           plan: SUBSCRIPTION_PLANS.FREE,
           isActive: true,
         },
@@ -311,7 +311,7 @@ export const authService: AuthService = {
             email,
             password: '',
           },
-          subScription: {
+          subscription: {
             plan: SUBSCRIPTION_PLANS.FREE,
             isActive: true,
           },
