@@ -1,7 +1,7 @@
 'use client'
 
 import { GoogleLogin } from '@react-oauth/google'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
 import { toast } from 'react-toastify'
 import { loginWithGoogle } from '@/features/auth/api/auth'
 import { ApiError } from '@/lib/api-client'

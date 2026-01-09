@@ -61,7 +61,12 @@ export const Tabs = ({
   tabClassName,
   contentClassName
 }: TabsProps) => {
-  const [active, setActive] = useState(propTabs[0])
+  const [active, setActive] = useState<Tab | undefined>(propTabs[0])
+
+  // Guard against empty tabs array
+  if (!active || propTabs.length === 0) {
+    return null
+  }
 
   return (
     <>

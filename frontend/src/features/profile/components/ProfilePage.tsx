@@ -9,7 +9,6 @@ import { getProfile, updateProfile } from '@/features/profile/api/profile'
 import { calculateProfileCompleteness } from '@shared/lib'
 import { type INTERESTS } from '@shared/types/enums'
 import { useAuthenticatedUser } from '@/features/auth/context/UserContext'
-import { ProfileHeader } from './ProfileHeader'
 import { ProfileAvatar } from './ProfileAvatar'
 import { BasicInfoSection, BioSection } from './BasicInfoSections'
 import { InterestsSection, InterestsModal } from './InterestsSection'
@@ -185,8 +184,6 @@ export const ProfilePage = () => {
 
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32">
-      <ProfileHeader />
-
       <main className="max-w-2xl mx-auto p-4 space-y-6 mt-4">
         {/* Hidden File Input */}
         <input
