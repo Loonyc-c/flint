@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { jwtDecode } from 'jwt-decode'
-import { User, AuthTokenPayload } from '@shared/types'
+import { type User, type AuthTokenPayload } from '@shared/types'
 
 // =============================================================================
 // Constants

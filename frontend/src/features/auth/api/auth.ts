@@ -1,14 +1,14 @@
 import { apiRequest } from '@/lib/api-client'
 import {
-  LoginRequest,
-  LoginResponse,
-  SignupRequest,
-  SignupResponse,
-  ForgetPasswordRequest,
-  ForgetPasswordResponse,
-  ResetPasswordRequest,
-  ResetPasswordResponse,
-  GoogleLoginRequest
+  type LoginRequest,
+  type LoginResponse,
+  type SignupRequest,
+  type SignupResponse,
+  type ForgetPasswordRequest,
+  type ForgetPasswordResponse,
+  type ResetPasswordRequest,
+  type ResetPasswordResponse,
+  type GoogleLoginRequest
 } from '@shared/types'
 
 // =============================================================================

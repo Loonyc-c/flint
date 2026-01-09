@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/api-client'
-import { ProfileUpdateRequest, ProfileResponse } from '@shared/types'
+import { type ProfileUpdateRequest, type ProfileResponse } from '@shared/types'
 
 // =============================================================================
 // API Functions

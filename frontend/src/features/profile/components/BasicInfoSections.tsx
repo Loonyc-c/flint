@@ -1,7 +1,7 @@
 'use client'
 
-import { UseFormRegister, FieldErrors } from 'react-hook-form'
-import { ProfileCreationFormData } from '@shared/validations'
+import { type UseFormRegister, type FieldErrors } from 'react-hook-form'
+import { type ProfileCreationFormData } from '@shared/validations'
 import { FormInput } from '@/components/ui/form-input'
 import { Label } from '@/components/ui/label'
 import { LabelInputContainer } from '@/utils'

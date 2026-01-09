@@ -1,6 +1,6 @@
 'use client'
 
-import { InteractionType } from '@shared/types'
+import { type InteractionType } from '@shared/types'
 import { Loader2 } from 'lucide-react'
 import { useSwipe } from '../hooks/useSwipe'
 import { SwipeCard } from './SwipeCard'

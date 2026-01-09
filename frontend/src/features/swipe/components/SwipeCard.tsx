@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { motion, AnimatePresence, useAnimation, useMotionValue } from 'framer-motion'
 import { Heart, X } from 'lucide-react'
 import Image from 'next/image'
-import { User, InteractionType } from '@shared/types'
+import { type User, InteractionType } from '@shared/types'
 import { CustomAudioPlayer } from '@/components/ui/custom-audio-player'
 
 // =============================================================================

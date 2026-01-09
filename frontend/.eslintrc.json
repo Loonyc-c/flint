@@ -20,5 +20,5 @@
     "prefer-arrow-callback": "warn",
     "no-console": ["warn", { "allow": ["warn", "error"] }]
   },
-  "ignorePatterns": ["node_modules/", ".next/", "dist/"]
+  "ignorePatterns": ["node_modules/", ".next/", "dist/", "next-env.d.ts"]
 }

@@ -1,5 +1,5 @@
 import { useState, useCallback, useEffect } from 'react'
-import { User, InteractionType } from '@shared/types'
+import { type User, type InteractionType } from '@shared/types'
 import { getCandidates, swipe } from '../api/swipe'
 import { useUser } from '@/features/auth/context/UserContext'
 

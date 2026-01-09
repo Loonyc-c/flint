@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from 'react'
-import { FieldError } from 'react-hook-form'
+import { type FieldError } from 'react-hook-form'
 import { Label } from './label'
 import { Input } from './input'
 import { LabelInputContainer } from '@/utils'

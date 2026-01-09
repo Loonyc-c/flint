@@ -1,5 +1,5 @@
 import { apiRequest } from '@/lib/api-client'
-import { User, SwipeRequest, SwipeResponse, MatchWithUser } from '@shared/types'
+import { type User, type SwipeRequest, type SwipeResponse, type MatchWithUser } from '@shared/types'
 
 // =============================================================================
 // API Functions
