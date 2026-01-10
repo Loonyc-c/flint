@@ -188,10 +188,16 @@ export class AgoraClient {
       // Check for existing remote users
       const remoteUsers = this.client!.remoteUsers
 
-      remoteUsers.forEach((user) => {
+      for (const user of remoteUsers) {
         this.remoteUsers.set(user.uid as number, user)
         this.eventHandlers.onUserJoined?.(user.uid as number)
-      })
+
+        // If user already has tracks, they won't fire user-published again
+        // We should subscribe to them
+        if (user.hasAudio || user.hasVideo) {
+          this.subscribeToExistingUser(user)
+        }
+      }
 
       return {
         success: true,
@@ -201,6 +207,26 @@ export class AgoraClient {
     } catch (error) {
       console.error('[Agora] Error joining channel:', error)
       throw error
+    }
+  }
+
+  /**
+   * Subscribe to an existing user's tracks
+   */
+  private async subscribeToExistingUser(user: IAgoraRTCRemoteUser): Promise<void> {
+    try {
+      if (user.hasAudio) {
+        await this.client?.subscribe(user, 'audio')
+        user.audioTrack?.play()
+      }
+      if (user.hasVideo) {
+        await this.client?.subscribe(user, 'video')
+        if (user.videoTrack) {
+          this.eventHandlers.onRemoteVideoAdded?.(user.uid as number, user.videoTrack)
+        }
+      }
+    } catch (error) {
+      console.error('[Agora] Error subscribing to existing user:', user.uid, error)
     }
   }
 

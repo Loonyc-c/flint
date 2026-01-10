@@ -61,15 +61,12 @@ const VideoPlayer = ({
       {/* Video Container */}
       <div
         ref={containerRef}
-        className={cn(
-          "w-full h-full",
-          (!track || !isCameraEnabled) && "hidden"
-        )}
+        className="w-full h-full"
       />
 
       {/* Placeholder when camera is off */}
       {(!track || !isCameraEnabled) && (
-        <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
+        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center bg-gradient-to-br from-neutral-800 to-neutral-900">
           <div className="w-24 h-24 rounded-full bg-neutral-700 flex items-center justify-center mb-4">
             {isCameraEnabled ? (
               <User className="w-12 h-12 text-neutral-500" />
@@ -84,7 +81,7 @@ const VideoPlayer = ({
       )}
 
       {/* Name Label */}
-      <div className="absolute bottom-4 left-4 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full">
+      <div className="absolute bottom-4 left-4 z-20 px-3 py-1.5 bg-black/50 backdrop-blur-sm rounded-full">
         <p className="text-white text-sm font-medium">
           {isLocal ? 'You' : userName}
         </p>
@@ -92,7 +89,7 @@ const VideoPlayer = ({
 
       {/* Local indicator */}
       {isLocal && (
-        <div className="absolute top-4 right-4 px-2 py-1 bg-brand/80 backdrop-blur-sm rounded-full">
+        <div className="absolute top-4 right-4 z-20 px-2 py-1 bg-brand/80 backdrop-blur-sm rounded-full">
           <p className="text-white text-xs font-bold">LIVE</p>
         </div>
       )}
@@ -115,7 +112,7 @@ export const VideoGrid = ({
   const hasRemote = remoteTracksArray.length > 0
 
   return (
-    <div className="flex-1 p-4 relative">
+    <div className="flex-1 h-full p-4 relative">
       {/* Main Layout */}
       {hasRemote ? (
         // Two-person call layout

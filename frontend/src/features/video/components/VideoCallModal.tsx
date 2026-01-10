@@ -122,7 +122,7 @@ export const VideoCallModal = ({
           </motion.div>
 
           {/* Video Grid */}
-          <div className="h-full pt-16 pb-32">
+          <div className="h-full pt-16 pb-32 flex flex-col">
             {error ? (
               <div className="h-full flex flex-col items-center justify-center text-center p-8">
                 <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
