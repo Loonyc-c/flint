@@ -47,10 +47,6 @@ export const StagedAudioCallModal = ({
   onClose,
   onCallEnded,
 }: StagedAudioCallModalProps) => {
-  // #region agent log
-  console.log('[DEBUG-MODAL] StagedAudioCallModal render, remainingTime:', remainingTime, 'isOpen:', isOpen)
-  // #endregion
-  
   const {
     isConnected,
     isConnecting,

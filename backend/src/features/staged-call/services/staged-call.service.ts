@@ -169,7 +169,7 @@ export const stagedCallService = {
   getNextStage: (currentStage: MatchStage): MatchStage => {
     const stageMap: Record<MatchStage, MatchStage> = {
       'fresh': 'stage1_complete',
-      'stage1_complete': 'stage2_complete',
+      'stage1_complete': 'unlocked', // Video call (Stage 2) completion leads to Unlocked
       'stage2_complete': 'unlocked',
       'unlocked': 'unlocked',
     }
