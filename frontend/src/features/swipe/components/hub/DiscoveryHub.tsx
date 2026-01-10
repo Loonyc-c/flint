@@ -9,7 +9,7 @@ import { SwipeFeature } from '@/features/swipe/components/SwipeFeature'
 import { MatchesList } from './MatchesList'
 import { useMatches } from '@/features/swipe/hooks/useMatches'
 import { useLikes } from '@/features/swipe/hooks/useLikes'
-import { useVideoCall, useStagedCall } from '@/features/realtime'
+import { useVideoCall } from '@/features/realtime'
 import { VideoCallModal, IncomingCallModal, StagedCallProvider } from '@/features/video'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
@@ -66,24 +66,10 @@ export const DiscoveryHub = () => {
     },
   })
 
-  // Staged call hook for stage 1/2 progression
-  const {
-    incomingCall: incomingStagedCall,
-    initiateCall: initiateStagedCall,
-  } = useStagedCall({
-    onCallAccepted: () => {
-      // #region agent log
-      console.log('[DEBUG-STAGED] Staged call accepted')
-      // #endregion
-    },
-    onCallEnded: () => {
-      // #region agent log
-      console.log('[DEBUG-STAGED] Staged call ended')
-      // #endregion
-    },
-  })
-
   const handleSelectMatch = (matchId: string) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DiscoveryHub.tsx:87',message:'handleSelectMatch called',data:{matchId,currentActiveView:activeView},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     setActiveMatchId(matchId)
     setActiveView('chat')
   }
@@ -107,24 +93,6 @@ export const DiscoveryHub = () => {
     
     initiateCall(matchId, calleeId)
   }, [activeConversation, initiateCall])
-
-  // Handle staged audio call (Stage 1) from chat
-  const handleStagedAudioCall = useCallback(() => {
-    if (!activeConversation) return
-    
-    // #region agent log
-    console.log('[DEBUG-STAGED] Initiating staged call', { 
-      matchId: activeConversation.matchId, 
-      calleeId: activeConversation.otherUser.id,
-      stage: 1 
-    })
-    // #endregion
-    
-    const matchId = activeConversation.matchId
-    const calleeId = activeConversation.otherUser.id
-    
-    initiateStagedCall(matchId, calleeId, 1)
-  }, [activeConversation, initiateStagedCall])
 
   // Handle accepting incoming call
   const handleAcceptCall = useCallback(() => {
@@ -295,7 +263,6 @@ export const DiscoveryHub = () => {
                       conversation={activeConversation} 
                       onClose={handleCloseView}
                       onVideoCall={handleVideoCall}
-                      onStagedAudioCall={handleStagedAudioCall}
                     />
                   </StagedCallProvider>
                 </motion.div>

@@ -8,6 +8,7 @@ import { getMessages } from '@/features/chat/api/chat'
 import { useUser } from '@/features/auth/context/UserContext'
 import { useChat, type RealtimeMessage } from '@/features/realtime'
 import { useSocket } from '@/features/realtime'
+import { useStagedCallContext } from '@/features/video'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-toastify'
 import Image from 'next/image'
@@ -20,7 +21,6 @@ interface ChatThreadProps {
   conversation: ChatConversation
   onClose: () => void
   onVideoCall?: () => void
-  onStagedAudioCall?: () => void
   matchStage?: MatchStage
 }
 
@@ -28,12 +28,25 @@ interface ChatThreadProps {
 // Component
 // =============================================================================
 
-export const ChatThread = ({ conversation, onClose, onVideoCall, onStagedAudioCall, matchStage }: ChatThreadProps) => {
+export const ChatThread = ({ conversation, onClose, onVideoCall, matchStage }: ChatThreadProps) => {
   const stage = matchStage || conversation.stage || 'fresh'
   const canMakeVideoCalls = stage === 'unlocked'
   const canMakeAudioCalls = stage === 'fresh' || stage === 'unlocked'
   const { user } = useUser()
   const { isConnected } = useSocket()
+  const { initiateCall: initiateStagedCall } = useStagedCallContext()
+
+  // Handle staged audio call initiation (Stage 1)
+  const handleStagedAudioCall = useCallback(() => {
+    // #region agent log
+    console.log('[DEBUG-STAGED] ChatThread: initiating staged call', {
+      matchId: conversation.matchId,
+      calleeId: conversation.otherUser.id,
+      stage: 1
+    })
+    // #endregion
+    initiateStagedCall(conversation.matchId, conversation.otherUser.id, 1)
+  }, [conversation.matchId, conversation.otherUser.id, initiateStagedCall])
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -178,7 +191,7 @@ export const ChatThread = ({ conversation, onClose, onVideoCall, onStagedAudioCa
            {/* Audio call button - always visible for fresh or unlocked */}
            {canMakeAudioCalls && (
              <button 
-               onClick={stage === 'unlocked' ? onVideoCall : onStagedAudioCall}
+               onClick={stage === 'unlocked' ? onVideoCall : handleStagedAudioCall}
                className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
                title={stage === 'fresh' ? 'Start Stage 1 Audio Call' : 'Audio Call'}
              >

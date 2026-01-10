@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, PhoneOff, Mic, Video } from 'lucide-react'
 import { STAGED_CALL_CONSTANTS } from '@shared/types'
@@ -34,6 +34,80 @@ export const IncomingStagedCallModal = ({
   onDecline,
 }: IncomingStagedCallModalProps) => {
   const [remainingTime, setRemainingTime] = useState<number>(STAGED_CALL_CONSTANTS.RING_TIMEOUT)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const intervalRef = useRef<NodeJS.Timeout | null>(null)
+
+  // Play ringtone when call comes in
+  useEffect(() => {
+    if (!isOpen) {
+      // Clean up audio when modal closes
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+        intervalRef.current = null
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+      return
+    }
+
+    // Create ringtone using Web Audio API
+    const playRingtone = () => {
+      try {
+        if (!audioContextRef.current) {
+          audioContextRef.current = new AudioContext()
+        }
+        const ctx = audioContextRef.current
+
+        const playRingPattern = () => {
+          // Ring pattern: two short beeps
+          const playBeep = (delay: number, frequency: number, duration: number) => {
+            const osc = ctx.createOscillator()
+            const gain = ctx.createGain()
+            
+            osc.connect(gain)
+            gain.connect(ctx.destination)
+            
+            osc.frequency.value = frequency
+            osc.type = 'sine'
+            gain.gain.value = 0
+            
+            const startTime = ctx.currentTime + delay
+            gain.gain.setValueAtTime(0.15, startTime)
+            gain.gain.exponentialRampToValueAtTime(0.001, startTime + duration)
+            
+            osc.start(startTime)
+            osc.stop(startTime + duration + 0.1)
+          }
+
+          // Classic phone ring pattern: two tones
+          playBeep(0, 440, 0.15)
+          playBeep(0.2, 480, 0.15)
+          playBeep(0.5, 440, 0.15)
+          playBeep(0.7, 480, 0.15)
+        }
+
+        playRingPattern()
+        // Repeat every 2 seconds
+        intervalRef.current = setInterval(playRingPattern, 2000)
+      } catch (e) {
+        console.warn('Could not play ringtone:', e)
+      }
+    }
+
+    playRingtone()
+
+    return () => {
+      if (intervalRef.current) {
+        clearInterval(intervalRef.current)
+      }
+      if (audioContextRef.current) {
+        audioContextRef.current.close()
+        audioContextRef.current = null
+      }
+    }
+  }, [isOpen])
 
   // Countdown for ring timeout
   useEffect(() => {

@@ -155,6 +155,9 @@ export const SwipeFeature = () => {
     const result = await handleSwipe(type);
 
     if (result && result.isMatch) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'SwipeFeature.tsx:157',message:'Match detected - showing modal',data:{matchId:result.matchId,matchedUserId:currentCandidate?.id,isMatch:result.isMatch},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H2'})}).catch(()=>{});
+      // #endregion
       setMatchedUser(currentCandidate);
       setShowMatchModal(true);
     }

@@ -146,6 +146,9 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     }
 
     const handlePromptResult = (data: StagePromptResult) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStagedCall.ts:148',message:'handlePromptResult - setting status to idle',data:{bothAccepted:data.bothAccepted,nextStage:data.nextStage},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+      // #endregion
       setStagePrompt(null)
       setCallStatus('idle')
       options.onPromptResult?.(data)
@@ -191,7 +194,13 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
   }, [socket, options, startTimer])
 
   const initiateCall = useCallback((matchId: string, calleeId: string, stage: 1 | 2) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStagedCall.ts:194',message:'initiateCall called',data:{matchId,calleeId,stage,socketExists:!!socket,isConnected,callStatus,willEmit:!!(socket && isConnected && callStatus === 'idle')},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+    // #endregion
     if (socket && isConnected && callStatus === 'idle') {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'useStagedCall.ts:199',message:'Emitting staged-call-initiate',data:{matchId,calleeId,stage},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H9'})}).catch(()=>{});
+      // #endregion
       socket.emit('staged-call-initiate', { matchId, calleeId, stage })
     }
   }, [socket, isConnected, callStatus])

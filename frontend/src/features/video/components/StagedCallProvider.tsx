@@ -1,10 +1,28 @@
 'use client'
 
-import { useState, useCallback, type ReactNode } from 'react'
+import { useState, useCallback, createContext, useContext, type ReactNode } from 'react'
 import { useStagedCall } from '@/features/realtime'
-import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal, IncomingStagedCallModal } from './staged'
+import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal, IncomingStagedCallModal, OutgoingStagedCallModal } from './staged'
 import { VideoCallModal } from './VideoCallModal'
 import { toast } from 'react-toastify'
+
+// =============================================================================
+// Context
+// =============================================================================
+
+interface StagedCallContextValue {
+  initiateCall: (matchId: string, calleeId: string, stage: 1 | 2) => void
+}
+
+const StagedCallContext = createContext<StagedCallContextValue | null>(null)
+
+export const useStagedCallContext = () => {
+  const context = useContext(StagedCallContext)
+  if (!context) {
+    throw new Error('useStagedCallContext must be used within a StagedCallProvider')
+  }
+  return context
+}
 
 // =============================================================================
 // Types
@@ -49,22 +67,42 @@ export const StagedCallProvider = ({
     respondToPrompt,
   } = useStagedCall({
     onCallAccepted: (data) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:51',message:'onCallAccepted triggered',data:{stage:data.stage,matchId:data.matchId,channelName:data.channelName},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+      // #endregion
       if (data.stage === 1) {
         setShowAudioModal(true)
       } else {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:58',message:'Setting showVideoModal to true for stage 2',data:{stage:data.stage},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
+        // #endregion
         setShowVideoModal(true)
       }
     },
     onCallEnded: () => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:66',message:'onCallEnded - closing modals',data:{showAudioModal,showVideoModal},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
+      // #endregion
       setShowAudioModal(false)
       setShowVideoModal(false)
     },
     onPromptResult: (data) => {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:74',message:'onPromptResult received',data:{bothAccepted:data.bothAccepted,nextStage:data.nextStage,callStatus},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+      // #endregion
       if (data.bothAccepted) {
         toast.success(`Moving to Stage ${data.nextStage}!`)
         if (data.nextStage === 2) {
+          // #region agent log
+          fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:81',message:'About to initiateCall for stage 2',data:{matchId,otherUserId,callStatus},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+          // #endregion
           // Auto-start stage 2 video call
-          setTimeout(() => initiateCall(matchId, otherUserId, 2), 1000)
+          setTimeout(() => {
+            // #region agent log
+            fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:87',message:'Calling initiateCall for stage 2 after timeout',data:{matchId,otherUserId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+            // #endregion
+            initiateCall(matchId, otherUserId, 2)
+          }, 1000)
         }
         onStageComplete?.(data.nextStage === 2 ? 'stage1_complete' : data.nextStage === 3 ? 'stage2_complete' : 'unlocked')
       } else {
@@ -90,6 +128,14 @@ export const StagedCallProvider = ({
       declineCall(incomingCall.matchId)
     }
   }, [declineCall, incomingCall])
+
+  // Cancel outgoing call
+  const handleCancelOutgoingCall = useCallback(() => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:98',message:'Cancelling outgoing call',data:{matchId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H-UI'})}).catch(()=>{});
+    // #endregion
+    endCall(matchId)
+  }, [endCall, matchId])
 
   // End active call (notifies other party via socket)
   const handleEndStagedCall = useCallback(() => {
@@ -118,14 +164,30 @@ export const StagedCallProvider = ({
     setShowContactModal(true)
   }
 
+  // Create context value with initiateCall exposed
+  const contextValue: StagedCallContextValue = {
+    initiateCall,
+  }
+
   return (
-    <>
+    <StagedCallContext.Provider value={contextValue}>
       {children}
 
-      {/* Incoming Call Modal */}
+      {/* Outgoing Call Modal (Caller Side) */}
+      <OutgoingStagedCallModal
+        isOpen={callStatus === 'calling' && !!currentCall}
+        calleeName={otherUserName}
+        calleeAvatar={otherUserAvatar}
+        stage={currentCall?.stage || 1}
+        callType={currentCall?.stage === 1 ? 'audio' : 'video'}
+        onCancel={handleCancelOutgoingCall}
+      />
+
+      {/* Incoming Call Modal (Receiver Side) */}
       <IncomingStagedCallModal
         isOpen={!!incomingCall && callStatus === 'ringing'}
         callerName={incomingCall?.callerName || ''}
+        callerAvatar={otherUserAvatar}
         stage={incomingCall?.stage || 1}
         callType={incomingCall?.callType || 'audio'}
         onAccept={handleAcceptCall}
@@ -145,6 +207,12 @@ export const StagedCallProvider = ({
       />
 
       {/* Stage 2 Video Call Modal */}
+      {(() => {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:148',message:'Evaluating video modal render condition',data:{showVideoModal,currentCallStage:currentCall?.stage,currentCallChannel:currentCall?.channelName,shouldRender:showVideoModal && currentCall?.stage === 2},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H6'})}).catch(()=>{});
+        // #endregion
+        return null;
+      })()}
       {showVideoModal && currentCall?.stage === 2 && (
         <VideoCallModal
           isOpen={true}
@@ -174,7 +242,7 @@ export const StagedCallProvider = ({
           onClose={() => setShowContactModal(false)}
         />
       )}
-    </>
+    </StagedCallContext.Provider>
   )
 }
 
