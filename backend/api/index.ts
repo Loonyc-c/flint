@@ -5,9 +5,9 @@ const basePath = path.join(__dirname, '..')
 
 // Try to use module-alias, but fall back to tsconfig-paths only if it fails
 // (module-alias may fail in Vercel if package.json isn't in expected location)
-let moduleAlias: any
 try {
-  moduleAlias = require('module-alias')
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const moduleAlias = require('module-alias') as { addAlias: (alias: string, path: string) => void }
   moduleAlias.addAlias('@', path.join(basePath, 'src'))
   moduleAlias.addAlias('@shared', path.join(basePath, 'src/shared-types'))
 } catch (error) {

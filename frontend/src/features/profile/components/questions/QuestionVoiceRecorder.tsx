@@ -3,7 +3,7 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Mic, Square, Play, Trash2, CheckCircle, PauseCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { motion, AnimatePresence } from 'framer-motion'
+import { motion } from 'framer-motion'
 
 interface QuestionVoiceRecorderProps {
   questionText: string

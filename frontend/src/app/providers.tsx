@@ -6,6 +6,7 @@ import { ToastContainer } from 'react-toastify'
 import { ThemeProvider, useTheme } from 'next-themes'
 import 'react-toastify/dist/ReactToastify.css'
 import { UserProvider } from '@/features/auth/context/UserContext'
+import { SocketProvider } from '@/features/realtime'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { HeaderWrapper } from '@/components/HeaderWrapper'
 
@@ -62,11 +63,13 @@ const AuthProviders = ({ children }: AuthProvidersProps) => {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <UserProvider>
-        <AuthGuard>
-          <HeaderWrapper />
-          {children}
-        </AuthGuard>
-        <ThemedToastContainer />
+        <SocketProvider>
+          <AuthGuard>
+            <HeaderWrapper />
+            {children}
+          </AuthGuard>
+          <ThemedToastContainer />
+        </SocketProvider>
       </UserProvider>
     </GoogleOAuthProvider>
   )

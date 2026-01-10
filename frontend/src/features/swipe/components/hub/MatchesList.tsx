@@ -1,7 +1,7 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Heart, MessageCircle, Sparkles } from 'lucide-react'
+import { Heart, MessageCircle } from 'lucide-react'
 import { type ChatConversation } from '@shared/types'
 import Image from 'next/image'
 

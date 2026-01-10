@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { MessageSquare, Heart, ArrowLeft, Sparkles, Lock } from 'lucide-react'
 import { Sidebar } from './Sidebar'
@@ -9,8 +9,11 @@ import { SwipeFeature } from '@/features/swipe/components/SwipeFeature'
 import { MatchesList } from './MatchesList'
 import { useMatches } from '@/features/swipe/hooks/useMatches'
 import { useLikes } from '@/features/swipe/hooks/useLikes'
+import { useVideoCall } from '@/features/realtime'
+import { VideoCallModal, IncomingCallModal } from '@/features/video'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
+import { toast } from 'react-toastify'
 
 // =============================================================================
 // Component
@@ -22,12 +25,46 @@ import { useTranslations } from 'next-intl'
  */
 export const DiscoveryHub = () => {
   const t = useTranslations('chat')
-  const tCommon = useTranslations('common')
   
   const { matches, isLoading: isLoadingMatches, refreshMatches } = useMatches()
-  const { likes, likeCount, isLoading: isLoadingLikes, refreshLikes } = useLikes()
+  const { likeCount, isLoading: isLoadingLikes, refreshLikes } = useLikes()
   const [activeView, setActiveView] = useState<'swipe' | 'chat' | 'matches' | 'likes' | 'messages'>('swipe')
   const [activeMatchId, setActiveMatchId] = useState<string | null>(null)
+  
+  // Video call state
+  const [isVideoCallOpen, setIsVideoCallOpen] = useState(false)
+  const [videoCallChannel, setVideoCallChannel] = useState<string | null>(null)
+  const [videoCallMatchId, setVideoCallMatchId] = useState<string | null>(null)
+
+  // Video call hook for signaling
+  const {
+    incomingCall,
+    initiateCall,
+    acceptCall,
+    declineCall,
+    endCall,
+  } = useVideoCall({
+    onCallAccepted: (data) => {
+      setVideoCallChannel(data.channelName)
+      setVideoCallMatchId(data.matchId)
+      setIsVideoCallOpen(true)
+    },
+    onCallDeclined: () => {
+      toast.info('Call declined')
+      setVideoCallChannel(null)
+      setVideoCallMatchId(null)
+    },
+    onCallEnded: () => {
+      setIsVideoCallOpen(false)
+      setVideoCallChannel(null)
+      setVideoCallMatchId(null)
+    },
+    onCallTimeout: () => {
+      toast.info('Call not answered')
+      setVideoCallChannel(null)
+      setVideoCallMatchId(null)
+    },
+  })
 
   const handleSelectMatch = (matchId: string) => {
     setActiveMatchId(matchId)
@@ -41,7 +78,49 @@ export const DiscoveryHub = () => {
     refreshLikes()
   }
 
+  // Must be declared before callbacks that use it
   const activeConversation = matches.find(m => m.matchId === activeMatchId)
+
+  // Handle video call from chat
+  const handleVideoCall = useCallback(() => {
+    if (!activeConversation) return
+    
+    const matchId = activeConversation.matchId
+    const calleeId = activeConversation.otherUser.id
+    
+    initiateCall(matchId, calleeId)
+  }, [activeConversation, initiateCall])
+
+  // Handle accepting incoming call
+  const handleAcceptCall = useCallback(() => {
+    if (!incomingCall) return
+    
+    acceptCall(incomingCall.matchId)
+    setVideoCallChannel(incomingCall.channelName)
+    setVideoCallMatchId(incomingCall.matchId)
+    setIsVideoCallOpen(true)
+  }, [incomingCall, acceptCall])
+
+  // Handle declining incoming call
+  const handleDeclineCall = useCallback(() => {
+    if (!incomingCall) return
+    declineCall(incomingCall.matchId)
+  }, [incomingCall, declineCall])
+
+  // Handle ending video call
+  const handleEndVideoCall = useCallback(() => {
+    if (videoCallMatchId) {
+      endCall(videoCallMatchId)
+    }
+    setIsVideoCallOpen(false)
+    setVideoCallChannel(null)
+    setVideoCallMatchId(null)
+  }, [videoCallMatchId, endCall])
+  
+  // Find caller info for incoming call
+  const incomingCallMatch = incomingCall 
+    ? matches.find(m => m.matchId === incomingCall.matchId)
+    : null
 
   const matchCount = matches.length
   const hiddenCount = 0
@@ -167,7 +246,8 @@ export const DiscoveryHub = () => {
                 >
                   <ChatThread 
                     conversation={activeConversation} 
-                    onClose={handleCloseView} 
+                    onClose={handleCloseView}
+                    onVideoCall={handleVideoCall}
                   />
                 </motion.div>
               )}
@@ -318,6 +398,27 @@ export const DiscoveryHub = () => {
           </main>
         </div>
       </div>
+
+      {/* Incoming Call Modal */}
+      <IncomingCallModal
+        isOpen={!!incomingCall}
+        callerName={incomingCall?.callerName || incomingCallMatch?.otherUser.name || 'Someone'}
+        callerAvatar={incomingCallMatch?.otherUser.avatar}
+        onAccept={handleAcceptCall}
+        onDecline={handleDeclineCall}
+      />
+
+      {/* Video Call Modal */}
+      {videoCallChannel && videoCallMatchId && (
+        <VideoCallModal
+          isOpen={isVideoCallOpen}
+          channelName={videoCallChannel}
+          localUserName="You"
+          remoteUserName={activeConversation?.otherUser.name || 'Partner'}
+          onClose={handleEndVideoCall}
+          onCallEnded={handleEndVideoCall}
+        />
+      )}
     </div>
   )
 }

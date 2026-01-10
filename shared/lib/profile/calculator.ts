@@ -1,4 +1,14 @@
-import { ProfileUpdateRequest } from '../../types/user'
+import type { ProfileUpdateRequest } from '../../types/user'
+
+interface ProfileForCalculation extends Partial<ProfileUpdateRequest> {
+  audioFile?: unknown
+}
+
+interface QuestionForCalculation {
+  questionId?: string
+  audioUrl?: string
+  audioFile?: unknown
+}
 
 /**
 
@@ -6,7 +16,7 @@ import { ProfileUpdateRequest } from '../../types/user'
 
  */
 
-export const calculateProfileCompleteness = (profile: any): number => {
+export const calculateProfileCompleteness = (profile: ProfileForCalculation): number => {
 
   let score = 0
 
@@ -38,7 +48,7 @@ export const calculateProfileCompleteness = (profile: any): number => {
 
   if (profile.questions && Array.isArray(profile.questions)) {
 
-    const answeredCount = profile.questions.filter((q: any) => q.questionId && (q.audioUrl || q.audioFile)).length
+    const answeredCount = profile.questions.filter((q: QuestionForCalculation) => q.questionId && (q.audioUrl || q.audioFile)).length
 
     score += Math.min(answeredCount, 3) * 5
 

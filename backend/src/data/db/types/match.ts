@@ -1,5 +1,5 @@
 // Requirement 11: Standardized import to use @shared/types for consistency
-import { BaseCollection } from '@shared/types'
+import { BaseCollection, MatchStage } from '@shared/types'
 import { WithId } from 'mongodb'
 
 export type Match = WithId<DbMatch>
@@ -20,4 +20,7 @@ export type DbMatch = BaseCollection & {
   lastMessage?: MatchLastMessage
   unreadCounts?: Record<string, number> // UserID -> Count map
   currentTurn?: string // UserID of whose turn it is
+  // Staged calling fields
+  stage: MatchStage // 'fresh' | 'stage1_complete' | 'stage2_complete' | 'unlocked'
+  contactExchangedAt?: Date // When stage 3 contact exchange occurred
 }

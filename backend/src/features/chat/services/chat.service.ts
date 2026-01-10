@@ -2,7 +2,6 @@ import { getMatchCollection, getMessageCollection } from '@/data/db/collection'
 import { DbMessage } from '@/data/db/types/message'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
-import { Message } from '@shared/types'
 import { ObjectId } from 'mongodb'
 
 // =============================================================================
@@ -39,7 +38,7 @@ export const chatService = {
 
     if (!match) {
       throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
-        message: 'You are not part of this match',
+        message: 'err.auth.permission_denied',
         isReadableMessage: true,
       })
     }
@@ -80,7 +79,7 @@ export const chatService = {
 
     if (!match) {
       throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
-        message: 'You are not part of this match',
+        message: 'err.auth.permission_denied',
         isReadableMessage: true,
       })
     }
@@ -152,7 +151,7 @@ export const chatService = {
 
     if (!match) {
       throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
-        message: 'You are not part of this match',
+        message: 'err.auth.permission_denied',
         isReadableMessage: true,
       })
     }

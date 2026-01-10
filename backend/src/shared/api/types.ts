@@ -11,7 +11,7 @@ export interface NormalizedEvent<T = unknown> {
   httpMethod: string
   headers: Record<string, string>
   authorizerContext?: {
-    payload: any
+    payload: Record<string, unknown>
     principalId: string
   }
   query: QueryParams

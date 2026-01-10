@@ -28,6 +28,15 @@ if (redisClient) {
   console.warn('[Express App] REDIS_URL not set, falling back to memory rate limiting (not recommended for serverless)')
 }
 
+// Create sendCommand function for RedisStore
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const createSendCommand = (client: Redis): any => {
+  return async (...args: string[]) => {
+    const [command, ...params] = args
+    return await client.call(command, ...params)
+  }
+}
+
 const authLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   limit: 100, // Limit each IP to 100 requests per window
@@ -35,11 +44,7 @@ const authLimiter = rateLimit({
   legacyHeaders: false,
   store: redisClient
     ? new RedisStore({
-        sendCommand: async (...args: string[]) => {
-          const [command, ...params] = args
-          const result = await redisClient.call(command, ...params)
-          return result as any
-        },
+        sendCommand: createSendCommand(redisClient),
       })
     : undefined,
 })
@@ -51,11 +56,7 @@ const generalLimiter = rateLimit({
   legacyHeaders: false,
   store: redisClient
     ? new RedisStore({
-        sendCommand: async (...args: string[]) => {
-          const [command, ...params] = args
-          const result = await redisClient.call(command, ...params)
-          return result as any
-        },
+        sendCommand: createSendCommand(redisClient),
       })
     : undefined,
 })

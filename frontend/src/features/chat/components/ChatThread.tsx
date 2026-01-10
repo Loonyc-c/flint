@@ -1,11 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
-import { motion } from 'framer-motion'
-import { Send, ArrowLeft, MoreVertical, Phone } from 'lucide-react'
-import { type ChatConversation, type Message } from '@shared/types'
-import { getMessages, sendMessage } from '@/features/chat/api/chat'
+import { useState, useEffect, useRef, useCallback } from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Send, ArrowLeft, MoreVertical, Phone, Video } from 'lucide-react'
+import { type ChatConversation, type Message, type MatchStage } from '@shared/types'
+import { getMessages } from '@/features/chat/api/chat'
 import { useUser } from '@/features/auth/context/UserContext'
+import { useChat, type RealtimeMessage } from '@/features/realtime'
+import { useSocket } from '@/features/realtime'
 import { cn } from '@/lib/utils'
 import { toast } from 'react-toastify'
 import Image from 'next/image'
@@ -17,27 +19,59 @@ import Image from 'next/image'
 interface ChatThreadProps {
   conversation: ChatConversation
   onClose: () => void
+  onVideoCall?: () => void
+  onStagedAudioCall?: () => void
+  matchStage?: MatchStage
 }
 
 // =============================================================================
 // Component
 // =============================================================================
 
-export const ChatThread = ({ conversation, onClose }: ChatThreadProps) => {
+export const ChatThread = ({ conversation, onClose, onVideoCall, onStagedAudioCall, matchStage }: ChatThreadProps) => {
+  const stage = matchStage || conversation.stage || 'fresh'
+  const canMakeVideoCalls = stage === 'unlocked'
+  const canMakeAudioCalls = stage === 'fresh' || stage === 'unlocked'
   const { user } = useUser()
+  const { isConnected } = useSocket()
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
   const [isSending, setIsSending] = useState(false)
   const messagesEndRef = useRef<HTMLDivElement>(null)
+  const inputRef = useRef<HTMLInputElement>(null)
 
-  // Fetch Messages
+  // Handle new real-time message
+  const handleNewMessage = useCallback((msg: RealtimeMessage) => {
+    setMessages(prev => {
+      // Check if message already exists (avoid duplicates)
+      if (prev.some(m => m.id === msg.id)) return prev
+      return [...prev, msg]
+    })
+  }, [])
+
+  // Real-time chat hook
+  const {
+    sendMessage: sendRealtimeMessage,
+    startTyping,
+    stopTyping,
+    markAsRead,
+    isPartnerOnline,
+    isPartnerTyping,
+  } = useChat({
+    matchId: conversation.matchId,
+    onNewMessage: handleNewMessage,
+  })
+
+  // Fetch Messages (initial load)
   useEffect(() => {
     const fetch = async () => {
       setIsLoading(true)
       try {
         const data = await getMessages(conversation.matchId)
         setMessages(data)
+        // Mark messages as read when opening chat
+        markAsRead()
       } catch (error) {
         console.error(error)
         toast.error('Failed to load messages')
@@ -46,27 +80,43 @@ export const ChatThread = ({ conversation, onClose }: ChatThreadProps) => {
       }
     }
     fetch()
-  }, [conversation.matchId])
+  }, [conversation.matchId, markAsRead])
 
   // Scroll to bottom
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
-  }, [messages])
+  }, [messages, isPartnerTyping])
 
+  // Handle input change with typing indicator
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setInputText(e.target.value)
+    if (e.target.value.trim()) {
+      startTyping()
+    } else {
+      stopTyping()
+    }
+  }
+
+  // Send message
   const handleSend = async (e?: React.FormEvent) => {
     e?.preventDefault()
     if (!inputText.trim() || !user?.id || isSending) return
 
+    const messageText = inputText.trim()
+    setInputText('')
     setIsSending(true)
+    stopTyping()
+
     try {
-      const msg = await sendMessage(conversation.matchId, inputText.trim())
-      setMessages(prev => [...prev, msg])
-      setInputText('')
+      // Send via real-time socket
+      sendRealtimeMessage(messageText)
     } catch (error) {
       console.error(error)
       toast.error('Failed to send message')
+      setInputText(messageText) // Restore message on error
     } finally {
       setIsSending(false)
+      inputRef.current?.focus()
     }
   }
 
@@ -96,8 +146,11 @@ export const ChatThread = ({ conversation, onClose }: ChatThreadProps) => {
                  </div>
                )}
             </div>
-            {/* Active Status Dot */}
-            <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white dark:border-neutral-900" />
+            {/* Online Status Dot */}
+            <div className={cn(
+              "absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-neutral-900 transition-colors",
+              isPartnerOnline ? "bg-green-500" : "bg-neutral-400"
+            )} />
           </div>
 
           <div>
@@ -105,19 +158,49 @@ export const ChatThread = ({ conversation, onClose }: ChatThreadProps) => {
               {conversation.otherUser.name}
             </h3>
             <p className="text-xs font-medium text-neutral-500 flex items-center gap-2">
-              {isMyTurn ? (
+              {isPartnerTyping ? (
+                <span className="text-brand animate-pulse">typing...</span>
+              ) : isPartnerOnline ? (
+                <span className="text-green-500">Online</span>
+              ) : isMyTurn ? (
                 <span className="text-brand">YOUR TURN</span>
               ) : (
                 <span>THEIR TURN</span>
+              )}
+              {!isConnected && (
+                <span className="text-amber-500 ml-2">• Reconnecting...</span>
               )}
             </p>
           </div>
         </div>
 
         <div className="flex items-center gap-2">
-           <button className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500">
-             <Phone className="w-5 h-5" />
-           </button>
+           {/* Audio call button - always visible for fresh or unlocked */}
+           {canMakeAudioCalls && (
+             <button 
+               onClick={stage === 'unlocked' ? onVideoCall : onStagedAudioCall}
+               className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
+               title={stage === 'fresh' ? 'Start Stage 1 Audio Call' : 'Audio Call'}
+             >
+               <Phone className="w-5 h-5" />
+             </button>
+           )}
+           {/* Video call button - only visible for unlocked matches */}
+           {canMakeVideoCalls && (
+             <button 
+               onClick={onVideoCall}
+               className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
+               title="Video Call"
+             >
+               <Video className="w-5 h-5" />
+             </button>
+           )}
+           {/* Stage indicator for non-unlocked matches */}
+           {!canMakeVideoCalls && stage !== 'fresh' && (
+             <div className="px-2 py-1 rounded-full bg-brand/10 text-brand text-xs font-medium">
+               {stage === 'stage1_complete' ? 'Stage 2 Available' : 'Stage 3 Available'}
+             </div>
+           )}
            <button className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500">
              <MoreVertical className="w-5 h-5" />
            </button>
@@ -139,29 +222,51 @@ export const ChatThread = ({ conversation, onClose }: ChatThreadProps) => {
              <p className="text-sm">Break the ice with {conversation.otherUser.name}</p>
           </div>
         ) : (
-          messages.map((msg) => {
-            const isMe = msg.senderId === user?.id
-            return (
-              <motion.div
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                key={msg.id}
-                className={cn(
-                  "flex w-full",
-                  isMe ? "justify-end" : "justify-start"
-                )}
-              >
-                <div className={cn(
-                  "max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium leading-relaxed shadow-sm",
-                  isMe 
-                    ? "bg-brand text-white rounded-tr-none" 
-                    : "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none border border-neutral-100 dark:border-neutral-700"
-                )}>
-                  {msg.text}
-                </div>
-              </motion.div>
-            )
-          })
+          <>
+            {messages.map((msg) => {
+              const isMe = msg.senderId === user?.id
+              return (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  key={msg.id}
+                  className={cn(
+                    "flex w-full",
+                    isMe ? "justify-end" : "justify-start"
+                  )}
+                >
+                  <div className={cn(
+                    "max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium leading-relaxed shadow-sm",
+                    isMe 
+                      ? "bg-brand text-white rounded-tr-none" 
+                      : "bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none border border-neutral-100 dark:border-neutral-700"
+                  )}>
+                    {msg.text}
+                  </div>
+                </motion.div>
+              )
+            })}
+            
+            {/* Typing Indicator */}
+            <AnimatePresence>
+              {isPartnerTyping && (
+                <motion.div
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -10 }}
+                  className="flex justify-start"
+                >
+                  <div className="bg-white dark:bg-neutral-800 rounded-2xl rounded-tl-none px-4 py-3 border border-neutral-100 dark:border-neutral-700 shadow-sm">
+                    <div className="flex items-center gap-1">
+                      <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }} />
+                      <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }} />
+                      <span className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }} />
+                    </div>
+                  </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </>
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -170,15 +275,17 @@ export const ChatThread = ({ conversation, onClose }: ChatThreadProps) => {
       <div className="p-4 bg-white dark:bg-neutral-900 border-t border-neutral-200 dark:border-neutral-800 shrink-0">
         <form onSubmit={handleSend} className="flex items-center gap-2 relative">
           <input
+            ref={inputRef}
             value={inputText}
-            onChange={(e) => setInputText(e.target.value)}
+            onChange={handleInputChange}
+            onBlur={stopTyping}
             placeholder="Type a message..."
             className="w-full h-12 pl-4 pr-12 rounded-full bg-neutral-100 dark:bg-neutral-800 border-transparent focus:border-brand focus:ring-0 transition-all font-medium text-neutral-900 dark:text-white placeholder:text-neutral-400 outline-none"
-            disabled={isSending}
+            disabled={isSending || !isConnected}
           />
           <button
             type="submit"
-            disabled={!inputText.trim() || isSending}
+            disabled={!inputText.trim() || isSending || !isConnected}
             className="absolute right-2 w-8 h-8 flex items-center justify-center bg-brand hover:bg-brand-300 text-white rounded-full transition-all shadow-lg shadow-brand/20 disabled:opacity-50 disabled:shadow-none cursor-pointer"
           >
             <Send className="w-4 h-4 ml-0.5" />

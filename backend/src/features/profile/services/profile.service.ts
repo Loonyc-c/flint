@@ -1,6 +1,6 @@
 import { getUserCollection } from '@/data/db/collection'
 import { DbUser } from '@/data/db/types/user'
-import {  ProfileUpdateRequest, ProfileResponse } from '@shared/types'
+import { ProfileUpdateRequest, ProfileResponse, UserContactInfo } from '@shared/types'
 import { calculateProfileCompleteness } from '@shared/lib'
 import { ObjectId } from 'mongodb'
 import { ErrorCode, ServiceException } from '@/features/error'
@@ -73,5 +73,33 @@ export const profileService = {
       isComplete: true,
       profile: profileData,
     }
+  },
+
+  updateContactInfo: async (userId: string, data: UserContactInfo): Promise<UserContactInfo> => {
+    const userCollection = await getUserCollection()
+    const userObjectId = new ObjectId(userId)
+
+    const result = await userCollection.findOneAndUpdate(
+      { _id: userObjectId },
+      { $set: { contactInfo: data, updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    )
+
+    if (isNil(result)) {
+      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+    }
+
+    return result.contactInfo || data
+  },
+
+  getContactInfo: async (userId: string): Promise<UserContactInfo | null> => {
+    const userCollection = await getUserCollection()
+    const user = await userCollection.findOne({ _id: new ObjectId(userId) })
+
+    if (isNil(user)) {
+      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+    }
+
+    return user.contactInfo || null
   },
 }

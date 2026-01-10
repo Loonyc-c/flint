@@ -14,7 +14,7 @@ import {
   useAnimation,
   useMotionValue,
   useTransform,
-  PanInfo,
+  type PanInfo,
 } from "framer-motion";
 import { MapPin, Volume2, Play, Pause, Heart, X, Star, ChevronLeft, ChevronRight, Mic } from "lucide-react";
 import Image from "next/image";
@@ -200,6 +200,44 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
       }
     }, [photos.length]);
 
+    const triggerSwipe = useCallback(async (type: "smash" | "super" | "pass") => {
+      let stamp: "SMASH" | "PASS" | "SUPER" = "SMASH";
+      let exitX = 0;
+      let exitY = 0;
+      
+      if (type === "pass") {
+        stamp = "PASS";
+        exitX = -400;
+      } else if (type === "super") {
+        stamp = "SUPER";
+        exitY = -400;
+      } else {
+        exitX = 400;
+      }
+
+      // Show stamp with animation
+      setStampType(stamp);
+      setShowStamp(true);
+
+      // Wait for stamp to be visible
+      await new Promise((resolve) => setTimeout(resolve, 400));
+
+      // Fade out stamp
+      setShowStamp(false);
+
+      // Animate card out
+      await controls.start({
+        x: exitX,
+        y: exitY,
+        opacity: 0,
+        scale: 0.8,
+        transition: {
+          duration: 0.4,
+          ease: [0.4, 0, 0.2, 1],
+        },
+      });
+    }, [controls]);
+
     // Handle drag end
     const handleDragEnd = useCallback(async (_: unknown, info: PanInfo) => {
       setIsDragging(false);
@@ -236,45 +274,7 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
         x.set(0);
         y.set(0);
       }
-    }, [controls, onSwipe, x, y]);
-
-    const triggerSwipe = async (type: "smash" | "super" | "pass") => {
-      let stamp: "SMASH" | "PASS" | "SUPER" = "SMASH";
-      let exitX = 0;
-      let exitY = 0;
-      
-      if (type === "pass") {
-        stamp = "PASS";
-        exitX = -400;
-      } else if (type === "super") {
-        stamp = "SUPER";
-        exitY = -400;
-      } else {
-        exitX = 400;
-      }
-
-      // Show stamp with animation
-      setStampType(stamp);
-      setShowStamp(true);
-
-      // Wait for stamp to be visible
-      await new Promise((resolve) => setTimeout(resolve, 400));
-
-      // Fade out stamp
-      setShowStamp(false);
-
-      // Animate card out
-      await controls.start({
-        x: exitX,
-        y: exitY,
-        opacity: 0,
-        scale: 0.8,
-        transition: {
-          duration: 0.4,
-          ease: [0.4, 0, 0.2, 1],
-        },
-      });
-    };
+    }, [controls, onSwipe, x, y, triggerSwipe]);
 
     useImperativeHandle(ref, () => ({
       triggerSwipe,
@@ -414,7 +414,7 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
                 className="absolute inset-0"
               >
                 <Image
-                  src={photos[currentPhotoIndex]}
+                  src={photos[currentPhotoIndex] ?? ''}
                   alt={candidate.profile?.nickName || candidate.firstName || "User"}
                   fill
                   className="object-cover pointer-events-none"

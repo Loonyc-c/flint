@@ -16,6 +16,7 @@ const STORAGE_KEY = 'flint_access_token'
 
 interface UserContextType {
   user: User | null
+  token: string | null
   isLoading: boolean
   login: (token: string) => void
   logout: () => void
@@ -42,23 +43,26 @@ const UserContext = createContext<UserContextType | undefined>(undefined)
  */
 export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
   /**
    * Decodes a JWT token and updates user state.
    * Clears token if expired or invalid.
    */
-  const decodeAndSetUser = useCallback((token: string) => {
+  const decodeAndSetUser = useCallback((storedToken: string) => {
     try {
-      const decoded = jwtDecode<AuthTokenPayload>(token)
+      const decoded = jwtDecode<AuthTokenPayload>(storedToken)
 
       // Check token expiration
       if (decoded.exp * 1000 < Date.now()) {
         localStorage.removeItem(STORAGE_KEY)
         setUser(null)
+        setToken(null)
         return
       }
 
+      setToken(storedToken)
       setUser({
         id: decoded.data.userId,
         firstName: decoded.data.firstName,
@@ -69,6 +73,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     } catch {
       localStorage.removeItem(STORAGE_KEY)
       setUser(null)
+      setToken(null)
     }
   }, [])
 
@@ -98,10 +103,12 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
     setUser(null)
+    setToken(null)
   }, [])
 
   const value: UserContextType = {
     user,
+    token,
     isLoading,
     login,
     logout,

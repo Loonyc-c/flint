@@ -30,3 +30,6 @@ export * from './chat'
 // i18n types and utilities
 export type { Locale, Messages, TranslationKey } from './i18n'
 export { SUPPORTED_LOCALES, DEFAULT_LOCALE, isValidLocale, parseLocale } from './i18n'
+
+// Staged calling types
+export * from './staged-call'

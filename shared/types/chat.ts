@@ -1,3 +1,5 @@
+import type { MatchStage } from './staged-call'
+
 export interface Message {
   id: string
   matchId: string
@@ -18,4 +20,5 @@ export interface ChatConversation {
   lastMessage?: Message
   unreadCount: number
   isTheirTurn: boolean
+  stage: MatchStage // Stage of the match for calling permissions
 }

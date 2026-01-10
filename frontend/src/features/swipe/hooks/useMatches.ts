@@ -31,6 +31,7 @@ export const useMatches = () => {
         },
         unreadCount: match.unreadCount,
         isTheirTurn: match.isTheirTurn,
+        stage: match.stage || 'fresh',
         lastMessage: match.lastMessage 
           ? {
               id: `${match.id}-last`,

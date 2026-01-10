@@ -143,6 +143,23 @@ export const SwipeFeature = () => {
   const [showMatchModal, setShowMatchModal] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  const onSwipeAction = useCallback(async (type: SwipeAction) => {
+    if (isSwiping || !currentCandidate) return;
+
+    // Trigger visual animation on card
+    if (cardRef.current) {
+      await cardRef.current.triggerSwipe(type);
+    }
+
+    // Process logic - handleSwipe now accepts smash/super/pass directly
+    const result = await handleSwipe(type);
+
+    if (result && result.isMatch) {
+      setMatchedUser(currentCandidate);
+      setShowMatchModal(true);
+    }
+  }, [isSwiping, currentCandidate, handleSwipe]);
+
   // Keyboard Shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -178,24 +195,7 @@ export const SwipeFeature = () => {
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [currentCandidate, showMatchModal, handleUndo]);
-
-  const onSwipeAction = useCallback(async (type: SwipeAction) => {
-    if (isSwiping || !currentCandidate) return;
-
-    // Trigger visual animation on card
-    if (cardRef.current) {
-      await cardRef.current.triggerSwipe(type);
-    }
-
-    // Process logic - handleSwipe now accepts smash/super/pass directly
-    const result = await handleSwipe(type);
-
-    if (result && result.isMatch) {
-      setMatchedUser(currentCandidate);
-      setShowMatchModal(true);
-    }
-  }, [isSwiping, currentCandidate, handleSwipe]);
+  }, [currentCandidate, showMatchModal, handleUndo, onSwipeAction]);
 
   const handleRefresh = useCallback(async () => {
     setIsRefreshing(true);

@@ -33,3 +33,20 @@ export const profileUpdateSchema = z.object({
 });
 
 export type ProfileCreationFormData = z.infer<typeof profileUpdateSchema>;
+
+// Contact info validation schema
+export const contactInfoSchema = z.object({
+  phone: z.string().max(20, "Phone number too long").optional(),
+  instagram: z.string().max(50, "Instagram handle too long").optional(),
+  telegram: z.string().max(50, "Telegram handle too long").optional(),
+  snapchat: z.string().max(50, "Snapchat handle too long").optional(),
+  whatsapp: z.string().max(20, "WhatsApp number too long").optional(),
+  wechat: z.string().max(50, "WeChat ID too long").optional(),
+  facebook: z.string().max(100, "Facebook URL too long").optional(),
+  twitter: z.string().max(50, "Twitter handle too long").optional(),
+  linkedin: z.string().max(100, "LinkedIn URL too long").optional(),
+  other: z.string().max(200, "Other contact info too long").optional(),
+  isContactVerified: z.boolean().optional().default(false),
+});
+
+export type ContactInfoFormData = z.infer<typeof contactInfoSchema>;

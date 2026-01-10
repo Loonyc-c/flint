@@ -1,0 +1,338 @@
+import AgoraRTC from 'agora-rtc-sdk-ng'
+import type {
+  IAgoraRTCClient,
+  IAgoraRTCRemoteUser,
+  IMicrophoneAudioTrack,
+  ICameraVideoTrack,
+  IRemoteVideoTrack,
+} from 'agora-rtc-sdk-ng'
+
+// =============================================================================
+// Types
+// =============================================================================
+
+export interface AgoraJoinOptions {
+  appId: string
+  channel: string
+  token: string
+  uid: number
+  enableVideo?: boolean
+}
+
+export interface AgoraJoinResult {
+  success: boolean
+  message?: string
+  localAudioTrack?: IMicrophoneAudioTrack
+  localVideoTrack?: ICameraVideoTrack
+}
+
+export interface AgoraEventHandlers {
+  onUserJoined?: (uid: number) => void
+  onUserLeft?: (uid: number) => void
+  onRemoteVideoAdded?: (uid: number, track: IRemoteVideoTrack) => void
+  onRemoteVideoRemoved?: (uid: number) => void
+}
+
+// =============================================================================
+// Agora Client Class
+// =============================================================================
+
+export class AgoraClient {
+  private client: IAgoraRTCClient | null = null
+  private localAudioTrack: IMicrophoneAudioTrack | null = null
+  private localVideoTrack: ICameraVideoTrack | null = null
+  private remoteUsers: Map<number, IAgoraRTCRemoteUser> = new Map()
+  private isJoined = false
+  private isJoining = false
+  private joinPromise: Promise<AgoraJoinResult> | null = null
+  private eventHandlers: AgoraEventHandlers = {}
+
+  /**
+   * Initialize the Agora client
+   */
+  async init(): Promise<void> {
+    if (this.client) {
+      return
+    }
+
+    this.client = AgoraRTC.createClient({
+      mode: 'rtc',
+      codec: 'vp8',
+    })
+
+    this.setupEventListeners()
+  }
+
+  /**
+   * Set event handlers
+   */
+  setEventHandlers(handlers: AgoraEventHandlers): void {
+    this.eventHandlers = handlers
+  }
+
+  /**
+   * Set up event listeners for remote users
+   */
+  private setupEventListeners(): void {
+    if (!this.client) return
+
+    // User joined channel
+    this.client.on('user-joined', (user) => {
+      this.remoteUsers.set(user.uid as number, user)
+      this.eventHandlers.onUserJoined?.(user.uid as number)
+    })
+
+    // User published media
+    this.client.on('user-published', async (user, mediaType) => {
+      try {
+        await this.client?.subscribe(user, mediaType)
+
+        this.remoteUsers.set(user.uid as number, user)
+
+        if (mediaType === 'audio') {
+          const remoteAudioTrack = user.audioTrack
+          remoteAudioTrack?.play()
+        }
+
+        if (mediaType === 'video') {
+          const remoteVideoTrack = user.videoTrack
+          if (remoteVideoTrack) {
+            this.eventHandlers.onRemoteVideoAdded?.(user.uid as number, remoteVideoTrack)
+          }
+        }
+      } catch (error) {
+        console.error('[Agora] Error subscribing to user:', user.uid, error)
+      }
+    })
+
+    // User unpublished media
+    this.client.on('user-unpublished', (user, mediaType) => {
+      if (mediaType === 'video') {
+        this.eventHandlers.onRemoteVideoRemoved?.(user.uid as number)
+      }
+    })
+
+    // User left channel
+    this.client.on('user-left', (user) => {
+      this.remoteUsers.delete(user.uid as number)
+      this.eventHandlers.onUserLeft?.(user.uid as number)
+    })
+  }
+
+  /**
+   * Join a channel
+   */
+  async join(options: AgoraJoinOptions): Promise<AgoraJoinResult> {
+    const { appId, channel, token, uid, enableVideo = false } = options
+
+    // Prevent concurrent join attempts
+    if (this.isJoining && this.joinPromise) {
+      return this.joinPromise
+    }
+
+    // Already connected
+    if (this.isJoined && this.client?.connectionState === 'CONNECTED') {
+      return { success: true, message: 'Already connected' }
+    }
+
+    this.isJoining = true
+
+    this.joinPromise = this.performJoin(appId, channel, token, uid, enableVideo)
+
+    try {
+      return await this.joinPromise
+    } finally {
+      this.isJoining = false
+      this.joinPromise = null
+    }
+  }
+
+  private async performJoin(
+    appId: string,
+    channel: string,
+    token: string,
+    uid: number,
+    enableVideo: boolean
+  ): Promise<AgoraJoinResult> {
+    try {
+      // Leave existing connection
+      if (this.isJoined || this.client?.connectionState === 'CONNECTED') {
+        await this.leave()
+        await new Promise((resolve) => setTimeout(resolve, 300))
+      }
+
+      // Initialize if needed
+      if (!this.client) {
+        await this.init()
+      }
+
+      // Join channel
+      await this.client!.join(appId, channel, token, uid)
+      this.isJoined = true
+
+      // Create and publish audio track
+      this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack()
+      await this.client!.publish([this.localAudioTrack])
+
+      // Create and publish video track if enabled
+      if (enableVideo) {
+        try {
+          this.localVideoTrack = await AgoraRTC.createCameraVideoTrack()
+          await this.client!.publish([this.localVideoTrack])
+        } catch (videoError) {
+          console.warn('[Agora] Could not create video track:', videoError)
+          this.localVideoTrack = null
+        }
+      }
+
+      // Check for existing remote users
+      const remoteUsers = this.client!.remoteUsers
+
+      remoteUsers.forEach((user) => {
+        this.remoteUsers.set(user.uid as number, user)
+        this.eventHandlers.onUserJoined?.(user.uid as number)
+      })
+
+      return {
+        success: true,
+        localAudioTrack: this.localAudioTrack,
+        localVideoTrack: this.localVideoTrack ?? undefined,
+      }
+    } catch (error) {
+      console.error('[Agora] Error joining channel:', error)
+      throw error
+    }
+  }
+
+  /**
+   * Leave the channel and clean up
+   */
+  async leave(): Promise<void> {
+    try {
+      // Stop and close local audio
+      if (this.localAudioTrack) {
+        this.localAudioTrack.stop()
+        this.localAudioTrack.close()
+        this.localAudioTrack = null
+      }
+
+      // Stop and close local video
+      if (this.localVideoTrack) {
+        this.localVideoTrack.stop()
+        this.localVideoTrack.close()
+        this.localVideoTrack = null
+      }
+
+      // Stop remote tracks
+      this.remoteUsers.forEach((user) => {
+        user.audioTrack?.stop()
+        user.videoTrack?.stop()
+      })
+
+      // Leave channel
+      if (this.client && this.isJoined) {
+        await this.client.leave()
+        this.isJoined = false
+      }
+
+      this.remoteUsers.clear()
+      this.client = null
+    } catch (error) {
+      console.error('[Agora] Error during cleanup:', error)
+      this.isJoined = false
+    }
+  }
+
+  /**
+   * Toggle microphone
+   */
+  async toggleMicrophone(): Promise<boolean> {
+    if (!this.localAudioTrack) return false
+    const enabled = this.localAudioTrack.enabled
+    await this.localAudioTrack.setEnabled(!enabled)
+    return !enabled
+  }
+
+  /**
+   * Toggle camera
+   */
+  async toggleCamera(): Promise<boolean> {
+    if (!this.localVideoTrack) return false
+    const enabled = this.localVideoTrack.enabled
+    await this.localVideoTrack.setEnabled(!enabled)
+    return !enabled
+  }
+
+  /**
+   * Enable video (upgrade to video call)
+   */
+  async enableVideo(): Promise<ICameraVideoTrack | null> {
+    if (this.localVideoTrack) {
+      return this.localVideoTrack
+    }
+
+    try {
+      this.localVideoTrack = await AgoraRTC.createCameraVideoTrack()
+      await this.client?.publish([this.localVideoTrack])
+      return this.localVideoTrack
+    } catch (error) {
+      console.error('[Agora] Error enabling video:', error)
+      return null
+    }
+  }
+
+  /**
+   * Disable video
+   */
+  async disableVideo(): Promise<void> {
+    if (!this.localVideoTrack) return
+
+    try {
+      await this.client?.unpublish([this.localVideoTrack])
+      this.localVideoTrack.stop()
+      this.localVideoTrack.close()
+      this.localVideoTrack = null
+    } catch (error) {
+      console.error('[Agora] Error disabling video:', error)
+    }
+  }
+
+  /**
+   * Get local video track
+   */
+  getLocalVideoTrack(): ICameraVideoTrack | null {
+    return this.localVideoTrack
+  }
+
+  /**
+   * Get local audio track
+   */
+  getLocalAudioTrack(): IMicrophoneAudioTrack | null {
+    return this.localAudioTrack
+  }
+
+  /**
+   * Get remote users
+   */
+  getRemoteUsers(): IAgoraRTCRemoteUser[] {
+    return Array.from(this.remoteUsers.values())
+  }
+
+  /**
+   * Check if connected
+   */
+  isConnected(): boolean {
+    return this.isJoined && this.client?.connectionState === 'CONNECTED'
+  }
+
+  /**
+   * Destroy client
+   */
+  destroy(): void {
+    this.leave()
+    this.eventHandlers = {}
+  }
+}
+
+// Export singleton instance
+export const agoraClient = new AgoraClient()

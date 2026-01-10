@@ -3,7 +3,7 @@
  * Single source of truth for all auth-related types across frontend and backend
  */
 
-import { UserProfile } from './user'
+import type { UserProfile } from './user'
 
 /**
  * User data structure

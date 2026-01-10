@@ -47,6 +47,8 @@ export interface MatchLastMessagePreview {
   createdAt: string // ISO string
 }
 
+import type { MatchStage } from './staged-call'
+
 export interface MatchWithUser {
   id: string
   createdAt: Date
@@ -60,4 +62,6 @@ export interface MatchWithUser {
   lastMessage?: MatchLastMessagePreview
   unreadCount: number
   isTheirTurn: boolean
+  // Staged calling fields
+  stage: MatchStage
 }

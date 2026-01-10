@@ -31,7 +31,8 @@ export const matchService = {
     const lookingFor = filterLookingFor ?? currentUser.preferences?.lookingFor
     const ageRange = filterAgeRange ?? currentUser.preferences?.ageRange
     
-    const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
+    // Note: userAge could be used for bidirectional age filtering in the future
+    // const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
 
     // Pre-fetch interacted user IDs to optimize query
     const interactions = await interactionCollection
@@ -164,6 +165,7 @@ export const matchService = {
             isDeleted: false as const,
             createdBy: actorId,
             updatedBy: actorId,
+            stage: 'fresh', // New matches start at fresh stage
           }
 
           const res = await matchCollection.insertOne(match, { session })
@@ -233,19 +235,21 @@ export const matchService = {
         // Get avatar from photos array (first photo)
         const avatar = otherUser.profile?.photos?.[0] || undefined
 
-        return {
+        const result: MatchWithUser = {
           id: match._id.toHexString(),
           createdAt: match.createdAt,
           otherUser: {
             id: otherUser._id.toHexString(),
-            firstName: otherUser.auth.firstName,
-            lastName: otherUser.auth.lastName,
+            firstName: otherUser.auth.firstName as string,
+            lastName: otherUser.auth.lastName as string,
             avatar,
           },
           lastMessage,
           unreadCount,
           isTheirTurn,
+          stage: match.stage || 'fresh', // Default to fresh for existing matches
         }
+        return result
       })
       .filter((r): r is MatchWithUser => r !== null)
   },
@@ -309,16 +313,17 @@ export const matchService = {
         const liker = userMap.get(like.actorId.toHexString())
         if (!liker) return null
 
-        return {
+        const result: LikePreview = {
           id: like._id.toHexString(),
           user: {
             id: liker._id.toHexString(),
-            firstName: liker.auth.firstName,
-            lastName: liker.auth.lastName,
+            firstName: liker.auth.firstName as string,
+            lastName: liker.auth.lastName as string,
             avatar: liker.profile?.photos?.[0] || undefined,
           },
           createdAt: like.createdAt.toISOString(),
         }
+        return result
       })
       .filter((r): r is LikePreview => r !== null)
   },

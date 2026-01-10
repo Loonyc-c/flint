@@ -7,7 +7,7 @@ import { toast } from 'react-toastify'
 import { getProfile, updateProfile } from '@/features/profile/api/profile'
 import { calculateProfileCompleteness } from '@shared/lib'
 import { uploadImageToCloudinary, uploadAudioToCloudinary } from '@/lib/cloudinary'
-import { profileUpdateSchema, ProfileCreationFormData } from '@/shared-types/validations'
+import { profileUpdateSchema, type ProfileCreationFormData } from '@/shared-types/validations'
 
 export const useProfileForm = (userId: string, pendingPhotoFile: File | null, clearPendingPhoto: () => void) => {
   const [completeness, setCompleteness] = useState(0)
@@ -22,7 +22,7 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
       interests: [],
       photo: '',
       voiceIntro: '',
-      questions: Array(3).fill(null).map((_, i) => ({
+      questions: Array(3).fill(null).map(() => ({
         questionId: '',
         audioUrl: '',
         uploadId: '',
@@ -101,7 +101,6 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
   }, [formData, pendingPhotoFile])
 
   const onManualSave: SubmitHandler<ProfileCreationFormData> = async (data) => {
-    console.log('Attempting to save profile:', data)
     setIsSaving(true)
     try {
       let finalPhotoUrl = data.photo

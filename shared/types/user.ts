@@ -1,4 +1,4 @@
-import { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
+import type { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
 
 export type UserProfile = {
   nickName: string
@@ -7,6 +7,7 @@ export type UserProfile = {
   bio: string
   interests: INTERESTS[]
   photo: string
+  photos?: string[]
   voiceIntro: string
   questions: QuestionAnswer[]
 }
