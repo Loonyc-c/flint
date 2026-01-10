@@ -68,38 +68,38 @@ export const StagedCallProvider = ({
   } = useStagedCall({
     onCallAccepted: (data) => {
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:51',message:'onCallAccepted triggered',data:{stage:data.stage,matchId:data.matchId,channelName:data.channelName},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H5'})}).catch(()=>{});
+      console.log('[DEBUG-PROVIDER] onCallAccepted:', { stage: data.stage, channelName: data.channelName })
       // #endregion
       if (data.stage === 1) {
         setShowAudioModal(true)
       } else {
         // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:58',message:'Setting showVideoModal to true for stage 2',data:{stage:data.stage},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
+        console.log('[DEBUG-PROVIDER] Setting showVideoModal to true for stage 2')
         // #endregion
         setShowVideoModal(true)
       }
     },
     onCallEnded: () => {
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:66',message:'onCallEnded - closing modals',data:{showAudioModal,showVideoModal},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H7'})}).catch(()=>{});
+      console.log('[DEBUG-PROVIDER] onCallEnded - closing modals')
       // #endregion
       setShowAudioModal(false)
       setShowVideoModal(false)
     },
     onPromptResult: (data) => {
       // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:74',message:'onPromptResult received',data:{bothAccepted:data.bothAccepted,nextStage:data.nextStage,callStatus},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+      console.log('[DEBUG-PROVIDER] onPromptResult received:', { bothAccepted: data.bothAccepted, nextStage: data.nextStage })
       // #endregion
       if (data.bothAccepted) {
         toast.success(`Moving to Stage ${data.nextStage}!`)
         if (data.nextStage === 2) {
           // #region agent log
-          fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:81',message:'About to initiateCall for stage 2',data:{matchId,otherUserId,callStatus},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+          console.log('[DEBUG-PROVIDER] Scheduling initiateCall for stage 2 in 1 second')
           // #endregion
           // Auto-start stage 2 video call
           setTimeout(() => {
             // #region agent log
-            fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:87',message:'Calling initiateCall for stage 2 after timeout',data:{matchId,otherUserId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H8'})}).catch(()=>{});
+            console.log('[DEBUG-PROVIDER] Now calling initiateCall for stage 2')
             // #endregion
             initiateCall(matchId, otherUserId, 2)
           }, 1000)
@@ -132,7 +132,7 @@ export const StagedCallProvider = ({
   // Cancel outgoing call
   const handleCancelOutgoingCall = useCallback(() => {
     // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:98',message:'Cancelling outgoing call',data:{matchId},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H-UI'})}).catch(()=>{});
+    console.log('[DEBUG-PROVIDER] Cancelling outgoing call')
     // #endregion
     endCall(matchId)
   }, [endCall, matchId])
@@ -207,12 +207,6 @@ export const StagedCallProvider = ({
       />
 
       {/* Stage 2 Video Call Modal */}
-      {(() => {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'StagedCallProvider.tsx:148',message:'Evaluating video modal render condition',data:{showVideoModal,currentCallStage:currentCall?.stage,currentCallChannel:currentCall?.channelName,shouldRender:showVideoModal && currentCall?.stage === 2},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H6'})}).catch(()=>{});
-        // #endregion
-        return null;
-      })()}
       {showVideoModal && currentCall?.stage === 2 && (
         <VideoCallModal
           isOpen={true}
