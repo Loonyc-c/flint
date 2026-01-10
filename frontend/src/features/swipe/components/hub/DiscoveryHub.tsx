@@ -9,8 +9,8 @@ import { SwipeFeature } from '@/features/swipe/components/SwipeFeature'
 import { MatchesList } from './MatchesList'
 import { useMatches } from '@/features/swipe/hooks/useMatches'
 import { useLikes } from '@/features/swipe/hooks/useLikes'
-import { useVideoCall } from '@/features/realtime'
-import { VideoCallModal, IncomingCallModal } from '@/features/video'
+import { useVideoCall, useStagedCall } from '@/features/realtime'
+import { VideoCallModal, IncomingCallModal, StagedCallProvider } from '@/features/video'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { toast } from 'react-toastify'
@@ -66,6 +66,23 @@ export const DiscoveryHub = () => {
     },
   })
 
+  // Staged call hook for stage 1/2 progression
+  const {
+    incomingCall: incomingStagedCall,
+    initiateCall: initiateStagedCall,
+  } = useStagedCall({
+    onCallAccepted: () => {
+      // #region agent log
+      console.log('[DEBUG-STAGED] Staged call accepted')
+      // #endregion
+    },
+    onCallEnded: () => {
+      // #region agent log
+      console.log('[DEBUG-STAGED] Staged call ended')
+      // #endregion
+    },
+  })
+
   const handleSelectMatch = (matchId: string) => {
     setActiveMatchId(matchId)
     setActiveView('chat')
@@ -90,6 +107,24 @@ export const DiscoveryHub = () => {
     
     initiateCall(matchId, calleeId)
   }, [activeConversation, initiateCall])
+
+  // Handle staged audio call (Stage 1) from chat
+  const handleStagedAudioCall = useCallback(() => {
+    if (!activeConversation) return
+    
+    // #region agent log
+    console.log('[DEBUG-STAGED] Initiating staged call', { 
+      matchId: activeConversation.matchId, 
+      calleeId: activeConversation.otherUser.id,
+      stage: 1 
+    })
+    // #endregion
+    
+    const matchId = activeConversation.matchId
+    const calleeId = activeConversation.otherUser.id
+    
+    initiateStagedCall(matchId, calleeId, 1)
+  }, [activeConversation, initiateStagedCall])
 
   // Handle accepting incoming call
   const handleAcceptCall = useCallback(() => {
@@ -244,11 +279,25 @@ export const DiscoveryHub = () => {
                   transition={{ duration: 0.2 }}
                   className="h-full w-full overflow-hidden sm:rounded-3xl bg-white dark:bg-neutral-900 shadow-2xl shadow-neutral-200/50 dark:shadow-neutral-950/50"
                 >
-                  <ChatThread 
-                    conversation={activeConversation} 
-                    onClose={handleCloseView}
-                    onVideoCall={handleVideoCall}
-                  />
+                  <StagedCallProvider
+                    matchId={activeConversation.matchId}
+                    otherUserId={activeConversation.otherUser.id}
+                    otherUserName={activeConversation.otherUser.name}
+                    otherUserAvatar={activeConversation.otherUser.avatar}
+                    onStageComplete={(newStage) => {
+                      // #region agent log
+                      console.log('[DEBUG-STAGED] Stage complete:', newStage)
+                      // #endregion
+                      refreshMatches()
+                    }}
+                  >
+                    <ChatThread 
+                      conversation={activeConversation} 
+                      onClose={handleCloseView}
+                      onVideoCall={handleVideoCall}
+                      onStagedAudioCall={handleStagedAudioCall}
+                    />
+                  </StagedCallProvider>
                 </motion.div>
               )}
 
