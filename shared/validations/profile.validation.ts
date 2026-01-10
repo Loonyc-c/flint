@@ -11,8 +11,9 @@ export const questionAnswerSchema = z.object({
     (id) => QUESTION_POOL.some(q => q.id === id),
     { message: "Question ID not found in the QUESTION_POOL" }
   ),
-  audioUrl: z.string().url("Invalid audio URL").or(z.literal("")).optional(), // Allow empty string or absence for local audio
-  audioFile: z.instanceof(Blob).or(z.string()).optional(), // Allow Blob or string for local audio
+  audioUrl: z.string(),
+  uploadId: z.string(),
+  audioFile: z.union([z.instanceof(Blob), z.string()]).optional(),
 });
 
 export const profileUpdateSchema = z.object({
@@ -23,9 +24,9 @@ export const profileUpdateSchema = z.object({
     .max(100, "Invalid age"),
   gender: GenderEnum,
   bio: z.string().max(500, "Bio must be under 500 characters"),
-  interests: z.array(InterestEnum).min(3, "Select at least one interest"),
+  interests: z.array(InterestEnum).min(3, "Select at least three interest"),
   photo: z.string(),
-  voiceIntro: z.string().url("Invalid voice intro URL").or(z.literal("")).optional(),
+  voiceIntro: z.string(),
   questions: z
     .array(questionAnswerSchema)
     .length(3, "Please answer exactly 3 questions"),

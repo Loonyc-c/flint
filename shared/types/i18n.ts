@@ -57,9 +57,18 @@ export interface Messages {
   HomePage: {
     loading: string
   }
-  // Add more namespaces as needed:
-  // Auth: { ... };
-  // Profile: { ... };
+  chat: {
+    messages: string
+    settings: string
+    matches: string
+    likes: string
+    yourTurn: string
+    theirTurn: string
+    hiddenChats: string
+  }
+  common: {
+    close: string
+  }
 }
 
 /**

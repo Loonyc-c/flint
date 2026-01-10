@@ -39,7 +39,8 @@ export type UserContactInfo = {
 
 export interface QuestionAnswer {
   questionId: string
-  audioUrl?: string // Optional
+  audioUrl: string
+  uploadId: string
   audioFile?: Blob | string
 }
 
@@ -50,7 +51,7 @@ export interface ProfileUpdateRequest {
   bio: string
   interests: INTERESTS[]
   photo: string
-  voiceIntro?: string // Optional
+  voiceIntro: string
   questions: QuestionAnswer[]
 }
 export interface ProfileResponse {
@@ -65,4 +66,9 @@ export interface UserAuth {
   password: string
   passwordResetToken?: string
   passwordResetExpires?: Date
+}
+
+export interface ReferenceUpdateRequest {
+  ageRange: number
+  lookingFor: LOOKING_FOR
 }

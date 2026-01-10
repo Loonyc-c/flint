@@ -1,16 +1,12 @@
-import { SwipeFeature } from '@/features/swipe/components/SwipeFeature'
+import { DiscoveryHub } from '@/features/swipe/components/hub/DiscoveryHub'
 
 /**
  * Swipe page for discovering and matching with other users.
+ * Refactored to use the Unified Discovery Hub.
  */
 const SwipePage = () => (
-  <main className="min-h-screen bg-gray-50 dark:bg-black py-8">
-    <div className="container mx-auto">
-      <h1 className="text-3xl font-bold text-center mb-8 text-gray-900 dark:text-white">
-        Discover New People
-      </h1>
-      <SwipeFeature />
-    </div>
+  <main className="min-h-screen bg-white dark:bg-black py-4 md:py-8 px-0 md:px-4">
+    <DiscoveryHub />
   </main>
 )
 

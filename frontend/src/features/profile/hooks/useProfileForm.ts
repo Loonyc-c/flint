@@ -1,13 +1,13 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
+import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-toastify'
-import { profileUpdateSchema, type ProfileCreationFormData } from '@shared/validations'
 import { getProfile, updateProfile } from '@/features/profile/api/profile'
 import { calculateProfileCompleteness } from '@shared/lib'
-import { uploadImageToCloudinary } from '@/lib/cloudinary'
+import { uploadImageToCloudinary, uploadAudioToCloudinary } from '@/lib/cloudinary'
+import { profileUpdateSchema, ProfileCreationFormData } from '@/shared-types/validations'
 
 export const useProfileForm = (userId: string, pendingPhotoFile: File | null, clearPendingPhoto: () => void) => {
   const [completeness, setCompleteness] = useState(0)
@@ -22,9 +22,10 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
       interests: [],
       photo: '',
       voiceIntro: '',
-      questions: Array(3).fill(null).map(() => ({
+      questions: Array(3).fill(null).map((_, i) => ({
         questionId: '',
         audioUrl: '',
+        uploadId: '',
         audioFile: undefined
       }))
     }
@@ -41,22 +42,44 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
         if (data.isComplete && data.profile) {
           const questionsWithDefaults = [...(data.profile.questions || [])]
           while (questionsWithDefaults.length < 3) {
-            questionsWithDefaults.push({ questionId: '', audioUrl: '', audioFile: undefined })
+            questionsWithDefaults.push({ 
+              questionId: '', 
+              audioUrl: '', 
+              uploadId: '',
+              audioFile: undefined 
+            })
           }
           if (questionsWithDefaults.length > 3) {
             questionsWithDefaults.splice(3)
           }
-          reset({ ...data.profile, questions: questionsWithDefaults })
+          reset({ 
+            ...data.profile, 
+            photo: data.profile.photo || '',
+            voiceIntro: data.profile.voiceIntro || '',
+            questions: questionsWithDefaults 
+          })
         } else {
           reset({
             ...formData,
-            questions: Array(3).fill({ questionId: '', audioUrl: '', audioFile: undefined })
+            photo: '',
+            voiceIntro: '',
+            questions: Array(3).fill({ 
+              questionId: '', 
+              audioUrl: '', 
+              uploadId: '',
+              audioFile: undefined 
+            })
           })
         }
       } catch {
         reset({
           ...formData,
-          questions: Array(3).fill({ questionId: '', audioUrl: '', audioFile: undefined })
+          questions: Array(3).fill({ 
+            questionId: '', 
+            audioUrl: '', 
+            uploadId: '',
+            audioFile: undefined 
+            })
         })
       }
     }
@@ -66,14 +89,19 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
 
   // Update completeness score
   useEffect(() => {
-    const dataForCalculation = pendingPhotoFile
-      ? { ...formData, photo: 'pending' }
-      : formData
-    const score = calculateProfileCompleteness(dataForCalculation)
-    setCompleteness(score)
+    const timer = setTimeout(() => {
+      const dataForCalculation = pendingPhotoFile
+        ? { ...formData, photo: 'pending' }
+        : formData
+      const score = calculateProfileCompleteness(dataForCalculation)
+      setCompleteness(score)
+    }, 500)
+
+    return () => clearTimeout(timer)
   }, [formData, pendingPhotoFile])
 
-  const onManualSave = async (data: ProfileCreationFormData) => {
+  const onManualSave: SubmitHandler<ProfileCreationFormData> = async (data) => {
+    console.log('Attempting to save profile:', data)
     setIsSaving(true)
     try {
       let finalPhotoUrl = data.photo
@@ -91,12 +119,27 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
 
       const questionsToSave = await Promise.all(
         data.questions.map(async qa => {
-          const audioFile = (qa as { audioFile?: Blob | string }).audioFile
+          const audioFile = qa.audioFile
           if (audioFile && audioFile instanceof Blob) {
-            // Audio upload logic would go here
-            return { questionId: qa.questionId, audioUrl: qa.audioUrl || '' }
+            try {
+              const result = await uploadAudioToCloudinary(audioFile, {
+                folder: 'flint/profile-questions'
+              })
+              return { 
+                questionId: qa.questionId, 
+                audioUrl: result.url,
+                uploadId: result.publicId
+              }
+            } catch (error) {
+              console.error('Failed to upload audio for question:', qa.questionId, error)
+              throw new Error(`Failed to upload audio for question: ${qa.questionId}`)
+            }
           }
-          return { questionId: qa.questionId, audioUrl: qa.audioUrl || '' }
+          return { 
+            questionId: qa.questionId, 
+            audioUrl: qa.audioUrl || '',
+            uploadId: qa.uploadId || ''
+          }
         })
       )
 
@@ -115,11 +158,19 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
     }
   }
 
+  const onInvalid = (errors: unknown) => {
+    console.error('Form Validation Errors:', errors)
+    toast.error('Please fix the errors in your profile')
+  }
+
   return {
     form,
     formData,
     completeness,
     isSaving,
-    onSave: handleSubmit(onManualSave)
+    onSave: handleSubmit(onManualSave, onInvalid)
   }
 }
+
+
+  

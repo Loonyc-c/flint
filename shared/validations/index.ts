@@ -30,3 +30,15 @@ export {
   profileUpdateSchema,
   type ProfileCreationFormData
 } from './profile.validation'
+
+export {
+  referenceUpdateSchema,
+  type ReferenceUpdateFormData
+} from './reference.validation'
+
+export {
+  sendMessageSchema,
+  getMessagesQuerySchema,
+  type SendMessageRequest,
+  type GetMessagesQuery
+} from './chat.validation'

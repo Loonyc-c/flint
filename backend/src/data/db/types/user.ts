@@ -15,5 +15,6 @@ export type DbUser = BaseCollection & {
   subscription: Subscription
   preferences: UserPreferences
   contactInfo?: UserContactInfo
+  voiceIntro?: string // Optional
   profileCompletion: number
 }

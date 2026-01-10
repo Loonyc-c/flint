@@ -1,5 +1,17 @@
 {
   "HomePage": {
     "loading": "Loading..."
+  },
+  "chat": {
+    "messages": "Messages",
+    "settings": "Settings",
+    "matches": "Matches",
+    "likes": "Likes",
+    "yourTurn": "Your Turn",
+    "theirTurn": "Their Turn",
+    "hiddenChats": "Hidden Chats"
+  },
+  "common": {
+    "close": "Close"
   }
 }

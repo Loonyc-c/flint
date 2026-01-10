@@ -6,16 +6,18 @@ import {
 import { withMongoTransaction } from '@/data/db'
 import { DbInteraction } from '@/data/db/types/interaction'
 import { DbMatch } from '@/data/db/types/match'
-import { InteractionType, LOOKING_FOR, MatchWithUser, SwipeResponse, User } from '@shared/types'
+import { InteractionType, LikePreview, LOOKING_FOR, MatchWithUser, SwipeResponse, User } from '@shared/types'
 import { ObjectId } from 'mongodb'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
 import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
+import { ListCandidatesRequest } from '@shared/validations/match.validation'
 
 const MIN_PROFILE_COMPLETION = 80
 
 export const matchService = {
-  getCandidates: async (userId: string, { limit = 20 }): Promise<User[]> => {
+  getCandidates: async (userId: string, filters: ListCandidatesRequest): Promise<User[]> => {
+    const { limit = 20, ageRange: filterAgeRange, lookingFor: filterLookingFor } = filters
     const userObjectId = new ObjectId(userId)
     const userCollection = await getUserCollection()
     const interactionCollection = await getInteractionCollection()
@@ -25,7 +27,10 @@ export const matchService = {
       return []
     }
 
-    const { lookingFor, ageRange } = currentUser.preferences ?? {}
+    // Use passed filters if available, otherwise fall back to user preferences
+    const lookingFor = filterLookingFor ?? currentUser.preferences?.lookingFor
+    const ageRange = filterAgeRange ?? currentUser.preferences?.ageRange
+    
     const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
 
     // Pre-fetch interacted user IDs to optimize query
@@ -42,8 +47,8 @@ export const matchService = {
           profileCompletion: { $gte: MIN_PROFILE_COMPLETION },
           'profile.gender': lookingFor === LOOKING_FOR.ALL ? { $exists: true } : lookingFor,
           'profile.age': {
-            $gte: userAge - ageRange,
-            $lte: userAge + ageRange,
+            $gte: 18,
+            $lte: ageRange ?? DEFAULT_AGE_RANGE,
           },
         },
       },
@@ -117,12 +122,14 @@ export const matchService = {
 
       await interactionCollection.insertOne(interaction, { session })
 
-      if (type === InteractionType.LIKE) {
+      // Both SMASH and SUPER can create matches
+      if (type === InteractionType.SMASH || type === InteractionType.SUPER) {
+        // Check if target has also swiped positively (smash or super) on the actor
         const reverseInteraction = await interactionCollection.findOne(
           {
             actorId: targetObjectId,
             targetId: actorObjectId,
-            type: InteractionType.LIKE,
+            type: { $in: [InteractionType.SMASH, InteractionType.SUPER] },
           },
           { session },
         )
@@ -194,7 +201,7 @@ export const matchService = {
 
     const otherUsers = await userCollection
       .find({ _id: { $in: otherUserObjectIds } })
-      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1 })
+      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photos': 1 })
       .toArray()
 
     const userMap = new Map(otherUsers.map((user) => [user._id.toHexString(), user]))
@@ -208,6 +215,24 @@ export const matchService = {
         const otherUser = userMap.get(otherUserId)
         if (!otherUser) return null
 
+        // Get unread count for current user
+        const unreadCount = match.unreadCounts?.[userIdString] || 0
+        
+        // Determine if it's their turn (other user's turn means current user is waiting)
+        const isTheirTurn = match.currentTurn === otherUserId
+
+        // Format last message for preview
+        const lastMessage = match.lastMessage
+          ? {
+              text: match.lastMessage.text,
+              senderId: match.lastMessage.senderId,
+              createdAt: match.lastMessage.createdAt.toISOString(),
+            }
+          : undefined
+
+        // Get avatar from photos array (first photo)
+        const avatar = otherUser.profile?.photos?.[0] || undefined
+
         return {
           id: match._id.toHexString(),
           createdAt: match.createdAt,
@@ -215,9 +240,86 @@ export const matchService = {
             id: otherUser._id.toHexString(),
             firstName: otherUser.auth.firstName,
             lastName: otherUser.auth.lastName,
+            avatar,
           },
+          lastMessage,
+          unreadCount,
+          isTheirTurn,
         }
       })
       .filter((r): r is MatchWithUser => r !== null)
+  },
+
+  /**
+   * Gets users who have liked the current user but haven't been matched yet
+   * (i.e., current user hasn't swiped on them yet)
+   */
+  getLikes: async (userId: string): Promise<LikePreview[]> => {
+    const userObjectId = new ObjectId(userId)
+    const interactionCollection = await getInteractionCollection()
+    const userCollection = await getUserCollection()
+
+    // Find interactions where someone swiped positively (smash or super) on the current user
+    const likesReceived = await interactionCollection
+      .find({
+        targetId: userObjectId,
+        type: { $in: [InteractionType.SMASH, InteractionType.SUPER] },
+        isDeleted: false,
+      })
+      .toArray()
+
+    if (likesReceived.length === 0) {
+      return []
+    }
+
+    // Get the IDs of users who liked current user
+    const likerIds = likesReceived.map((like) => like.actorId)
+
+    // Find which of these the current user has already swiped on
+    const currentUserSwipes = await interactionCollection
+      .find({
+        actorId: userObjectId,
+        targetId: { $in: likerIds },
+      })
+      .project({ targetId: 1 })
+      .toArray()
+
+    const swipedOnIds = new Set(currentUserSwipes.map((s) => s.targetId.toHexString()))
+
+    // Filter to only include likes from users we haven't swiped on yet
+    const pendingLikes = likesReceived.filter(
+      (like) => !swipedOnIds.has(like.actorId.toHexString())
+    )
+
+    if (pendingLikes.length === 0) {
+      return []
+    }
+
+    // Get user details for the likers
+    const pendingLikerIds = pendingLikes.map((like) => like.actorId)
+    const likers = await userCollection
+      .find({ _id: { $in: pendingLikerIds } })
+      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photos': 1 })
+      .toArray()
+
+    const userMap = new Map(likers.map((user) => [user._id.toHexString(), user]))
+
+    return pendingLikes
+      .map((like) => {
+        const liker = userMap.get(like.actorId.toHexString())
+        if (!liker) return null
+
+        return {
+          id: like._id.toHexString(),
+          user: {
+            id: liker._id.toHexString(),
+            firstName: liker.auth.firstName,
+            lastName: liker.auth.lastName,
+            avatar: liker.profile?.photos?.[0] || undefined,
+          },
+          createdAt: like.createdAt.toISOString(),
+        }
+      })
+      .filter((r): r is LikePreview => r !== null)
   },
 }

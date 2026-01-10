@@ -1,5 +1,17 @@
 {
   "HomePage": {
     "loading": "Ачааллаж байна..."
+  },
+  "chat": {
+    "messages": "Зурвасууд",
+    "settings": "Тохиргоо",
+    "matches": "Тааруулсан",
+    "likes": "Таалагдсан",
+    "yourTurn": "Таны ээлж",
+    "theirTurn": "Түүний ээлж",
+    "hiddenChats": "Нуугдсан чат"
+  },
+  "common": {
+    "close": "Хаах"
   }
 }

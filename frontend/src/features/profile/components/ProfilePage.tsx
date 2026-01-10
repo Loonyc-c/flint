@@ -19,18 +19,29 @@ interface SaveButtonProps {
   onClick: () => void
   isSaving: boolean
   hasPendingPhoto: boolean
+  className?: string
 }
 
-const SaveProfileButton = ({ onClick, isSaving, hasPendingPhoto }: SaveButtonProps) => (
-  <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-40">
+const MobileSaveButton = ({ onClick, isSaving, hasPendingPhoto }: SaveButtonProps) => (
+  <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-40 lg:hidden">
     <button
       onClick={onClick}
       disabled={isSaving}
       className="w-full bg-brand hover:bg-brand-300 text-white font-black py-5 rounded-2xl shadow-2xl shadow-brand/40 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm cursor-pointer"
     >
-      {isSaving ? (hasPendingPhoto ? 'UPLOADING PHOTO...' : 'SAVING...') : 'SAVE PROFILE'}
+      {isSaving ? (hasPendingPhoto ? 'UPLOADING...' : 'SAVING...') : 'SAVE PROFILE'}
     </button>
   </div>
+)
+
+const DesktopSaveButton = ({ onClick, isSaving, hasPendingPhoto, className }: SaveButtonProps) => (
+  <button
+    onClick={onClick}
+    disabled={isSaving}
+    className={`w-full bg-brand hover:bg-brand-300 text-white font-black py-4 rounded-xl shadow-xl shadow-brand/20 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm cursor-pointer ${className}`}
+  >
+    {isSaving ? (hasPendingPhoto ? 'UPLOADING...' : 'SAVING...') : 'SAVE CHANGES'}
+  </button>
 )
 
 // =============================================================================
@@ -71,8 +82,8 @@ export const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32">
-      <main className="max-w-2xl mx-auto p-4 space-y-6">
+    <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32 lg:pb-12">
+      <main className="max-w-7xl mx-auto p-4 lg:p-8">
         <input
           type="file"
           ref={fileInputRef}
@@ -81,34 +92,63 @@ export const ProfilePage = () => {
           onChange={handlePhotoSelect}
         />
 
-        <ProfileAvatar
-          photo={photoPreviewUrl || formData.photo || ''}
-          completeness={completeness}
-          onEdit={triggerFileInput}
-          isUploading={isSaving && !!pendingPhotoFile}
-        />
+        <div className="lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
+          {/* Sidebar (Avatar & Actions) */}
+          <div className="lg:col-span-4 space-y-6">
+            <div className="lg:sticky lg:top-8 space-y-8">
+              <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
+                <ProfileAvatar
+                  photo={photoPreviewUrl || formData.photo || ''}
+                  completeness={completeness}
+                  onEdit={triggerFileInput}
+                  isUploading={isSaving && !!pendingPhotoFile}
+                />
+              </div>
 
-        <BasicInfoSection register={register} errors={errors} />
+              {/* Desktop Voice Intro */}
+              <div className="hidden lg:block">
+                <VoiceIntroWidget />
+              </div>
 
-        <BioSection register={register} errors={errors} />
+              {/* Desktop Save Button */}
+              <div className="hidden lg:block">
+                <DesktopSaveButton
+                  onClick={onSave}
+                  isSaving={isSaving}
+                  hasPendingPhoto={!!pendingPhotoFile}
+                />
+              </div>
+            </div>
+          </div>
 
-        <InterestsSection
-          selectedInterests={formData.interests || []}
-          onEdit={() => setShowInterestsModal(true)}
-          error={errors.interests?.message}
-        />
+          {/* Main Content (Forms) */}
+          <div className="lg:col-span-8 space-y-6 mt-6 lg:mt-0">
+            <BasicInfoSection register={register} errors={errors} />
 
-        <QuestionsSection
-          questions={formData.questions || []}
-          onUpdateQuestions={updatedQuestions =>
-            setValue('questions', updatedQuestions, { shouldValidate: true })
-          }
-          error={errors.questions?.message}
-        />
+            <BioSection register={register} errors={errors} />
 
-        <VoiceIntroWidget />
+            <InterestsSection
+              selectedInterests={formData.interests || []}
+              onEdit={() => setShowInterestsModal(true)}
+              error={errors.interests?.message}
+            />
 
-        <SaveProfileButton
+            <QuestionsSection
+              questions={formData.questions || []}
+              onUpdateQuestions={updatedQuestions =>
+                setValue('questions', updatedQuestions, { shouldValidate: true })
+              }
+              error={errors.questions?.message}
+            />
+
+            {/* Mobile Voice Intro */}
+            <div className="lg:hidden">
+              <VoiceIntroWidget />
+            </div>
+          </div>
+        </div>
+
+        <MobileSaveButton
           onClick={onSave}
           isSaving={isSaving}
           hasPendingPhoto={!!pendingPhotoFile}

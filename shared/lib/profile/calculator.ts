@@ -1,57 +1,71 @@
 import { ProfileUpdateRequest } from '../../types/user'
 
 /**
+
  * Calculates the profile completeness score based on filled fields.
- *
- * Base Requirements (Must exist to be valid profile): 60 points
- * - Nickname, Age, Gender
- * - 1 Photo
- * - Voice Intro
- *
- * Bonus Points (To reach 80% threshold):
- * - Questions (max 3): +5 each (Total 15)
- * - Bio: +10
- * - Interests: +10
- * - Preferences (Implicitly checked): +5
- *
- * @param profile The user profile data
- * @returns Score from 0 to 100
+
  */
-export const calculateProfileCompleteness = (profile: ProfileUpdateRequest): number => {
+
+export const calculateProfileCompleteness = (profile: any): number => {
+
   let score = 0
 
-  // 1. Base Requirements
-  const hasBase =
-    profile.nickName &&
-    profile.age &&
-    profile.gender &&
-    profile.photo &&
-    profile.voiceIntro
 
-  if (hasBase) {
-    score += 60
-  } else {
-    return 0 // Fundamental missing
+
+  // 1. Base Requirements (Leniency added)
+
+  if (profile.nickName) score += 15
+
+  if (profile.age) score += 15
+
+  if (profile.gender) score += 10
+
+  if (profile.photo) score += 20
+
+
+
+  // 1.1 Voice Intro (Optional but adds score)
+
+  if (profile.voiceIntro) {
+
+    score += 10
+
   }
+
+
 
   // 2. Questions (Max 15)
+
   if (profile.questions && Array.isArray(profile.questions)) {
-    const answeredCount = profile.questions.length
+
+    const answeredCount = profile.questions.filter((q: any) => q.questionId && (q.audioUrl || q.audioFile)).length
+
     score += Math.min(answeredCount, 3) * 5
+
   }
+
+
 
   // 3. Bio (Max 10)
+
   if (profile.bio && profile.bio.trim().length > 0) {
+
     score += 10
+
   }
+
+
 
   // 4. Interests (Max 10)
+
   if (profile.interests && profile.interests.length > 0) {
-    score += 10
+
+    score += 5
+
   }
 
-  // 5. Preferences
-  score += 5
+
 
   return Math.min(score, 100)
+
 }
