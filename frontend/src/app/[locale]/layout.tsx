@@ -31,7 +31,11 @@ interface RootLayoutProps {
   params: Promise<{ locale: string }>
 }
 
-export default async function RootLayout({ children, params }: RootLayoutProps) {
+/**
+ * RootLayout component.
+ * Uses Next.js 15+ async params pattern.
+ */
+const RootLayout = async ({ children, params }: RootLayoutProps) => {
   const { locale: localeParam } = await params
 
   // Type-safe locale validation without `as any`
@@ -53,3 +57,5 @@ export default async function RootLayout({ children, params }: RootLayoutProps) 
     </html>
   )
 }
+
+export default RootLayout

@@ -131,16 +131,16 @@ export const SwipeCard = ({ candidate, onSwipe }: SwipeCardProps) => {
         {/* Q&A */}
         {candidate.profile?.questions && candidate.profile.questions.length > 0 && (
           <div className="space-y-3">
-            {candidate.profile.questions.map(
-              (q: { questionId: string; audioUrl: string }, idx: number) => (
+            {candidate.profile.questions
+              .filter((q) => q.audioUrl)
+              .map((q, idx) => (
                 <CustomAudioPlayer
                   key={idx}
-                  audioUrl={q.audioUrl}
+                  audioUrl={q.audioUrl!}
                   question={`Question ${idx + 1}`}
                   size="small"
                 />
-              )
-            )}
+              ))}
           </div>
         )}
       </div>

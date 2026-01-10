@@ -1,112 +1,66 @@
 'use client'
 
-import { useState, useEffect, useRef, type ChangeEvent, useCallback } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'react-toastify'
-import { profileUpdateSchema, type ProfileCreationFormData } from '@shared/validations'
-import { getProfile, updateProfile } from '@/features/profile/api/profile'
-import { calculateProfileCompleteness } from '@shared/lib'
-import { type INTERESTS } from '@shared/types/enums'
+import { useState } from 'react'
 import { useAuthenticatedUser } from '@/features/auth/context/UserContext'
-import { ProfileAvatar } from './ProfileAvatar'
-import { BasicInfoSection, BioSection } from './BasicInfoSections'
-import { InterestsSection, InterestsModal } from './InterestsSection'
-import { QuestionsSection } from './QuestionsSection'
-import { VoiceIntroWidget } from './VoiceIntroWidget'
-import { uploadImageToCloudinary } from '@/lib/cloudinary'
+import { ProfileAvatar } from './avatar/ProfileAvatar'
+import { BasicInfoSection, BioSection } from './info/BasicInfoSections'
+import { InterestsSection, InterestsModal } from './interests/InterestsSection'
+import { QuestionsSection } from './questions/QuestionsSection'
+import { VoiceIntroWidget } from './voice/VoiceIntroWidget'
+import { useProfilePhoto } from '../hooks/useProfilePhoto'
+import { useProfileForm } from '../hooks/useProfileForm'
+import { type INTERESTS } from '@shared/types/enums'
 
 // =============================================================================
-// Component
+// Sub-Components
 // =============================================================================
 
-/**
- * Main profile page component for viewing and editing user profiles.
- * Manages form state, profile completeness, and various edit modals.
- */
+interface SaveButtonProps {
+  onClick: () => void
+  isSaving: boolean
+  hasPendingPhoto: boolean
+}
+
+const SaveProfileButton = ({ onClick, isSaving, hasPendingPhoto }: SaveButtonProps) => (
+  <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-40">
+    <button
+      onClick={onClick}
+      disabled={isSaving}
+      className="w-full bg-brand hover:bg-brand-300 text-white font-black py-5 rounded-2xl shadow-2xl shadow-brand/40 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm cursor-pointer"
+    >
+      {isSaving ? (hasPendingPhoto ? 'UPLOADING PHOTO...' : 'SAVING...') : 'SAVE PROFILE'}
+    </button>
+  </div>
+)
+
+// =============================================================================
+// Main Component
+// =============================================================================
+
 export const ProfilePage = () => {
   const { user } = useAuthenticatedUser()
-  const fileInputRef = useRef<HTMLInputElement>(null)
-
-  const [completeness, setCompleteness] = useState(0)
-  const [isSaving, setIsSaving] = useState(false)
   const [showInterestsModal, setShowInterestsModal] = useState(false)
 
-  // Store pending photo file for upload on save (cost-efficient: only upload when user saves)
-  const [pendingPhotoFile, setPendingPhotoFile] = useState<File | null>(null)
-  const [photoPreviewUrl, setPhotoPreviewUrl] = useState<string | null>(null)
+  const {
+    fileInputRef,
+    pendingPhotoFile,
+    photoPreviewUrl,
+    handlePhotoSelect,
+    clearPendingPhoto,
+    triggerFileInput
+  } = useProfilePhoto()
+
+  const { form, formData, completeness, isSaving, onSave } = useProfileForm(
+    user.id,
+    pendingPhotoFile,
+    clearPendingPhoto
+  )
 
   const {
     register,
-    handleSubmit,
-    watch,
-    reset,
     setValue,
     formState: { errors }
-  } = useForm<ProfileCreationFormData>({
-    resolver: zodResolver(profileUpdateSchema),
-    // In ProfilePage component, update the default values:
-    defaultValues: {
-      nickName: '',
-      age: 18,
-      bio: '',
-      interests: [],
-      photo: '',
-      voiceIntro: '', // Add default value
-      questions: Array(3)
-        .fill(null)
-        .map(() => ({
-          questionId: '',
-          audioUrl: '', // Provide empty string default
-          audioFile: undefined
-        }))
-    }
-  })
-
-  const formData = watch()
-
-  // Fetch profile on mount
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile(user.id)
-        if (data.isComplete && data.profile) {
-          // Ensure that the questions array always has 3 elements
-          const questionsWithDefaults = data.profile.questions || []
-          while (questionsWithDefaults.length < 3) {
-            questionsWithDefaults.push({ questionId: '', audioUrl: '', audioFile: undefined })
-          }
-          if (questionsWithDefaults.length > 3) {
-            questionsWithDefaults.splice(3)
-          }
-          reset({ ...data.profile, questions: questionsWithDefaults })
-        } else {
-          // If profile is not complete or not present, ensure default questions are set
-          reset({
-            ...formData, // Use current formData as base
-            questions: Array(3).fill({ questionId: '', audioUrl: '', audioFile: undefined })
-          })
-        }
-      } catch {
-        // Profile fetch errors result in empty form display, ensure default questions are set
-        reset({
-          ...formData, // Use current formData as base
-          questions: Array(3).fill({ questionId: '', audioUrl: '', audioFile: undefined })
-        })
-      }
-    }
-    fetchProfile()
-  }, [reset, user.id])
-
-  // Update completeness score when form data or pending photo changes
-  useEffect(() => {
-    // Include pending photo in completeness calculation (even before save)
-    const dataForCalculation = pendingPhotoFile
-      ? { ...formData, photo: 'pending' } // Treat pending photo as having a photo
-      : formData
-    const score = calculateProfileCompleteness(dataForCalculation)
-    setCompleteness(score)
-  }, [formData, pendingPhotoFile])
+  } = form
 
   const toggleInterest = (interest: INTERESTS) => {
     const current = formData.interests || []
@@ -116,110 +70,9 @@ export const ProfilePage = () => {
     setValue('interests', updated, { shouldValidate: true })
   }
 
-  // Cleanup preview URL on unmount or when preview changes
-  useEffect(() => {
-    return () => {
-      if (photoPreviewUrl) {
-        URL.revokeObjectURL(photoPreviewUrl)
-      }
-    }
-  }, [photoPreviewUrl])
-
-  const handlePhotoSelect = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      const file = e.target.files?.[0]
-      if (!file) return
-
-      // Validate file before creating preview
-      const allowedFormats = ['image/jpeg', 'image/png', 'image/webp']
-      const maxFileSize = 5 * 1024 * 1024 // 5MB
-
-      if (!allowedFormats.includes(file.type)) {
-        toast.error('Invalid file format. Allowed: JPG, PNG, WebP')
-        return
-      }
-
-      if (file.size > maxFileSize) {
-        toast.error('File size exceeds 5MB limit')
-        return
-      }
-
-      // Revoke old preview URL to prevent memory leaks
-      if (photoPreviewUrl) {
-        URL.revokeObjectURL(photoPreviewUrl)
-      }
-
-      // Store file for later upload and create local preview (FREE - no Cloudinary cost)
-      setPendingPhotoFile(file)
-      const previewUrl = URL.createObjectURL(file)
-      setPhotoPreviewUrl(previewUrl)
-
-      // Reset input so same file can be selected again
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ''
-      }
-    },
-    [photoPreviewUrl]
-  )
-
-  const onManualSave = async (data: ProfileCreationFormData) => {
-    setIsSaving(true)
-
-    try {
-      let finalPhotoUrl = data.photo
-
-      // Only upload to Cloudinary if there's a pending photo file
-      if (pendingPhotoFile) {
-        const result = await uploadImageToCloudinary(pendingPhotoFile, {
-          folder: 'flint/profile-photos',
-          maxFileSize: 5 * 1024 * 1024,
-          allowedFormats: ['image/jpeg', 'image/png', 'image/webp']
-        })
-        finalPhotoUrl = result.url
-
-        // Clear pending file after successful upload
-        setPendingPhotoFile(null)
-        if (photoPreviewUrl) {
-          URL.revokeObjectURL(photoPreviewUrl)
-          setPhotoPreviewUrl(null)
-        }
-
-        // Update form with the Cloudinary URL
-        setValue('photo', finalPhotoUrl, { shouldValidate: true })
-      }
-
-      // Process question audios for upload
-      const questionsToSave = await Promise.all(
-        data.questions.map(async qa => {
-          const audioFile = (qa as unknown as { audioFile?: File | Blob }).audioFile
-          if (audioFile && audioFile instanceof Blob) {
-            console.log(`Uploading audio for question ${qa.questionId}... (not yet implemented)`)
-            return { questionId: qa.questionId, audioUrl: qa.audioUrl || '' }
-          }
-          return { questionId: qa.questionId, audioUrl: qa.audioUrl || '' }
-        })
-      )
-
-      // Save profile with all required fields
-      await updateProfile(user.id, {
-        ...data,
-        photo: finalPhotoUrl,
-        questions: questionsToSave,
-        voiceIntro: data.voiceIntro || '' // Ensure voiceIntro is always a string
-      })
-      toast.success('Profile updated!')
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Save failed'
-      toast.error(message)
-    } finally {
-      setIsSaving(false)
-    }
-  }
-
   return (
     <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32">
-      <main className="max-w-2xl mx-auto p-4 space-y-6 ">
-        {/* Hidden File Input */}
+      <main className="max-w-2xl mx-auto p-4 space-y-6">
         <input
           type="file"
           ref={fileInputRef}
@@ -231,7 +84,7 @@ export const ProfilePage = () => {
         <ProfileAvatar
           photo={photoPreviewUrl || formData.photo || ''}
           completeness={completeness}
-          onEdit={() => fileInputRef.current?.click()}
+          onEdit={triggerFileInput}
           isUploading={isSaving && !!pendingPhotoFile}
         />
 
@@ -255,16 +108,11 @@ export const ProfilePage = () => {
 
         <VoiceIntroWidget />
 
-        {/* Floating Save Button */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-40">
-          <button
-            onClick={handleSubmit(onManualSave)}
-            disabled={isSaving}
-            className="w-full bg-brand hover:bg-brand-300 text-white font-black py-5 rounded-2xl shadow-2xl shadow-brand/40 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm cursor-pointer"
-          >
-            {isSaving ? (pendingPhotoFile ? 'UPLOADING PHOTO...' : 'SAVING...') : 'SAVE PROFILE'}
-          </button>
-        </div>
+        <SaveProfileButton
+          onClick={onSave}
+          isSaving={isSaving}
+          hasPendingPhoto={!!pendingPhotoFile}
+        />
       </main>
 
       <InterestsModal

@@ -3,7 +3,6 @@
 import React, { useState, useRef, useEffect } from 'react'
 import { Mic, StopCircle, Play, Trash2, CheckCircle, PauseCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { cn } from '@/lib/utils'
 
 interface QuestionVoiceRecorderProps {
   questionText: string
