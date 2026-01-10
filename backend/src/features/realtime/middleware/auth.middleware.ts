@@ -15,6 +15,15 @@ export const socketAuthMiddleware = (
   socket: Socket,
   next: (err?: Error) => void
 ) => {
+  // #region agent log
+  console.log('[DEBUG-C] Socket auth middleware - incoming connection:', { 
+    hasAuthToken: !!socket.handshake.auth?.token, 
+    hasQueryToken: !!socket.handshake.query?.token,
+    origin: socket.handshake.headers.origin,
+    socketId: socket.id
+  })
+  // #endregion
+
   try {
     // Try to get token from handshake auth first, then query params
     const token =
@@ -22,6 +31,9 @@ export const socketAuthMiddleware = (
       socket.handshake.query?.token
 
     if (!token || typeof token !== 'string') {
+      // #region agent log
+      console.log('[DEBUG-C] Socket auth FAILED - no token provided')
+      // #endregion
       return next(new Error('Authentication required'))
     }
 
@@ -32,6 +44,9 @@ export const socketAuthMiddleware = (
     const verifiedToken = authService.extractToken(cleanToken)
 
     if (!verifiedToken) {
+      // #region agent log
+      console.log('[DEBUG-C] Socket auth FAILED - invalid/expired token')
+      // #endregion
       return next(new Error('Invalid or expired token'))
     }
 
@@ -40,9 +55,15 @@ export const socketAuthMiddleware = (
     authenticatedSocket.userId = verifiedToken.data.userId
     authenticatedSocket.user = verifiedToken.data
 
+    // #region agent log
+    console.log('[DEBUG-C] Socket auth SUCCESS:', { userId: verifiedToken.data.userId })
+    // #endregion
     console.log(`✅ [Socket.io] User authenticated: ${verifiedToken.data.userId}`)
     next()
   } catch (error) {
+    // #region agent log
+    console.log('[DEBUG-C] Socket auth EXCEPTION:', { error: String(error) })
+    // #endregion
     console.error('❌ [Socket.io] Authentication error:', error)
     next(new Error('Authentication failed'))
   }
