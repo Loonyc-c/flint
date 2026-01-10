@@ -38,15 +38,14 @@ export const ChatThread = ({ conversation, onClose, onVideoCall, matchStage }: C
 
   // Handle staged audio call initiation (Stage 1)
   const handleStagedAudioCall = useCallback(() => {
-    // #region agent log
-    console.log('[DEBUG-STAGED] ChatThread: initiating staged call', {
-      matchId: conversation.matchId,
-      calleeId: conversation.otherUser.id,
-      stage: 1
-    })
-    // #endregion
     initiateStagedCall(conversation.matchId, conversation.otherUser.id, 1)
   }, [conversation.matchId, conversation.otherUser.id, initiateStagedCall])
+
+  // Handle staged video call initiation (Stage 2)
+  const handleStagedVideoCall = useCallback(() => {
+    initiateStagedCall(conversation.matchId, conversation.otherUser.id, 2)
+  }, [conversation.matchId, conversation.otherUser.id, initiateStagedCall])
+
   const [messages, setMessages] = useState<Message[]>([])
   const [inputText, setInputText] = useState('')
   const [isLoading, setIsLoading] = useState(true)
@@ -208,11 +207,19 @@ export const ChatThread = ({ conversation, onClose, onVideoCall, matchStage }: C
                <Video className="w-5 h-5" />
              </button>
            )}
-           {/* Stage indicator for non-unlocked matches */}
+           {/* Stage indicator/button for non-unlocked matches */}
            {!canMakeVideoCalls && stage !== 'fresh' && (
-             <div className="px-2 py-1 rounded-full bg-brand/10 text-brand text-xs font-medium">
-               {stage === 'stage1_complete' ? 'Stage 2 Available' : 'Stage 3 Available'}
-             </div>
+             <button 
+               onClick={stage === 'stage1_complete' ? handleStagedVideoCall : undefined}
+               className={cn(
+                 "px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm",
+                 stage === 'stage1_complete' 
+                   ? "bg-brand text-white hover:bg-brand-300 cursor-pointer" 
+                   : "bg-brand/10 text-brand cursor-default"
+               )}
+             >
+               {stage === 'stage1_complete' ? 'Start Stage 2' : 'Stage 3 Available'}
+             </button>
            )}
            <button className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500">
              <MoreVertical className="w-5 h-5" />

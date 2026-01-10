@@ -232,7 +232,9 @@ const handleCallComplete = async (io: Server, matchId: string) => {
   console.log(`🔔 [StagedCall] Stage ${call.stage} call complete in match ${matchId}`)
 
   // Emit call ended and prompt for next stage
-  const promptNextStage = call.stage < 2 || call.stage === 2
+  const promptNextStage = true // Always prompt after successful completion of Stage 1 or 2
+  const nextStageNum = call.stage + 1
+  
   io.to(`user:${call.callerId}`).emit('staged-call-ended', { matchId, stage: call.stage, promptNextStage })
   io.to(`user:${call.calleeId}`).emit('staged-call-ended', { matchId, stage: call.stage, promptNextStage })
 
@@ -241,8 +243,8 @@ const handleCallComplete = async (io: Server, matchId: string) => {
     if (match) {
       await stagedCallService.createStagePrompt(matchId, call.stage, match.users)
       const expiresAt = new Date(Date.now() + STAGED_CALL_CONSTANTS.PROMPT_TIMEOUT).toISOString()
-      io.to(`user:${call.callerId}`).emit('stage-prompt', { matchId, fromStage: call.stage, expiresAt })
-      io.to(`user:${call.calleeId}`).emit('stage-prompt', { matchId, fromStage: call.stage, expiresAt })
+      io.to(`user:${call.callerId}`).emit('stage-prompt', { matchId, fromStage: call.stage, nextStage: nextStageNum, expiresAt })
+      io.to(`user:${call.calleeId}`).emit('stage-prompt', { matchId, fromStage: call.stage, nextStage: nextStageNum, expiresAt })
 
       // Prompt timeout
       const timeoutId = setTimeout(async () => {

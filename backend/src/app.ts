@@ -63,7 +63,7 @@ const generalLimiter = rateLimit({
 
 
 
-const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000' || 'http://127.0.0.1:7242')
+const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000,http://127.0.0.1:7242')
   .split(',')
   .map((o) => o.trim().replace(/\/$/, ''))
   .filter(Boolean)

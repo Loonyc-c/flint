@@ -48,13 +48,6 @@ const RAW_API_URL = process.env.NEXT_PUBLIC_API_URL;
 // If SOCKET_URL is not set, use API_URL but strip any path (like /v1)
 const SOCKET_URL = RAW_SOCKET_URL || (RAW_API_URL ? getSocketBaseUrl(RAW_API_URL) : "http://localhost:9999");
 
-const debugLog = (location: string, message: string, data: Record<string, unknown>, hypothesisId: string) => {
-  console.log(`[DEBUG-${hypothesisId}] ${location}: ${message}`, data);
-  // Also send to local debug server if available
-  fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location,message,data,timestamp:Date.now(),sessionId:'debug-session',hypothesisId})}).catch(()=>{});
-};
-// #endregion
-
 export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, token } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -63,17 +56,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
   // Initialize socket connection
   useEffect(() => {
-    // #region agent log
-    debugLog('SocketContext.tsx:useEffect', 'Socket init check', { 
-      hasUser: !!user?.id, 
-      hasToken: !!token, 
-      tokenLength: token?.length || 0, 
-      SOCKET_URL_FINAL: SOCKET_URL,
-      RAW_SOCKET_URL: RAW_SOCKET_URL || 'NOT_SET', 
-      RAW_API_URL: RAW_API_URL || 'NOT_SET'
-    }, 'A');
-    // #endregion
-
     if (!user?.id || !token) {
       // Disconnect if user logs out
       if (socket) {
@@ -83,10 +65,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       }
       return;
     }
-
-    // #region agent log
-    debugLog('SocketContext.tsx:createSocket', 'Creating socket connection', { userId: user.id, SOCKET_URL, tokenPreview: token.substring(0, 20) + '...' }, 'A,C');
-    // #endregion
 
     // Create socket connection
     const newSocket = io(SOCKET_URL, {
@@ -101,9 +79,6 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
 
     // Connection events
     newSocket.on("connect", () => {
-      // #region agent log
-      debugLog('SocketContext.tsx:onConnect', 'Socket connected successfully', { socketId: newSocket.id, transport: newSocket.io.engine?.transport?.name }, 'D,E');
-      // #endregion
       setIsConnected(true);
 
       // Rejoin any match rooms after reconnection
@@ -112,32 +87,17 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       });
     });
 
-    newSocket.on("disconnect", (reason) => {
-      // #region agent log
-      debugLog('SocketContext.tsx:onDisconnect', 'Socket disconnected', { reason, socketId: newSocket.id }, 'D');
-      // #endregion
+    newSocket.on("disconnect", (_reason) => {
       setIsConnected(false);
     });
 
-    newSocket.on("connect_error", (error) => {
-      // #region agent log
-      debugLog('SocketContext.tsx:onConnectError', 'Socket connection error', { errorMessage: error.message, errorName: error.name, SOCKET_URL }, 'B,C,D,E');
-      // #endregion
+    newSocket.on("connect_error", (_error) => {
       setIsConnected(false);
     });
 
     newSocket.on("error", (error) => {
-      // #region agent log
-      debugLog('SocketContext.tsx:onError', 'Socket error event', { error: String(error) }, 'D');
-      // #endregion
       console.error("[Socket] Error:", error);
     });
-
-    // #region agent log
-    newSocket.io.on("reconnect_attempt", (attempt) => {
-      debugLog('SocketContext.tsx:reconnectAttempt', 'Reconnection attempt', { attempt }, 'D,E');
-    });
-    // #endregion
 
     setSocket(newSocket);
 
