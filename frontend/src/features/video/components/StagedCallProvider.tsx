@@ -1,10 +1,28 @@
 'use client'
 
-import { useState, useCallback, type ReactNode } from 'react'
+import { useState, useCallback, createContext, useContext, type ReactNode } from 'react'
 import { useStagedCall } from '@/features/realtime'
-import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal, IncomingStagedCallModal } from './staged'
+import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal, IncomingStagedCallModal, OutgoingStagedCallModal } from './staged'
 import { VideoCallModal } from './VideoCallModal'
 import { toast } from 'react-toastify'
+
+// =============================================================================
+// Context
+// =============================================================================
+
+interface StagedCallContextValue {
+  initiateCall: (matchId: string, calleeId: string, stage: 1 | 2) => void
+}
+
+const StagedCallContext = createContext<StagedCallContextValue | null>(null)
+
+export const useStagedCallContext = () => {
+  const context = useContext(StagedCallContext)
+  if (!context) {
+    throw new Error('useStagedCallContext must be used within a StagedCallProvider')
+  }
+  return context
+}
 
 // =============================================================================
 // Types
@@ -45,25 +63,46 @@ export const StagedCallProvider = ({
     initiateCall,
     acceptCall,
     declineCall,
+    endCall,
     respondToPrompt,
   } = useStagedCall({
     onCallAccepted: (data) => {
+      // #region agent log
+      console.log('[DEBUG-PROVIDER] onCallAccepted:', { stage: data.stage, channelName: data.channelName })
+      // #endregion
       if (data.stage === 1) {
         setShowAudioModal(true)
       } else {
+        // #region agent log
+        console.log('[DEBUG-PROVIDER] Setting showVideoModal to true for stage 2')
+        // #endregion
         setShowVideoModal(true)
       }
     },
     onCallEnded: () => {
+      // #region agent log
+      console.log('[DEBUG-PROVIDER] onCallEnded - closing modals')
+      // #endregion
       setShowAudioModal(false)
       setShowVideoModal(false)
     },
     onPromptResult: (data) => {
+      // #region agent log
+      console.log('[DEBUG-PROVIDER] onPromptResult received:', { bothAccepted: data.bothAccepted, nextStage: data.nextStage })
+      // #endregion
       if (data.bothAccepted) {
         toast.success(`Moving to Stage ${data.nextStage}!`)
         if (data.nextStage === 2) {
+          // #region agent log
+          console.log('[DEBUG-PROVIDER] Scheduling initiateCall for stage 2 in 1 second')
+          // #endregion
           // Auto-start stage 2 video call
-          setTimeout(() => initiateCall(matchId, otherUserId, 2), 1000)
+          setTimeout(() => {
+            // #region agent log
+            console.log('[DEBUG-PROVIDER] Now calling initiateCall for stage 2')
+            // #endregion
+            initiateCall(matchId, otherUserId, 2)
+          }, 1000)
         }
         onStageComplete?.(data.nextStage === 2 ? 'stage1_complete' : data.nextStage === 3 ? 'stage2_complete' : 'unlocked')
       } else {
@@ -90,6 +129,24 @@ export const StagedCallProvider = ({
     }
   }, [declineCall, incomingCall])
 
+  // Cancel outgoing call
+  const handleCancelOutgoingCall = useCallback(() => {
+    // #region agent log
+    console.log('[DEBUG-PROVIDER] Cancelling outgoing call')
+    // #endregion
+    endCall(matchId)
+  }, [endCall, matchId])
+
+  // End active call (notifies other party via socket)
+  const handleEndStagedCall = useCallback(() => {
+    // #region agent log
+    console.log('[DEBUG-END] handleEndStagedCall called, matchId:', matchId)
+    // #endregion
+    endCall(matchId)
+    setShowAudioModal(false)
+    setShowVideoModal(false)
+  }, [endCall, matchId])
+
   // Respond to stage prompt
   const handlePromptAccept = useCallback(() => {
     respondToPrompt(matchId, true)
@@ -107,14 +164,30 @@ export const StagedCallProvider = ({
     setShowContactModal(true)
   }
 
+  // Create context value with initiateCall exposed
+  const contextValue: StagedCallContextValue = {
+    initiateCall,
+  }
+
   return (
-    <>
+    <StagedCallContext.Provider value={contextValue}>
       {children}
 
-      {/* Incoming Call Modal */}
+      {/* Outgoing Call Modal (Caller Side) */}
+      <OutgoingStagedCallModal
+        isOpen={callStatus === 'calling' && !!currentCall}
+        calleeName={otherUserName}
+        calleeAvatar={otherUserAvatar}
+        stage={currentCall?.stage || 1}
+        callType={currentCall?.stage === 1 ? 'audio' : 'video'}
+        onCancel={handleCancelOutgoingCall}
+      />
+
+      {/* Incoming Call Modal (Receiver Side) */}
       <IncomingStagedCallModal
         isOpen={!!incomingCall && callStatus === 'ringing'}
         callerName={incomingCall?.callerName || ''}
+        callerAvatar={otherUserAvatar}
         stage={incomingCall?.stage || 1}
         callType={incomingCall?.callType || 'audio'}
         onAccept={handleAcceptCall}
@@ -129,7 +202,8 @@ export const StagedCallProvider = ({
         partnerAvatar={otherUserAvatar}
         remainingTime={remainingTime}
         stage={1}
-        onClose={() => setShowAudioModal(false)}
+        onClose={handleEndStagedCall}
+        onCallEnded={handleEndStagedCall}
       />
 
       {/* Stage 2 Video Call Modal */}
@@ -139,7 +213,7 @@ export const StagedCallProvider = ({
           channelName={currentCall.channelName}
           localUserName="You"
           remoteUserName={otherUserName}
-          onClose={() => setShowVideoModal(false)}
+          onClose={handleEndStagedCall}
         />
       )}
 
@@ -162,7 +236,7 @@ export const StagedCallProvider = ({
           onClose={() => setShowContactModal(false)}
         />
       )}
-    </>
+    </StagedCallContext.Provider>
   )
 }
 

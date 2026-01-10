@@ -10,7 +10,7 @@ import { MatchesList } from './MatchesList'
 import { useMatches } from '@/features/swipe/hooks/useMatches'
 import { useLikes } from '@/features/swipe/hooks/useLikes'
 import { useVideoCall } from '@/features/realtime'
-import { VideoCallModal, IncomingCallModal } from '@/features/video'
+import { VideoCallModal, IncomingCallModal, StagedCallProvider } from '@/features/video'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
 import { toast } from 'react-toastify'
@@ -67,6 +67,9 @@ export const DiscoveryHub = () => {
   })
 
   const handleSelectMatch = (matchId: string) => {
+    // #region agent log
+    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'DiscoveryHub.tsx:87',message:'handleSelectMatch called',data:{matchId,currentActiveView:activeView},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H3'})}).catch(()=>{});
+    // #endregion
     setActiveMatchId(matchId)
     setActiveView('chat')
   }
@@ -244,11 +247,24 @@ export const DiscoveryHub = () => {
                   transition={{ duration: 0.2 }}
                   className="h-full w-full overflow-hidden sm:rounded-3xl bg-white dark:bg-neutral-900 shadow-2xl shadow-neutral-200/50 dark:shadow-neutral-950/50"
                 >
-                  <ChatThread 
-                    conversation={activeConversation} 
-                    onClose={handleCloseView}
-                    onVideoCall={handleVideoCall}
-                  />
+                  <StagedCallProvider
+                    matchId={activeConversation.matchId}
+                    otherUserId={activeConversation.otherUser.id}
+                    otherUserName={activeConversation.otherUser.name}
+                    otherUserAvatar={activeConversation.otherUser.avatar}
+                    onStageComplete={(newStage) => {
+                      // #region agent log
+                      console.log('[DEBUG-STAGED] Stage complete:', newStage)
+                      // #endregion
+                      refreshMatches()
+                    }}
+                  >
+                    <ChatThread 
+                      conversation={activeConversation} 
+                      onClose={handleCloseView}
+                      onVideoCall={handleVideoCall}
+                    />
+                  </StagedCallProvider>
                 </motion.div>
               )}
 

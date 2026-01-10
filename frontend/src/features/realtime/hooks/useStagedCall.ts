@@ -46,6 +46,7 @@ interface UseStagedCallReturn {
   initiateCall: (matchId: string, calleeId: string, stage: 1 | 2) => void
   acceptCall: (matchId: string) => void
   declineCall: (matchId: string) => void
+  endCall: (matchId: string) => void
   respondToPrompt: (matchId: string, accepted: boolean) => void
 }
 
@@ -62,13 +63,28 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
   const [stagePrompt, setStagePrompt] = useState<StagePromptPayload | null>(null)
   const [partnerContact, setPartnerContact] = useState<ContactInfoDisplay | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Use ref to track callStatus immediately (avoids stale closure issues)
+  const callStatusRef = useRef<StagedCallStatus>(callStatus)
+  callStatusRef.current = callStatus
 
   // Start countdown timer
   const startTimer = useCallback((duration: number) => {
+    // #region agent log
+    console.log('[DEBUG-TIMER] startTimer called with duration:', duration)
+    // #endregion
     setRemainingTime(duration)
-    if (timerRef.current) clearInterval(timerRef.current)
+    if (timerRef.current) {
+      // #region agent log
+      console.log('[DEBUG-TIMER] Clearing existing timer')
+      // #endregion
+      clearInterval(timerRef.current)
+    }
     timerRef.current = setInterval(() => {
       setRemainingTime(prev => {
+        // #region agent log
+        console.log('[DEBUG-TIMER] Timer tick, prev:', prev, 'next:', prev - 1000)
+        // #endregion
         if (prev <= 1000) {
           if (timerRef.current) clearInterval(timerRef.current)
           return 0
@@ -85,23 +101,33 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     const handleRinging = (data: StagedCallRingingPayload) => {
       setIncomingCall(data)
       setCallStatus('ringing')
+      callStatusRef.current = 'ringing'
       options.onIncomingCall?.(data)
     }
 
     const handleWaiting = (data: { matchId: string; channelName: string; stage: 1 | 2 }) => {
       setCallStatus('calling')
+      callStatusRef.current = 'calling'
       setCurrentCall({ ...data, duration: 0 })
     }
 
     const handleAccepted = (data: StagedCallAcceptedPayload) => {
+      // #region agent log
+      console.log('[DEBUG-TIMER] handleAccepted received:', data)
+      // #endregion
       setCallStatus('active')
+      callStatusRef.current = 'active'
       setCurrentCall({ matchId: data.matchId, channelName: data.channelName, stage: data.stage, duration: data.duration })
       startTimer(data.duration)
       options.onCallAccepted?.(data)
     }
 
     const handleConnected = (data: StagedCallAcceptedPayload) => {
+      // #region agent log
+      console.log('[DEBUG-TIMER] handleConnected received:', data)
+      // #endregion
       setCallStatus('active')
+      callStatusRef.current = 'active'
       setCurrentCall({ matchId: data.matchId, channelName: data.channelName, stage: data.stage, duration: data.duration })
       setIncomingCall(null)
       startTimer(data.duration)
@@ -110,12 +136,15 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
 
     const handleDeclined = () => {
       setCallStatus('idle')
+      callStatusRef.current = 'idle'
       setCurrentCall(null)
     }
 
     const handleEnded = (data: StagedCallEndedPayload) => {
       if (timerRef.current) clearInterval(timerRef.current)
-      setCallStatus(data.promptNextStage ? 'prompt' : 'idle')
+      const newStatus = data.promptNextStage ? 'prompt' : 'idle'
+      setCallStatus(newStatus)
+      callStatusRef.current = newStatus
       setCurrentCall(null)
       setIncomingCall(null)
       options.onCallEnded?.(data)
@@ -124,12 +153,18 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     const handlePrompt = (data: StagePromptPayload) => {
       setStagePrompt(data)
       setCallStatus('prompt')
+      callStatusRef.current = 'prompt'
       options.onStagePrompt?.(data)
     }
 
     const handlePromptResult = (data: StagePromptResult) => {
+      // #region agent log
+      console.log('[DEBUG-PROMPT] handlePromptResult received:', data)
+      // #endregion
       setStagePrompt(null)
       setCallStatus('idle')
+      // Update ref immediately so initiateCall can use the new value
+      callStatusRef.current = 'idle'
       options.onPromptResult?.(data)
     }
 
@@ -138,9 +173,9 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       options.onContactExchange?.(data)
     }
 
-    const handleTimeout = () => { setCallStatus('idle'); setCurrentCall(null) }
-    const handleMissed = () => { setIncomingCall(null); setCallStatus('idle') }
-    const handleCancelled = () => { setIncomingCall(null); setCallStatus('idle') }
+    const handleTimeout = () => { setCallStatus('idle'); callStatusRef.current = 'idle'; setCurrentCall(null) }
+    const handleMissed = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle' }
+    const handleCancelled = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle' }
 
     socket.on('staged-call-ringing', handleRinging)
     socket.on('staged-call-waiting', handleWaiting)
@@ -173,10 +208,22 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
   }, [socket, options, startTimer])
 
   const initiateCall = useCallback((matchId: string, calleeId: string, stage: 1 | 2) => {
-    if (socket && isConnected && callStatus === 'idle') {
+    // Use ref for immediate status check (avoids stale closure from React state)
+    const currentStatus = callStatusRef.current
+    // #region agent log
+    console.log('[DEBUG-INITIATE] initiateCall called:', { matchId, calleeId, stage, socketExists: !!socket, isConnected, callStatusRef: currentStatus })
+    // #endregion
+    if (socket && isConnected && currentStatus === 'idle') {
+      // #region agent log
+      console.log('[DEBUG-INITIATE] Emitting staged-call-initiate for stage', stage)
+      // #endregion
       socket.emit('staged-call-initiate', { matchId, calleeId, stage })
+    } else {
+      // #region agent log
+      console.log('[DEBUG-INITIATE] Cannot initiate - conditions not met:', { socketExists: !!socket, isConnected, currentStatus })
+      // #endregion
     }
-  }, [socket, isConnected, callStatus])
+  }, [socket, isConnected])
 
   const acceptCall = useCallback((matchId: string) => {
     if (socket && isConnected && incomingCall) {
@@ -189,6 +236,20 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       socket.emit('staged-call-decline', { matchId })
       setIncomingCall(null)
       setCallStatus('idle')
+      callStatusRef.current = 'idle'
+    }
+  }, [socket, isConnected])
+
+  const endCall = useCallback((matchId: string) => {
+    // #region agent log
+    console.log('[DEBUG-END] endCall called for matchId:', matchId)
+    // #endregion
+    if (socket && isConnected) {
+      socket.emit('staged-call-end', { matchId })
+      if (timerRef.current) clearInterval(timerRef.current)
+      setCallStatus('idle')
+      callStatusRef.current = 'idle'
+      setCurrentCall(null)
     }
   }, [socket, isConnected])
 
@@ -200,6 +261,6 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
 
   return {
     callStatus, currentCall, incomingCall, remainingTime,
-    stagePrompt, partnerContact, initiateCall, acceptCall, declineCall, respondToPrompt,
+    stagePrompt, partnerContact, initiateCall, acceptCall, declineCall, endCall, respondToPrompt,
   }
 }

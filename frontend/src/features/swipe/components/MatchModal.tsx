@@ -72,6 +72,12 @@ export const MatchModal = ({ isOpen, matchedUser, onClose }: MatchModalProps) =>
   const router = useRouter()
   const [showContent, setShowContent] = useState(false)
 
+  // #region agent log
+  if (isOpen && matchedUser) {
+    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MatchModal.tsx:76',message:'MatchModal opened',data:{matchedUserId:matchedUser.id,matchedUserName:matchedUser.firstName},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+  }
+  // #endregion
+
   useEffect(() => {
     if (isOpen) {
       // Delay content reveal for dramatic effect
@@ -223,7 +229,12 @@ export const MatchModal = ({ isOpen, matchedUser, onClose }: MatchModalProps) =>
                     <motion.button
                       whileHover={{ scale: 1.02 }}
                       whileTap={{ scale: 0.98 }}
-                      onClick={() => router.push('/matches')}
+                      onClick={() => {
+                        // #region agent log
+                        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({location:'MatchModal.tsx:227',message:'Start Chatting clicked - navigating to /matches',data:{matchedUserId:matchedUser?.id,currentPath:typeof window !== 'undefined' ? window.location.pathname : 'unknown'},timestamp:Date.now(),sessionId:'debug-session',hypothesisId:'H1'})}).catch(()=>{});
+                        // #endregion
+                        router.push('/matches')
+                      }}
                       className="w-full py-4 bg-gradient-to-r from-brand to-brand-300 text-white rounded-2xl font-bold text-lg tracking-wide shadow-xl shadow-brand/30 hover:shadow-2xl hover:shadow-brand/40 transition-shadow cursor-pointer flex items-center justify-center gap-3"
                     >
                       <MessageCircle className="w-5 h-5" />
