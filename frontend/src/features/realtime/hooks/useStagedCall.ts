@@ -46,6 +46,7 @@ interface UseStagedCallReturn {
   initiateCall: (matchId: string, calleeId: string, stage: 1 | 2) => void
   acceptCall: (matchId: string) => void
   declineCall: (matchId: string) => void
+  endCall: (matchId: string) => void
   respondToPrompt: (matchId: string, accepted: boolean) => void
 }
 
@@ -209,6 +210,18 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     }
   }, [socket, isConnected])
 
+  const endCall = useCallback((matchId: string) => {
+    // #region agent log
+    console.log('[DEBUG-END] endCall called for matchId:', matchId)
+    // #endregion
+    if (socket && isConnected) {
+      socket.emit('staged-call-end', { matchId })
+      if (timerRef.current) clearInterval(timerRef.current)
+      setCallStatus('idle')
+      setCurrentCall(null)
+    }
+  }, [socket, isConnected])
+
   const respondToPrompt = useCallback((matchId: string, accepted: boolean) => {
     if (socket && isConnected) {
       socket.emit('stage-prompt-response', { matchId, accepted })
@@ -217,6 +230,6 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
 
   return {
     callStatus, currentCall, incomingCall, remainingTime,
-    stagePrompt, partnerContact, initiateCall, acceptCall, declineCall, respondToPrompt,
+    stagePrompt, partnerContact, initiateCall, acceptCall, declineCall, endCall, respondToPrompt,
   }
 }

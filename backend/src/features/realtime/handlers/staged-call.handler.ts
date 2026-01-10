@@ -139,7 +139,7 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
   })
 
   /**
-   * Decline staged call
+   * Decline staged call (callee rejects incoming call)
    */
   socket.on('staged-call-decline', (data: { matchId: string }) => {
     const { matchId } = data
@@ -153,6 +153,35 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
 
     io.to(`user:${call.callerId}`).emit('staged-call-declined', { matchId })
     console.log(`❌ [StagedCall] Call declined in match ${matchId}`)
+  })
+
+  /**
+   * End active staged call (either party can end)
+   */
+  socket.on('staged-call-end', (data: { matchId: string }) => {
+    const { matchId } = data
+    const call = activeStagedCalls.get(matchId)
+
+    // #region agent log
+    console.log('[DEBUG-END] staged-call-end received:', { matchId, userId, call: call ? { callerId: call.callerId, calleeId: call.calleeId } : null })
+    // #endregion
+
+    if (!call) return
+    
+    // Allow either caller or callee to end the call
+    if (call.callerId !== userId && call.calleeId !== userId) return
+
+    if (call.timerId) clearTimeout(call.timerId)
+    activeStagedCalls.delete(matchId)
+    stagedCallService.endStagedCall(matchId)
+
+    // Notify the other party
+    const otherId = call.callerId === userId ? call.calleeId : call.callerId
+    io.to(`user:${otherId}`).emit('staged-call-ended', { matchId, stage: call.stage, reason: 'ended_by_user' })
+    // Also confirm to the user who ended
+    socket.emit('staged-call-ended', { matchId, stage: call.stage, reason: 'ended_by_self' })
+    
+    console.log(`📴 [StagedCall] Call ended by user in match ${matchId}`)
   })
 
   /**

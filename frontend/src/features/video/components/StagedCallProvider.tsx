@@ -45,6 +45,7 @@ export const StagedCallProvider = ({
     initiateCall,
     acceptCall,
     declineCall,
+    endCall,
     respondToPrompt,
   } = useStagedCall({
     onCallAccepted: (data) => {
@@ -90,6 +91,16 @@ export const StagedCallProvider = ({
     }
   }, [declineCall, incomingCall])
 
+  // End active call (notifies other party via socket)
+  const handleEndStagedCall = useCallback(() => {
+    // #region agent log
+    console.log('[DEBUG-END] handleEndStagedCall called, matchId:', matchId)
+    // #endregion
+    endCall(matchId)
+    setShowAudioModal(false)
+    setShowVideoModal(false)
+  }, [endCall, matchId])
+
   // Respond to stage prompt
   const handlePromptAccept = useCallback(() => {
     respondToPrompt(matchId, true)
@@ -129,7 +140,8 @@ export const StagedCallProvider = ({
         partnerAvatar={otherUserAvatar}
         remainingTime={remainingTime}
         stage={1}
-        onClose={() => setShowAudioModal(false)}
+        onClose={handleEndStagedCall}
+        onCallEnded={handleEndStagedCall}
       />
 
       {/* Stage 2 Video Call Modal */}
@@ -139,7 +151,7 @@ export const StagedCallProvider = ({
           channelName={currentCall.channelName}
           localUserName="You"
           remoteUserName={otherUserName}
-          onClose={() => setShowVideoModal(false)}
+          onClose={handleEndStagedCall}
         />
       )}
 
