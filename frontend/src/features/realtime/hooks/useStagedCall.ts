@@ -65,10 +65,21 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
 
   // Start countdown timer
   const startTimer = useCallback((duration: number) => {
+    // #region agent log
+    console.log('[DEBUG-TIMER] startTimer called with duration:', duration)
+    // #endregion
     setRemainingTime(duration)
-    if (timerRef.current) clearInterval(timerRef.current)
+    if (timerRef.current) {
+      // #region agent log
+      console.log('[DEBUG-TIMER] Clearing existing timer')
+      // #endregion
+      clearInterval(timerRef.current)
+    }
     timerRef.current = setInterval(() => {
       setRemainingTime(prev => {
+        // #region agent log
+        console.log('[DEBUG-TIMER] Timer tick, prev:', prev, 'next:', prev - 1000)
+        // #endregion
         if (prev <= 1000) {
           if (timerRef.current) clearInterval(timerRef.current)
           return 0
@@ -94,6 +105,9 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     }
 
     const handleAccepted = (data: StagedCallAcceptedPayload) => {
+      // #region agent log
+      console.log('[DEBUG-TIMER] handleAccepted received:', data)
+      // #endregion
       setCallStatus('active')
       setCurrentCall({ matchId: data.matchId, channelName: data.channelName, stage: data.stage, duration: data.duration })
       startTimer(data.duration)
@@ -101,6 +115,9 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     }
 
     const handleConnected = (data: StagedCallAcceptedPayload) => {
+      // #region agent log
+      console.log('[DEBUG-TIMER] handleConnected received:', data)
+      // #endregion
       setCallStatus('active')
       setCurrentCall({ matchId: data.matchId, channelName: data.channelName, stage: data.stage, duration: data.duration })
       setIncomingCall(null)
