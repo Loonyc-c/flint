@@ -193,6 +193,8 @@ export const StagedCallProvider = ({
           channelName={currentCall.channelName}
           localUserName="You"
           remoteUserName={partnerName}
+          remainingTime={remainingTime}
+          stage={2}
           onClose={handleEndStagedCall}
         />
       )}
