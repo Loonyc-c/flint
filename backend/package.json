@@ -7,6 +7,8 @@
     "dev": "tsx --watch src/index.ts",
     "copy:shared": "bash scripts/copy-shared.sh",
     "postinstall": "npm run copy:shared",
+    "build": "npm run copy:shared && tsc && tsc-alias",
+    "start:prod": "node dist/src/render.js",
     "compile": "npm run copy:shared && tsc && tsc-alias",
     "lint": "ESLINT_USE_FLAT_CONFIG=false eslint .",
     "lint:fix": "ESLINT_USE_FLAT_CONFIG=false eslint . --fix",

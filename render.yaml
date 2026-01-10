@@ -1,0 +1,16 @@
+# Render Blueprint for Flint Backend
+# Deploy from monorepo root to access shared/ folder
+
+services:
+  - type: web
+    name: flint-backend
+    runtime: node
+    plan: free
+    buildCommand: cd backend && npm install && npm run build
+    startCommand: cd backend && npm run start:prod
+    healthCheckPath: /
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
