@@ -82,7 +82,7 @@ export const ProfilePage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32 lg:pb-12">
+    <div className="bg-neutral-50 dark:bg-black pb-32 lg:pb-12">
       <main className="max-w-7xl mx-auto p-4 lg:p-8">
         <input
           type="file"

@@ -28,7 +28,7 @@ const HomePage = () => {
   ]
 
   return (
-    <div className="p-10 flex justify-center items-center h-fit">
+    <div className="px-4 py-8 sm:p-10 flex justify-center items-center min-h-[calc(100dvh-5rem)]">
       <div className="perspective-[1000px] relative flex flex-col max-w-5xl justify-center items-center w-full">
         <Tabs tabs={tabs} />
       </div>

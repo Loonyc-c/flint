@@ -52,6 +52,13 @@ Organize by **Feature**, not by Type.
     });
     ```
 
+### Responsive Consistency (Layout Stability)
+To ensure stability across all devices and prevent scrollbar issues:
+1.  **No Static Heights:** NEVER use fixed pixel heights (e.g., `h-[600px]`) for layout containers.
+2.  **Viewport Handling:** Use `min-h-[calc(100dvh-headerHeight)]` instead of `min-h-screen` to account for sticky headers and avoid overflow on mobile.
+3.  **Content-First Expansion:** Layouts must expand based on their children. Use `aspect-ratio` for elements that need a specific shape (like cards) to ensure they scale proportionally.
+4.  **Responsive Spacing:** Always use responsive padding and margins (e.g., `p-4 sm:p-10`) to maintain UX quality on smaller viewports.
+
 ---
 
 ## 3. ⚙️ Backend Guidelines (Express)
@@ -89,3 +96,4 @@ When presented with a coding task, follow this internal process:
 > - [ ] **DRY:** Used `@shared/types` & `@shared/validations`?
 > - [ ] **i18n:** Used `@/i18n/routing` for all navigation?
 > - [ ] **Architecture:** Feature folder structure respected?
+> - [ ] **Responsive:** Layout is stable and uses viewport-aware units?

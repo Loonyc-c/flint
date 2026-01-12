@@ -58,7 +58,7 @@ export const LoadingSpinner = ({
   }
 
   const containerClasses = fullScreen
-    ? 'min-h-screen flex items-center justify-center bg-background'
+    ? 'min-h-[calc(100vh-5rem)] flex items-center justify-center bg-background'
     : `flex items-center justify-center ${minHeight}`
 
   return (
