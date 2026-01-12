@@ -5,6 +5,7 @@ import { Heart, MessageCircle, Sparkles, PartyPopper } from 'lucide-react'
 import { type User } from '@shared/types'
 import { useRouter } from '@/i18n/routing'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 interface MatchContentProps {
   showContent: boolean
@@ -13,6 +14,7 @@ interface MatchContentProps {
 }
 
 export const MatchContent = ({ showContent, matchedUser, onClose }: MatchContentProps) => {
+  const t = useTranslations('swipe.modals.match')
   const router = useRouter()
   const userPhoto = matchedUser.profile?.photo
   const userName = matchedUser.profile?.nickName || matchedUser.firstName
@@ -104,7 +106,7 @@ export const MatchContent = ({ showContent, matchedUser, onClose }: MatchContent
                 transition={{ type: 'spring', delay: 0.3 }}
                 className="text-4xl sm:text-5xl font-black italic bg-gradient-to-r from-brand to-brand-300 bg-clip-text text-transparent uppercase tracking-tight"
               >
-                It&apos;s a Match!
+                {t('title')}
               </motion.h2>
               <motion.p
                 initial={{ opacity: 0 }}
@@ -112,9 +114,7 @@ export const MatchContent = ({ showContent, matchedUser, onClose }: MatchContent
                 transition={{ delay: 0.4 }}
                 className="text-neutral-600 dark:text-neutral-300 text-lg"
               >
-                You and{' '}
-                <span className="font-bold text-neutral-900 dark:text-white">{userName}</span> like
-                each other!
+                {t('subtitle', { name: userName })}
               </motion.p>
             </div>
 
@@ -134,7 +134,7 @@ export const MatchContent = ({ showContent, matchedUser, onClose }: MatchContent
                 className="w-full py-4 bg-gradient-to-r from-brand to-brand-300 text-white rounded-2xl font-bold text-lg tracking-wide shadow-xl shadow-brand/30 hover:shadow-2xl hover:shadow-brand/40 transition-shadow cursor-pointer flex items-center justify-center gap-3"
               >
                 <MessageCircle className="w-5 h-5" />
-                Start Chatting
+                {t('startChatting')}
               </motion.button>
 
               <motion.button
@@ -143,7 +143,7 @@ export const MatchContent = ({ showContent, matchedUser, onClose }: MatchContent
                 onClick={onClose}
                 className="w-full py-4 bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400 rounded-2xl font-bold tracking-wide hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors cursor-pointer"
               >
-                Keep Swiping
+                {t('keepSwiping')}
               </motion.button>
             </motion.div>
           </motion.div>

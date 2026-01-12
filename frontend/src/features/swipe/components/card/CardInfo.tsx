@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Volume2, Play, Pause, Mic } from 'lucide-react'
 import { type User } from '@shared/types'
 import { CustomAudioPlayer } from '@/components/ui/custom-audio-player'
+import { useTranslations } from 'next-intl'
 
 interface CardInfoProps {
   candidate: User
@@ -12,6 +13,8 @@ interface CardInfoProps {
 }
 
 export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardInfoProps) => {
+  const t = useTranslations('swipe.card')
+
   return (
     <div className="flex-1 overflow-y-auto bg-white dark:bg-neutral-800">
       <div className="p-4 space-y-4">
@@ -42,10 +45,10 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
               <div className="flex-1 min-w-0 text-left">
                 <p className="font-bold flex items-center gap-2">
                   <Mic className="w-4 h-4" />
-                  Voice Intro
+                  {t('voiceIntro')}
                 </p>
                 <p className="text-sm opacity-90">
-                  {isPlayingVoice ? 'Playing...' : 'Tap to hear their voice'}
+                  {isPlayingVoice ? t('voiceIntroPlaying') : t('voiceIntroTap')}
                 </p>
               </div>
 
@@ -74,8 +77,8 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
               <Volume2 className="w-5 h-5 text-neutral-400" />
             </div>
             <div className="flex-1 text-left">
-              <p className="font-bold text-neutral-700 dark:text-neutral-300">Voice Intro</p>
-              <p className="text-sm text-neutral-500 dark:text-neutral-400">Not recorded yet</p>
+              <p className="font-bold text-neutral-700 dark:text-neutral-300">{t('voiceIntro')}</p>
+              <p className="text-sm text-neutral-500 dark:text-neutral-400">{t('voiceIntroEmpty')}</p>
             </div>
           </div>
         )}
@@ -89,7 +92,7 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
             className="p-4 bg-neutral-50 dark:bg-neutral-700/30 rounded-2xl"
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-2">
-              About
+              {t('about')}
             </h3>
             <p className="text-sm leading-relaxed text-neutral-700 dark:text-neutral-300">
               {candidate.profile.bio}
@@ -106,7 +109,7 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
             className="space-y-3"
           >
             <h3 className="text-xs font-bold uppercase tracking-widest text-neutral-400 px-1">
-              Get to know me
+              {t('getToKnowMe')}
             </h3>
             {candidate.profile.questions.slice(0, 2).map((q, i) => {
               if (!q.questionId) return null
@@ -120,16 +123,16 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
                   {q.audioUrl ? (
                     <CustomAudioPlayer
                       audioUrl={q.audioUrl}
-                      question={`Question ${i + 1}`}
+                      question={t('question', { number: i + 1 })}
                       size="small"
                     />
                   ) : (
                     <div className="bg-gradient-to-r from-brand/5 to-brand-300/5 dark:from-brand/10 dark:to-brand-300/10 rounded-xl p-3 border border-brand/10">
                       <p className="text-xs font-semibold text-neutral-700 dark:text-neutral-300">
-                        Question {i + 1}
+                        {t('question', { number: i + 1 })}
                       </p>
                       <p className="text-xs italic text-neutral-400 dark:text-neutral-500 mt-0.5">
-                        No answer yet
+                        {t('noAnswer')}
                       </p>
                     </div>
                   )}
@@ -138,7 +141,7 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
             })}
             {candidate.profile.questions.length > 2 && (
               <p className="text-xs text-neutral-400 text-center py-1">
-                +{candidate.profile.questions.length - 2} more questions
+                {t('moreQuestions', { count: candidate.profile.questions.length - 2 })}
               </p>
             )}
           </motion.div>

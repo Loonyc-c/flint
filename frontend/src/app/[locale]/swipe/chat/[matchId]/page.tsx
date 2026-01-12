@@ -7,6 +7,7 @@ import { ChatThread } from "@/features/chat/components/ChatThread";
 import { useMatches } from "@/features/swipe/hooks/useMatches";
 import { useRouter } from "@/i18n/routing";
 import { useStagedCallContext } from "@/features/video";
+import { useTranslations } from "next-intl";
 
 const pageVariants = {
   initial: { opacity: 0, x: 20 },
@@ -15,6 +16,7 @@ const pageVariants = {
 };
 
 const ChatPage = () => {
+  const t = useTranslations('chat');
   const params = useParams();
   const router = useRouter();
   const { matches } = useMatches();
@@ -41,12 +43,12 @@ const ChatPage = () => {
     return (
       <div className="flex-1 flex items-center justify-center p-8 text-center">
         <div className="space-y-4">
-          <p className="text-neutral-500">Conversation not found</p>
+          <p className="text-neutral-500">{t('notFound')}</p>
           <button 
             onClick={() => router.push("/swipe")}
             className="text-brand font-bold"
           >
-            Go back
+            {t('goBack')}
           </button>
         </div>
       </div>

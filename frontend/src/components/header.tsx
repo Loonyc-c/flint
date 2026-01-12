@@ -5,12 +5,14 @@ import { LogOut, User } from 'lucide-react'
 import { useRouter, Link } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
 import MainLogo from './ui/logo'
+import { useTranslations } from 'next-intl'
 
 /**
  * Main header component displayed on authenticated pages.
  * Provides navigation and user profile access.
  */
 const MainHeader = () => {
+  const t = useTranslations('auth.header')
   const { user, logout } = useUser()
   const router = useRouter()
 
@@ -42,7 +44,7 @@ const MainHeader = () => {
               {user?.profile?.photo ? (
                 <Image
                   src={user.profile.photo}
-                  alt={user.name || 'User Profile'}
+                  alt={user.name || t('userProfile')}
                   width={40}
                   height={40}
                   className="h-10 w-10 rounded-full object-cover border-2 border-brand hover:border-brand/70 transition-colors"
@@ -61,7 +63,7 @@ const MainHeader = () => {
               className="flex items-center gap-2 px-4 py-2 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
+              <span>{t('signOut')}</span>
             </button>
           </li>
         </ul>

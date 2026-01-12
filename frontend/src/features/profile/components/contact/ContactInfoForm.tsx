@@ -7,6 +7,7 @@ import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Local Schema (without default to avoid type issues with react-hook-form)
@@ -39,25 +40,22 @@ interface ContactInfoFormProps {
 }
 
 // =============================================================================
-// Field Config
-// =============================================================================
-
-const contactFields = [
-  { name: 'phone', label: 'Phone Number', placeholder: '+1 234 567 8900', icon: Phone },
-  { name: 'instagram', label: 'Instagram', placeholder: '@yourusername', icon: Instagram },
-  { name: 'telegram', label: 'Telegram', placeholder: '@yourusername', icon: MessageCircle },
-  { name: 'snapchat', label: 'Snapchat', placeholder: 'yourusername', icon: MessageCircle },
-  { name: 'whatsapp', label: 'WhatsApp', placeholder: '+1 234 567 8900', icon: Phone },
-  { name: 'wechat', label: 'WeChat', placeholder: 'yourwechatid', icon: MessageCircle },
-  { name: 'other', label: 'Other', placeholder: 'Any other contact info', icon: MessageCircle },
-] as const
-
-// =============================================================================
 // Component
 // =============================================================================
 
 export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInfoFormProps) => {
+  const t = useTranslations('profile.contact')
   const [isSubmitting, setIsSubmitting] = useState(false)
+
+  const contactFields = [
+    { name: 'phone', label: t('labels.phone'), placeholder: t('placeholders.phone'), icon: Phone },
+    { name: 'instagram', label: t('labels.instagram'), placeholder: t('placeholders.instagram'), icon: Instagram },
+    { name: 'telegram', label: t('labels.telegram'), placeholder: t('placeholders.telegram'), icon: MessageCircle },
+    { name: 'snapchat', label: t('labels.snapchat'), placeholder: t('placeholders.snapchat'), icon: MessageCircle },
+    { name: 'whatsapp', label: t('labels.whatsapp'), placeholder: t('placeholders.whatsapp'), icon: Phone },
+    { name: 'wechat', label: t('labels.wechat'), placeholder: t('placeholders.wechat'), icon: MessageCircle },
+    { name: 'other', label: t('labels.other'), placeholder: t('placeholders.other'), icon: MessageCircle },
+  ] as const
 
   const {
     register,
@@ -89,20 +87,20 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} className={cn('space-y-4', className)}>
       <div className="mb-6">
-        <h3 className="text-lg font-bold text-neutral-900 dark:text-white">Contact Information</h3>
-        <p className="text-sm text-neutral-500 dark:text-neutral-400 mt-1">
-          Add your contact details to share with matches after completing Stage 3
+        <h3 className="text-lg font-bold text-foreground">{t('title')}</h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('subtitle')}
         </p>
       </div>
 
       <div className="grid gap-4">
         {contactFields.map(({ name, label, placeholder, icon: Icon }) => (
           <div key={name}>
-            <label className="block text-sm font-medium text-neutral-700 dark:text-neutral-300 mb-1.5">
+            <label className="block text-sm font-medium text-foreground mb-1.5">
               {label}
             </label>
             <div className="relative">
-              <div className="absolute left-3 top-1/2 -translate-y-1/2 text-neutral-400">
+              <div className="absolute -translate-y-1/2 left-3 top-1/2 text-muted-foreground">
                 <Icon className="w-5 h-5" />
               </div>
               <input
@@ -110,17 +108,17 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
                 type="text"
                 placeholder={placeholder}
                 className={cn(
-                  'w-full pl-11 pr-4 py-3 rounded-xl border bg-white dark:bg-neutral-800',
-                  'text-neutral-900 dark:text-white placeholder:text-neutral-400',
+                  'w-full pl-11 pr-4 py-3 rounded-xl border bg-background',
+                  'text-foreground placeholder:text-muted-foreground',
                   'focus:ring-2 focus:ring-brand/50 focus:border-brand outline-none transition-all',
                   errors[name as keyof FormData]
-                    ? 'border-red-500'
-                    : 'border-neutral-200 dark:border-neutral-700'
+                    ? 'border-destructive'
+                    : 'border-border'
                 )}
               />
             </div>
             {errors[name as keyof FormData] && (
-              <p className="text-red-500 text-xs mt-1">
+              <p className="mt-1 text-xs text-destructive">
                 {errors[name as keyof FormData]?.message}
               </p>
             )}
@@ -137,26 +135,26 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
           className={cn(
             'w-full py-3 px-6 rounded-xl font-semibold flex items-center justify-center gap-2 transition-all',
             isDirty
-              ? 'bg-brand hover:bg-brand/90 text-white shadow-lg shadow-brand/20'
-              : 'bg-neutral-200 dark:bg-neutral-700 text-neutral-400 cursor-not-allowed'
+              ? 'bg-brand hover:bg-brand/90 text-brand-foreground shadow-lg shadow-brand/20'
+              : 'bg-muted text-muted-foreground cursor-not-allowed'
           )}
         >
           {isSubmitting ? (
             <>
               <Loader2 className="w-5 h-5 animate-spin" />
-              Saving...
+              {t('saving')}
             </>
           ) : (
             <>
               <Save className="w-5 h-5" />
-              Save Contact Info
+              {t('saveButton')}
             </>
           )}
         </motion.button>
       </div>
 
-      <p className="text-xs text-neutral-400 text-center">
-        Your contact info will only be shared with matches who complete Stage 3 with you
+      <p className="text-xs text-center text-muted-foreground">
+        {t('footerNote')}
       </p>
     </form>
   )

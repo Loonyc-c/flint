@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import QuestionVoiceRecorder from "./QuestionVoiceRecorder";
 import { QUESTION_POOL, type QuestionAnswer } from "@/shared-types/types";
+import { useTranslations } from 'next-intl';
 
 export interface RecordingModalProps {
   isOpen: boolean;
@@ -20,6 +21,7 @@ export const RecordingModal = ({
   onClose,
   onSave,
 }: RecordingModalProps) => {
+  const t = useTranslations('profile.questions.recordingModal');
   const selectedQuestion = QUESTION_POOL.find(
     (q) => q.id === question.questionId
   );
@@ -46,8 +48,8 @@ export const RecordingModal = ({
           >
             <div className="flex items-start justify-between mb-6">
               <div className="flex-1">
-                <div className="mb-2 text-xs font-bold text-brand">
-                  QUESTION {questionIndex + 1}
+                <div className="mb-2 text-xs font-bold text-brand uppercase">
+                  {t('title', { number: questionIndex + 1 })}
                 </div>
                 <h3 className="text-lg font-bold text-neutral-800 dark:text-neutral-200">
                   {selectedQuestion.text}

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Phone, Instagram, MessageCircle, CheckCircle, AlertCircle } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import type { UserContactInfo } from '@shared/types'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -18,23 +19,6 @@ interface ContactCardProps {
 }
 
 // =============================================================================
-// Contact Icons/Labels
-// =============================================================================
-
-const contactConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
-  phone: { icon: Phone, label: 'Phone', color: 'text-green-500' },
-  instagram: { icon: Instagram, label: 'Instagram', color: 'text-pink-500' },
-  telegram: { icon: MessageCircle, label: 'Telegram', color: 'text-blue-500' },
-  snapchat: { icon: MessageCircle, label: 'Snapchat', color: 'text-yellow-500' },
-  whatsapp: { icon: Phone, label: 'WhatsApp', color: 'text-green-500' },
-  wechat: { icon: MessageCircle, label: 'WeChat', color: 'text-green-600' },
-  facebook: { icon: MessageCircle, label: 'Facebook', color: 'text-blue-600' },
-  twitter: { icon: MessageCircle, label: 'Twitter', color: 'text-sky-500' },
-  linkedin: { icon: MessageCircle, label: 'LinkedIn', color: 'text-blue-700' },
-  other: { icon: MessageCircle, label: 'Other', color: 'text-neutral-500' },
-}
-
-// =============================================================================
 // Component
 // =============================================================================
 
@@ -45,11 +29,26 @@ export const ContactCard = ({
   className,
   compact = false,
 }: ContactCardProps) => {
+  const t = useTranslations('profile.contact')
+
+  const contactConfig: Record<string, { icon: React.ElementType; label: string; color: string }> = {
+    phone: { icon: Phone, label: t('labels.phone'), color: 'text-green-500' },
+    instagram: { icon: Instagram, label: t('labels.instagram'), color: 'text-pink-500' },
+    telegram: { icon: MessageCircle, label: t('labels.telegram'), color: 'text-blue-500' },
+    snapchat: { icon: MessageCircle, label: t('labels.snapchat'), color: 'text-yellow-500' },
+    whatsapp: { icon: Phone, label: t('labels.whatsapp'), color: 'text-green-500' },
+    wechat: { icon: MessageCircle, label: t('labels.wechat'), color: 'text-green-600' },
+    facebook: { icon: MessageCircle, label: t('labels.facebook'), color: 'text-blue-600' },
+    twitter: { icon: MessageCircle, label: t('labels.twitter'), color: 'text-sky-500' },
+    linkedin: { icon: MessageCircle, label: t('labels.linkedin'), color: 'text-blue-700' },
+    other: { icon: MessageCircle, label: t('labels.other'), color: 'text-neutral-500' },
+  }
+
   if (!contactInfo) {
     return (
       <div className={cn('p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center', className)}>
         <AlertCircle className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
-        <p className="text-neutral-500 dark:text-neutral-400">No contact information available</p>
+        <p className="text-neutral-500 dark:text-neutral-400">{t('empty')}</p>
       </div>
     )
   }
@@ -63,7 +62,7 @@ export const ContactCard = ({
     return (
       <div className={cn('p-6 rounded-2xl bg-neutral-100 dark:bg-neutral-800 text-center', className)}>
         <AlertCircle className="w-10 h-10 text-neutral-400 mx-auto mb-3" />
-        <p className="text-neutral-500 dark:text-neutral-400">No contact details added yet</p>
+        <p className="text-neutral-500 dark:text-neutral-400">{t('noDetails')}</p>
       </div>
     )
   }
@@ -74,7 +73,7 @@ export const ContactCard = ({
       {userName && (
         <div className="px-5 py-4 bg-gradient-to-r from-brand/10 to-brand/5 border-b border-neutral-100 dark:border-neutral-700">
           <div className="flex items-center justify-between">
-            <h4 className="font-bold text-neutral-900 dark:text-white">{userName}&apos;s Contact</h4>
+            <h4 className="font-bold text-neutral-900 dark:text-white">{t('partnerContact', { name: userName })}</h4>
             {showVerification && (
               <div className={cn(
                 'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full',
@@ -85,12 +84,12 @@ export const ContactCard = ({
                 {contactInfo.isContactVerified ? (
                   <>
                     <CheckCircle className="w-3.5 h-3.5" />
-                    Verified
+                    {t('verified')}
                   </>
                 ) : (
                   <>
                     <AlertCircle className="w-3.5 h-3.5" />
-                    Unverified
+                    {t('unverified')}
                   </>
                 )}
               </div>

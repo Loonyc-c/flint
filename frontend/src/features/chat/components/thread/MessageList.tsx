@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { cn } from '@/lib/utils'
 import { type Message, type ChatConversation } from '@shared/types'
 import { type RefObject } from 'react'
+import { useTranslations } from 'next-intl'
 
 interface MessageListProps {
   messages: Message[]
@@ -22,19 +23,21 @@ export const MessageList = ({
   isPartnerTyping,
   messagesEndRef,
 }: MessageListProps) => {
+  const t = useTranslations('chat')
+
   return (
-    <div className="flex-1 overflow-y-auto custom-scrollbar p-4 space-y-4 bg-neutral-50 dark:bg-black/20">
+    <div className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar bg-muted/30">
       {isLoading ? (
         <div className="flex items-center justify-center h-full">
-          <div className="animate-spin w-8 h-8 border-2 border-brand border-t-transparent rounded-full" />
+          <div className="w-8 h-8 border-2 rounded-full animate-spin border-brand border-t-transparent" />
         </div>
       ) : messages.length === 0 ? (
-        <div className="flex flex-col items-center justify-center h-full text-center opacity-40 px-8">
-          <div className="w-20 h-20 rounded-full bg-neutral-200 dark:bg-neutral-800 mb-4 flex items-center justify-center text-4xl grayscale">
+        <div className="flex flex-col items-center justify-center h-full px-8 text-center opacity-40">
+          <div className="flex items-center justify-center w-20 h-20 mb-4 text-4xl rounded-full grayscale bg-muted">
             👋
           </div>
-          <p className="font-bold text-lg">Say Hello!</p>
-          <p className="text-sm">Break the ice with {conversation.otherUser.name}</p>
+          <p className="text-lg font-bold text-foreground">{t('sayHello')}</p>
+          <p className="text-sm text-muted-foreground">{t('breakIce', { name: conversation.otherUser.name })}</p>
         </div>
       ) : (
         <>
@@ -51,8 +54,8 @@ export const MessageList = ({
                   className={cn(
                     'max-w-[75%] px-4 py-2.5 rounded-2xl text-sm font-medium leading-relaxed shadow-sm',
                     isMe
-                      ? 'bg-brand text-white rounded-tr-none'
-                      : 'bg-white dark:bg-neutral-800 text-neutral-900 dark:text-white rounded-tl-none border border-neutral-100 dark:border-neutral-700'
+                      ? 'bg-brand text-brand-foreground rounded-tr-none'
+                      : 'bg-card text-foreground rounded-tl-none border border-border'
                   )}
                 >
                   {msg.text}
@@ -70,18 +73,18 @@ export const MessageList = ({
                 exit={{ opacity: 0, y: -10 }}
                 className="flex justify-start"
               >
-                <div className="bg-white dark:bg-neutral-800 rounded-2xl rounded-tl-none px-4 py-3 border border-neutral-100 dark:border-neutral-700 shadow-sm">
+                <div className="px-4 py-3 border shadow-sm bg-card rounded-2xl rounded-tl-none border-border">
                   <div className="flex items-center gap-1">
                     <span
-                      className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
+                      className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"
                       style={{ animationDelay: '0ms' }}
                     />
                     <span
-                      className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
+                      className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"
                       style={{ animationDelay: '150ms' }}
                     />
                     <span
-                      className="w-2 h-2 bg-neutral-400 rounded-full animate-bounce"
+                      className="w-2 h-2 rounded-full bg-muted-foreground animate-bounce"
                       style={{ animationDelay: '300ms' }}
                     />
                   </div>

@@ -3,15 +3,19 @@
 import { Suspense } from 'react'
 import ResetPasswordForm from '@/features/auth/components/ResetPasswordForm'
 import AuthHeader from '@/features/auth/components/AuthHeader'
+import { useTranslations } from 'next-intl'
 
 /**
  * Loading fallback for the reset password form.
  */
-const FormFallback = () => (
-  <div className="flex justify-center items-center p-8">
-    <div className="text-neutral-600 dark:text-neutral-400">Loading...</div>
-  </div>
-)
+const FormFallback = () => {
+  const t = useTranslations('auth.resetPassword')
+  return (
+    <div className="flex justify-center items-center p-8">
+      <div className="text-neutral-600 dark:text-neutral-400">{t('loading')}</div>
+    </div>
+  )
+}
 
 /**
  * Reset password page for completing password reset with token.

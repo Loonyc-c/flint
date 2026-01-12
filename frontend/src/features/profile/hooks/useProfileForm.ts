@@ -116,6 +116,19 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
         setValue('photo', finalPhotoUrl, { shouldValidate: true })
       }
 
+      let finalVoiceIntroUrl = data.voiceIntro
+      if (data.voiceIntroFile instanceof Blob) {
+        try {
+          const result = await uploadAudioToCloudinary(data.voiceIntroFile, {
+            folder: 'flint/voice-intros'
+          })
+          finalVoiceIntroUrl = result.url
+        } catch (error) {
+          console.error('Failed to upload voice intro:', error)
+          throw new Error('Failed to upload voice intro')
+        }
+      }
+
       const questionsToSave = await Promise.all(
         data.questions.map(async qa => {
           const audioFile = qa.audioFile
@@ -146,7 +159,7 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
         ...data,
         photo: finalPhotoUrl,
         questions: questionsToSave,
-        voiceIntro: data.voiceIntro || ''
+        voiceIntro: finalVoiceIntroUrl
       })
       toast.success('Profile updated!')
     } catch (error: unknown) {

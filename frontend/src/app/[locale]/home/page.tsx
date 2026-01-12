@@ -4,24 +4,27 @@ import { Tabs } from '@/components/ui/tabs'
 import FindMatch from '@/features/home/components/FindMatch'
 import MatchingPref from '@/features/home/components/MatchingPref'
 import SubscriptionRedirect from '@/features/home/components/SubscriptionRedirect'
+import { useTranslations } from 'next-intl'
 
 /**
  * Home page with tabbed navigation for matching features.
  */
 const HomePage = () => {
+  const t = useTranslations('HomePage')
+
   const tabs = [
     {
-      title: 'Find Match',
+      title: t('tabs.findMatch'),
       value: 'Find Match',
       content: <FindMatch />
     },
     {
-      title: 'Matching Preferences',
+      title: t('tabs.matchingPreferences'),
       value: 'Matching Preferences',
       content: <MatchingPref />
     },
     {
-      title: 'Subscription',
+      title: t('tabs.subscription'),
       value: 'Subscription',
       content: <SubscriptionRedirect />
     }

@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, X, Check } from 'lucide-react'
 import { INTERESTS } from '@shared/types/enums'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -29,45 +30,50 @@ interface InterestsModalProps {
 /**
  * Section displaying selected interests with an edit button.
  */
-export const InterestsSection = ({ selectedInterests, onEdit, error }: InterestsSectionProps) => (
-  <section className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-2">
-        <Heart className="w-4 h-4 text-brand" />
-        <h2 className="font-bold text-sm uppercase tracking-widest text-neutral-500">Interests</h2>
+export const InterestsSection = ({ selectedInterests, onEdit, error }: InterestsSectionProps) => {
+  const t = useTranslations('profile.interests')
+
+  return (
+    <section className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-2">
+          <Heart className="w-4 h-4 text-brand" />
+          <h2 className="font-bold text-sm uppercase tracking-widest text-neutral-500">{t('title')}</h2>
+        </div>
+        <button
+          type="button"
+          onClick={onEdit}
+          className="px-4 py-1.5 bg-brand text-white text-xs font-black rounded-full shadow-lg shadow-brand/20 active:scale-95 transition-transform cursor-pointer"
+        >
+          {t('edit')}
+        </button>
       </div>
-      <button
-        type="button"
-        onClick={onEdit}
-        className="px-4 py-1.5 bg-brand text-white text-xs font-black rounded-full shadow-lg shadow-brand/20 active:scale-95 transition-transform cursor-pointer"
-      >
-        EDIT
-      </button>
-    </div>
 
-    <div className="flex flex-wrap gap-2">
-      {selectedInterests.length ? (
-        selectedInterests.map(interest => (
-          <motion.span
-            key={interest}
-            initial={{ scale: 0.8, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-            className="px-4 py-2 bg-neutral-50 dark:bg-black border border-neutral-100 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full font-bold"
-          >
-            {interest}
-          </motion.span>
-        ))
-      ) : (
-        <p className="text-sm text-neutral-400 italic py-2">
-          What do you love? Tap edit to add interests.
-        </p>
-      )}
-    </div>
+      <div className="flex flex-wrap gap-2">
+        {selectedInterests.length ? (
+          selectedInterests.map(interest => (
+            <motion.span
+              key={interest}
+              initial={{ scale: 0.8, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: 'spring', stiffness: 300, damping: 20 }}
+                          className="px-4 py-2 bg-neutral-50 dark:bg-black border border-neutral-100 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full font-bold"
+                        >
+                          {t(`items.${interest}`)}
+                        </motion.span>
+                      ))
+              
+        ) : (
+          <p className="text-sm text-neutral-400 italic py-2">
+            {t('empty')}
+          </p>
+        )}
+      </div>
 
-    {error && <p className="text-xs text-destructive mt-2 px-2">{error}</p>}
-  </section>
-)
+      {error && <p className="text-xs text-destructive mt-2 px-2">{error}</p>}
+    </section>
+  )
+}
 
 /**
  * Modal for selecting/deselecting interests.
@@ -78,6 +84,7 @@ export const InterestsModal = ({
   selectedInterests,
   onToggle
 }: InterestsModalProps) => {
+  const t = useTranslations('profile.interests')
   const allInterests = Object.values(INTERESTS)
 
   return (
@@ -99,9 +106,9 @@ export const InterestsModal = ({
           >
             <div className="flex items-center justify-between mb-8">
               <div>
-                <h3 className="text-2xl font-black italic uppercase">Select Interests</h3>
+                <h3 className="text-2xl font-black italic uppercase">{t('modalTitle')}</h3>
                 <p className="text-xs font-bold text-neutral-400">
-                  {selectedInterests.length} selected
+                  {t('selectedCount', { count: selectedInterests.length })}
                 </p>
               </div>
               <button
@@ -126,7 +133,7 @@ export const InterestsModal = ({
                         : 'border-neutral-100 dark:border-neutral-800 hover:border-brand/50 bg-neutral-50 dark:bg-black text-neutral-700 dark:text-neutral-300'
                     )}
                   >
-                    {interest}
+                    {t(`items.${interest}`)}
                     {isSelected && <Check className="w-4 h-4" />}
                   </button>
                 )

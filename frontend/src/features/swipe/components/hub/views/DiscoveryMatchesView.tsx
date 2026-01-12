@@ -24,6 +24,7 @@ export const DiscoveryMatchesView = ({
   onClose,
 }: DiscoveryMatchesViewProps) => {
   const t = useTranslations("chat");
+  const th = useTranslations("swipe.hub");
   const matchCount = matches.length;
 
   return (
@@ -51,7 +52,7 @@ export const DiscoveryMatchesView = ({
               {t("matches")}
             </h2>
             <p className="text-xs text-neutral-500">
-              {matchCount} people
+              {th('matchCount', { count: matchCount })}
             </p>
           </div>
         </div>

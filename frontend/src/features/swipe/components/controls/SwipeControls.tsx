@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { Heart, X, RotateCcw, Star, Sparkles } from "lucide-react";
 import { type SwipeAction } from '@shared/types'
+import { useTranslations } from 'next-intl'
 
 interface SwipeControlsProps {
   onSwipe: (type: SwipeAction) => void;
@@ -29,19 +30,19 @@ const ActionButton = ({
 }) => {
   const variants = {
     pass: {
-      bg: "bg-white dark:bg-neutral-800",
-      border: "border-2 border-neutral-200 dark:border-neutral-700",
-      text: "text-neutral-500 dark:text-neutral-400",
-      hoverText: "group-hover:text-red-500",
-      shadow: "shadow-lg shadow-neutral-200/50 dark:shadow-neutral-900/50",
-      hoverShadow: "hover:shadow-xl hover:shadow-red-500/20",
-      ring: "focus:ring-red-400",
-      glow: "group-hover:bg-red-500/5",
+      bg: "bg-card",
+      border: "border-2 border-border",
+      text: "text-muted-foreground",
+      hoverText: "group-hover:text-destructive",
+      shadow: "shadow-lg shadow-muted/50",
+      hoverShadow: "hover:shadow-xl hover:shadow-destructive/20",
+      ring: "focus:ring-destructive/40",
+      glow: "group-hover:bg-destructive/5",
     },
     like: {
-      bg: "bg-gradient-to-br from-brand via-brand to-brand-300",
+      bg: "bg-linear-to-br from-brand via-brand to-brand-300",
       border: "",
-      text: "text-white",
+      text: "text-brand-foreground",
       hoverText: "",
       shadow: "shadow-lg shadow-brand/40",
       hoverShadow: "hover:shadow-xl hover:shadow-brand/50",
@@ -49,23 +50,23 @@ const ActionButton = ({
       glow: "",
     },
     superlike: {
-      bg: "bg-gradient-to-br from-blue-400 via-blue-500 to-indigo-500",
+      bg: "bg-linear-to-br from-info to-info/80",
       border: "",
-      text: "text-white",
+      text: "text-info-foreground",
       hoverText: "",
-      shadow: "shadow-lg shadow-blue-500/40",
-      hoverShadow: "hover:shadow-xl hover:shadow-blue-500/50",
-      ring: "focus:ring-blue-400",
+      shadow: "shadow-lg shadow-info/40",
+      hoverShadow: "hover:shadow-xl hover:shadow-info/50",
+      ring: "focus:ring-info/40",
       glow: "",
     },
     undo: {
-      bg: "bg-gradient-to-br from-amber-400 to-orange-500",
+      bg: "bg-linear-to-br from-warning to-warning/80",
       border: "",
-      text: "text-white",
+      text: "text-warning-foreground",
       hoverText: "",
-      shadow: "shadow-lg shadow-amber-500/40",
-      hoverShadow: "hover:shadow-xl hover:shadow-amber-500/50",
-      ring: "focus:ring-amber-400",
+      shadow: "shadow-lg shadow-warning/40",
+      hoverShadow: "hover:shadow-xl hover:shadow-warning/50",
+      ring: "focus:ring-warning/40",
       glow: "",
     },
   };
@@ -126,8 +127,8 @@ const KeyHint = ({
     <kbd
       className={`
       px-2 py-0.5 text-[10px] font-mono font-bold rounded-md
-      bg-neutral-100 dark:bg-neutral-800 text-neutral-600 dark:text-neutral-400
-      border border-neutral-200 dark:border-neutral-700
+      bg-muted text-muted-foreground
+      border border-border
       shadow-sm
     `}
     >
@@ -135,7 +136,7 @@ const KeyHint = ({
     </kbd>
     <div className="flex items-center gap-1.5">
       <div className={`w-2 h-2 rounded-full ${color}`} />
-      <span className="text-[11px] font-medium text-neutral-500 dark:text-neutral-400">
+      <span className="text-[11px] font-medium text-muted-foreground">
         {label}
       </span>
     </div>
@@ -148,6 +149,8 @@ export const SwipeControls = ({
   canUndo,
   isSwiping,
 }: SwipeControlsProps) => {
+  const t = useTranslations('swipe.controls')
+
   return (
     <div className="flex flex-col items-center gap-5">
       {/* Main Action Buttons */}
@@ -166,7 +169,7 @@ export const SwipeControls = ({
                 disabled={isSwiping}
                 variant="undo"
                 size="small"
-                ariaLabel="Undo last swipe (Z)"
+                ariaLabel={t('undoAria')}
               >
                 <RotateCcw className="w-5 h-5" strokeWidth={2.5} />
               </ActionButton>
@@ -179,7 +182,7 @@ export const SwipeControls = ({
           onClick={() => onSwipe("pass")}
           disabled={isSwiping}
           variant="pass"
-          ariaLabel="Pass (←)"
+          ariaLabel={t('passAria')}
         >
           <X className="w-7 h-7 sm:w-8 sm:h-8" strokeWidth={3} />
         </ActionButton>
@@ -191,7 +194,7 @@ export const SwipeControls = ({
             disabled={isSwiping}
             variant="superlike"
             size="small"
-            ariaLabel="Super (↑)"
+            ariaLabel={t('superAria')}
           >
             <Star className="w-5 h-5 sm:w-6 sm:h-6 fill-current" />
           </ActionButton>
@@ -219,7 +222,7 @@ export const SwipeControls = ({
             onClick={() => onSwipe("smash")}
             disabled={isSwiping}
             variant="like"
-            ariaLabel="Smash (→)"
+            ariaLabel={t('smashAria')}
           >
             <Heart className="w-7 h-7 sm:w-8 sm:h-8 fill-current" />
           </ActionButton>
@@ -245,10 +248,10 @@ export const SwipeControls = ({
         transition={{ delay: 0.3 }}
         className="hidden sm:flex justify-center gap-6"
       >
-        <KeyHint keys="←" label="Pass" color="bg-neutral-400" />
-        <KeyHint keys="↑" label="Super" color="bg-blue-500" />
-        <KeyHint keys="→" label="Smash" color="bg-brand" />
-        {canUndo && <KeyHint keys="Z" label="Undo" color="bg-amber-500" />}
+        <KeyHint keys="←" label={t('pass')} color="bg-muted-foreground" />
+        <KeyHint keys="↑" label={t('super')} color="bg-info" />
+        <KeyHint keys="→" label={t('smash')} color="bg-brand" />
+        {canUndo && <KeyHint keys="Z" label={t('undo')} color="bg-warning" />}
       </motion.div>
     </div>
   );

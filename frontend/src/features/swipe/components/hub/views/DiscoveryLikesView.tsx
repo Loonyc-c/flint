@@ -16,6 +16,7 @@ const pageVariants = {
 
 export const DiscoveryLikesView = ({ onClose }: DiscoveryLikesViewProps) => {
   const t = useTranslations("chat");
+  const th = useTranslations("swipe.hub");
 
   return (
     <motion.div
@@ -41,7 +42,7 @@ export const DiscoveryLikesView = ({ onClose }: DiscoveryLikesViewProps) => {
             <h2 className="text-lg font-bold text-neutral-900 dark:text-white">
               {t("likes")}
             </h2>
-            <p className="text-xs text-neutral-500">Coming soon</p>
+            <p className="text-xs text-neutral-500">{th('comingSoon')}</p>
           </div>
         </div>
       </div>
@@ -50,10 +51,10 @@ export const DiscoveryLikesView = ({ onClose }: DiscoveryLikesViewProps) => {
           <Lock className="w-10 h-10 text-amber-500" />
         </div>
         <h3 className="text-xl font-bold text-neutral-900 dark:text-white mb-2">
-          Coming Soon
+          {th('likesTitle')}
         </h3>
         <p className="text-neutral-500 dark:text-neutral-400 text-center max-w-xs">
-          See who likes you! This feature is coming soon.
+          {th('likesSubtitle')}
         </p>
       </div>
     </motion.div>

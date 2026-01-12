@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { type LucideIcon } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface SidebarStatCardProps {
   icon: LucideIcon
@@ -45,6 +46,7 @@ export const SidebarStatCard = ({
   onClick,
   disabled = false
 }: SidebarStatCardProps) => {
+  const t = useTranslations('swipe.hub')
   const v = variants[variant]
 
   return (
@@ -65,7 +67,7 @@ export const SidebarStatCard = ({
         <span className={cn("font-medium text-sm", v.text)}>{label}</span>
         {disabled && (
           <span className="ml-auto text-[10px] font-semibold uppercase tracking-wider text-neutral-400 dark:text-neutral-500">
-            Soon
+            {t('soon')}
           </span>
         )}
       </div>

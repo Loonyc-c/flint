@@ -8,6 +8,7 @@ import { CallControls } from './CallControls'
 import { VideoGrid } from './VideoGrid'
 import { CallHeader } from './modal/CallHeader'
 import { ConnectingOverlay } from './modal/ConnectingOverlay'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -31,13 +32,17 @@ interface VideoCallModalProps {
 export const VideoCallModal = ({
   isOpen,
   channelName,
-  localUserName = 'You',
-  remoteUserName = 'Partner',
+  localUserName,
+  remoteUserName,
   remainingTime = 0,
   stage = 2,
   onClose,
   onCallEnded,
 }: VideoCallModalProps) => {
+  const t = useTranslations('video.modal')
+  const finalLocalUserName = localUserName || t('you')
+  const finalRemoteUserName = remoteUserName || t('partner')
+
   const {
     isConnected,
     isConnecting,
@@ -100,7 +105,7 @@ export const VideoCallModal = ({
             isConnecting={isConnecting}
             remainingTime={remainingTime}
             stage={stage}
-            remoteUserName={remoteUserName}
+            remoteUserName={finalRemoteUserName}
             onClose={handleClose}
           />
 
@@ -111,7 +116,7 @@ export const VideoCallModal = ({
                 <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center mb-4">
                   <X className="w-10 h-10 text-red-500" />
                 </div>
-                <h3 className="text-white text-xl font-bold mb-2">Connection Error</h3>
+                <h3 className="text-white text-xl font-bold mb-2">{t('errorTitle')}</h3>
                 <p className="text-white/60 mb-6 max-w-md">{error}</p>
                 <motion.button
                   whileHover={{ scale: 1.02 }}
@@ -119,15 +124,15 @@ export const VideoCallModal = ({
                   onClick={() => join()}
                   className="px-6 py-3 bg-brand rounded-full text-white font-bold"
                 >
-                  Try Again
+                  {t('tryAgain')}
                 </motion.button>
               </div>
             ) : (
               <VideoGrid
                 localVideoTrack={localVideoTrack}
                 remoteVideoTracks={remoteVideoTracks}
-                localUserName={localUserName}
-                remoteUserName={remoteUserName}
+                localUserName={finalLocalUserName}
+                remoteUserName={finalRemoteUserName}
                 isCameraEnabled={isCameraEnabled}
               />
             )}

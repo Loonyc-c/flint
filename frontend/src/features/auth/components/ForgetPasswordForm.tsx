@@ -11,6 +11,7 @@ import { ApiError } from '@/lib/api-client'
 import { AuthFormWrapper } from './AuthFormWrapper'
 import { FormInput } from '@/components/ui/form-input'
 import { BottomGradient } from '@/utils'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Sub-Components
@@ -20,31 +21,37 @@ interface EmailSentViewProps {
   email: string
 }
 
-const EmailSentView = ({ email }: EmailSentViewProps) => (
-  <AuthFormWrapper title="Check Your Email">
-    <div className="my-8 text-center">
-      <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-        If an account exists with <strong>{email}</strong>, you will receive a password reset link
-        shortly.
-      </p>
-      <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
-        Didn&apos;t receive the email? Check your spam folder or try again.
-      </p>
-      <Link
-        href="/auth"
-        className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer inline-block"
-      >
-        ← Back to Login
-      </Link>
-    </div>
-  </AuthFormWrapper>
-)
+const EmailSentView = ({ email }: EmailSentViewProps) => {
+  const t = useTranslations('auth.forgetPassword')
+  return (
+    <AuthFormWrapper title={t('sentTitle')}>
+      <div className="my-8 text-center">
+        <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+          {t.rich('sentMessage', {
+            email: (chunks) => <strong>{email}</strong>
+          })}
+        </p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
+          {t('sentSpam')}
+        </p>
+        <Link
+          href="/auth"
+          className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer inline-block"
+        >
+          {t('backToLogin')}
+        </Link>
+      </div>
+    </AuthFormWrapper>
+  )
+}
 
 // =============================================================================
 // Main Component
 // =============================================================================
 
 const ForgetPasswordForm = () => {
+  const t = useTranslations('auth.forgetPassword')
+  const tc = useTranslations('common')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
 
@@ -63,14 +70,14 @@ const ForgetPasswordForm = () => {
     try {
       await requestForgetPassword(data)
       setEmailSent(true)
-      toast.success('Password reset email sent! Check your inbox.')
+      toast.success(t('success'))
     } catch (err) {
       if (err instanceof ApiError) {
         toast.error(err.message)
       } else if (err instanceof Error) {
         toast.error(err.message)
       } else {
-        toast.error('An unexpected error occurred. Please try again.')
+        toast.error(tc('error'))
       }
     } finally {
       setIsLoading(false)
@@ -83,14 +90,14 @@ const ForgetPasswordForm = () => {
 
   return (
     <AuthFormWrapper
-      title="Forgot Password?"
-      subtitle="No worries! Enter your email and we'll send you a reset link."
+      title={t('title')}
+      subtitle={t('subtitle')}
     >
       <form className="my-8" onSubmit={handleSubmit(onSubmit)}>
         <FormInput
           id="forget-email"
-          label="Email Address"
-          placeholder="projectmayhem@fc.com"
+          label={t('emailLabel')}
+          placeholder={t('emailPlaceholder')}
           type="email"
           error={errors.email}
           disabled={isLoading}
@@ -103,7 +110,7 @@ const ForgetPasswordForm = () => {
           type="submit"
           disabled={isLoading}
         >
-          {isLoading ? 'Sending...' : 'Send Reset Link →'}
+          {isLoading ? t('loading') : t('button')}
           <BottomGradient />
         </button>
       </form>
@@ -113,7 +120,7 @@ const ForgetPasswordForm = () => {
           href="/auth"
           className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer"
         >
-          ← Back to Login
+          {t('backToLogin')}
         </Link>
       </div>
     </AuthFormWrapper>

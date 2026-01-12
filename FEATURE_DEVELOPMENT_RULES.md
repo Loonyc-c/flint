@@ -19,10 +19,31 @@ This document outlines the strict architectural and coding standards for AI agen
 3.  **Imports:**
     *   **Shared:** NEVER redefine types/schemas. ALWAYS import from `@shared/types` or `@shared/validations`.
     *   **Navigation:** NEVER import from `next/navigation`. ALWAYS import from `@/i18n/routing`.
+4.  **Localization:** **ZERO Hardcoded Strings.**
+    *   ❌ **Forbidden:** `<span>Login</span>` or `placeholder="Enter email"`
+    *   ✅ **Required:** `<span>{t('auth.login')}</span>` or `placeholder={t('auth.emailPlaceholder')}`
+    *   All user-facing text MUST be managed via `src/messages/en.json` and `src/messages/mn.json`.
+    *   **Data Integrity:** ALWAYS separate localized **Display Labels** from **Internal Values** (Enums/Types). The backend MUST receive stable keys (e.g., `"female"`, `"GYM"`), never localized text (e.g., `"эмэгтэй"`, `"Фитнесс"`).
+5.  **Theming:** **ZERO Hardcoded Colors.**
+    *   ❌ **Forbidden:** `bg-[#B33A2E]`, `text-white`, `border-gray-200`, `bg-neutral-100`.
+    *   ✅ **Required:** `bg-brand`, `text-foreground`, `border-border`, `bg-muted`.
+    *   All colors MUST be semantic and mapped in `src/app/globals.css`.
 
 ---
 
 ## 2. 🎨 Frontend Guidelines (Next.js 15)
+
+### Theming & Design System (Mode-Aware)
+The app uses `next-themes` and Tailwind v4. Components must support Dark/Light modes automatically.
+
+| **Semantic Category** | **Tailwind Classes** | **Usage** |
+| :--- | :--- | :--- |
+| **Surfaces** | `bg-background`, `bg-card`, `bg-muted`, `bg-secondary` | Main app background, cards, and subtle sections. |
+| **Text** | `text-foreground`, `text-muted-foreground`, `text-brand-foreground` | Primary text, secondary/placeholder text, and text on brand backgrounds. |
+| **Borders** | `border-border`, `border-input` | Dividers, card borders, and form inputs. |
+| **Accents** | `bg-brand`, `text-brand`, `bg-accent`, `bg-info`, `bg-success`, `bg-warning` | Primary brand colors and semantic status indicators. |
+
+**Centralized Truth:** If a required color is missing, add it to `:root` and `.dark` in `globals.css` as a semantic variable. NEVER hardcode a hex value or literal Tailwind color (e.g., `zinc-500`) in a component.
 
 ### Routing & Navigation (i18n Strict)
 The app uses `next-intl` routing. Standard Next.js routing breaks locale prefixes.
@@ -87,13 +108,28 @@ When presented with a coding task, follow this internal process:
 
 ---
 
+
+
 ## 5. Definition of Done Checklist
+
+
 
 *Append this validation to your response:*
 
+
+
 > - [ ] **Syntax:** All functions are arrow functions?
+
 > - [ ] **Size:** All files < 160 lines?
+
 > - [ ] **DRY:** Used `@shared/types` & `@shared/validations`?
+
 > - [ ] **i18n:** Used `@/i18n/routing` for all navigation?
+
+> - [ ] **Localization:** Zero hardcoded strings? (All text in JSON)
+
+> - [ ] **Theming:** Zero hardcoded colors? (Used semantic variables)
+
 > - [ ] **Architecture:** Feature folder structure respected?
+
 > - [ ] **Responsive:** Layout is stable and uses viewport-aware units?

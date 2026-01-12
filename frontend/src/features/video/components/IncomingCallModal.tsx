@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, PhoneOff, Video } from 'lucide-react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -27,6 +28,8 @@ export const IncomingCallModal = ({
   onAccept,
   onDecline,
 }: IncomingCallModalProps) => {
+  const t = useTranslations('video.staged')
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -107,7 +110,7 @@ export const IncomingCallModal = ({
 
               {/* Caller Info */}
               <h2 className="text-2xl font-bold text-white mb-2">{callerName}</h2>
-              <p className="text-neutral-400 mb-8">Incoming video call...</p>
+              <p className="text-neutral-400 mb-8">{t('incoming')}</p>
 
               {/* Action Buttons */}
               <div className="flex items-center justify-center gap-6">
