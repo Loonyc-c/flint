@@ -1,14 +1,17 @@
-'use client'
+"use client";
 
-import { motion } from 'framer-motion'
-import { Users, Filter } from 'lucide-react'
+import { motion } from "framer-motion";
+import { Users, Filter } from "lucide-react";
 
 interface SwipeHeaderProps {
-  candidateCount: number
-  onFilterClick?: () => void
+  candidateCount: number;
+  onFilterClick?: () => void;
 }
 
-export const SwipeHeader = ({ candidateCount, onFilterClick }: SwipeHeaderProps) => {
+export const SwipeHeader = ({
+  candidateCount,
+  onFilterClick,
+}: SwipeHeaderProps) => {
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -27,7 +30,8 @@ export const SwipeHeader = ({ candidateCount, onFilterClick }: SwipeHeaderProps)
         >
           <Users className="w-3.5 h-3.5 text-neutral-400" />
           <p className="text-xs font-semibold tracking-wide text-neutral-400">
-            {candidateCount} {candidateCount === 1 ? 'profile' : 'profiles'} nearby
+            {candidateCount} {candidateCount === 1 ? "profile" : "profiles"}{" "}
+            nearby
           </p>
         </motion.div>
       </div>
@@ -42,5 +46,5 @@ export const SwipeHeader = ({ candidateCount, onFilterClick }: SwipeHeaderProps)
         <Filter className="w-5 h-5" />
       </motion.button>
     </motion.div>
-  )
-}
+  );
+};

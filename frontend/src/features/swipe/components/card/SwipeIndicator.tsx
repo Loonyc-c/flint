@@ -1,11 +1,11 @@
 'use client'
 
-import { motion } from 'framer-motion'
-import { type SwipeAction } from '../../types'
+import { motion, type MotionValue } from 'framer-motion'
+import { type SwipeAction } from '@shared/types'
 
 interface SwipeIndicatorProps {
   type: SwipeAction
-  opacity: number
+  opacity: MotionValue<number> | number
 }
 
 export const SwipeIndicator = ({ type, opacity }: SwipeIndicatorProps) => {

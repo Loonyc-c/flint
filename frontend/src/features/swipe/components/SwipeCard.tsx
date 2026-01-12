@@ -1,22 +1,21 @@
-'use client'
+"use client";
 
-import { forwardRef, useImperativeHandle } from 'react'
-import { motion } from 'framer-motion'
-import { type User } from '@shared/types'
-import { SwipeIndicator } from './card/SwipeIndicator'
-import { StampOverlay } from './card/StampOverlay'
-import { CardPhoto } from './card/CardPhoto'
-import { CardInfo } from './card/CardInfo'
-import { useSwipeCard } from '../hooks/useSwipeCard'
-import { type SwipeAction } from '../types'
+import { forwardRef, useImperativeHandle } from "react";
+import { motion } from "framer-motion";
+import { type User, type SwipeAction } from "@shared/types";
+import { useSwipeCard } from "../hooks/useSwipeCard";
+import { CardInfo } from "./card/CardInfo";
+import { CardPhoto } from "./card/CardPhoto";
+import { StampOverlay } from "./card/StampOverlay";
+import { SwipeIndicator } from "./card/SwipeIndicator";
 
 interface SwipeCardProps {
-  candidate: User
-  onSwipe?: (type: SwipeAction) => Promise<void>
+  candidate: User;
+  onSwipe?: (type: SwipeAction) => Promise<void>;
 }
 
 export interface SwipeCardRef {
-  triggerSwipe: (type: SwipeAction) => Promise<void>
+  triggerSwipe: (type: SwipeAction) => Promise<void>;
 }
 
 export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
@@ -35,12 +34,21 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
       setIsDragging,
       handleDragEnd,
       triggerSwipe,
-      motionValues: { x, y, rotate, likeOpacity, passOpacity, superOpacity, cardOpacity, controls },
-    } = useSwipeCard({ candidate, onSwipe })
+      motionValues: {
+        x,
+        y,
+        rotate,
+        likeOpacity,
+        passOpacity,
+        superOpacity,
+        cardOpacity,
+        controls,
+      },
+    } = useSwipeCard({ candidate, onSwipe });
 
     useImperativeHandle(ref, () => ({
       triggerSwipe,
-    }))
+    }));
 
     return (
       <motion.div
@@ -55,9 +63,9 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
       >
         {isDragging && (
           <>
-            <SwipeIndicator type="smash" opacity={likeOpacity.get()} />
-            <SwipeIndicator type="pass" opacity={passOpacity.get()} />
-            <SwipeIndicator type="super" opacity={superOpacity.get()} />
+            <SwipeIndicator type="smash" opacity={likeOpacity} />
+            <SwipeIndicator type="pass" opacity={passOpacity} />
+            <SwipeIndicator type="super" opacity={superOpacity} />
           </>
         )}
 
@@ -80,8 +88,8 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
           handleToggleVoice={handleToggleVoice}
         />
       </motion.div>
-    )
+    );
   }
-)
+);
 
-SwipeCard.displayName = 'SwipeCard'
+SwipeCard.displayName = "SwipeCard";

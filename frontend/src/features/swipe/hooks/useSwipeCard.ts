@@ -8,7 +8,7 @@ import {
   type PanInfo,
 } from 'framer-motion'
 import { type User } from '@shared/types'
-import { type SwipeAction } from '../types'
+import { type SwipeAction } from '@shared/types'
 
 const SWIPE_THRESHOLD = 100
 const ROTATION_RANGE = 15
@@ -29,9 +29,9 @@ export const useSwipeCard = ({ candidate, onSwipe }: UseSwipeCardProps) => {
   const y = useMotionValue(0)
 
   const rotate = useTransform(x, [-300, 0, 300], [-ROTATION_RANGE, 0, ROTATION_RANGE])
-  const likeOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1])
-  const passOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0])
-  const superOpacity = useTransform(y, [-SWIPE_THRESHOLD, 0], [1, 0])
+  const likeOpacity = useTransform(x, [0, SWIPE_THRESHOLD], [0, 1], { clamp: true })
+  const passOpacity = useTransform(x, [-SWIPE_THRESHOLD, 0], [1, 0], { clamp: true })
+  const superOpacity = useTransform(y, [-SWIPE_THRESHOLD, 0], [1, 0], { clamp: true })
   const cardOpacity = useMotionValue(1)
 
   const photos = useMemo(() => {
@@ -102,7 +102,11 @@ export const useSwipeCard = ({ candidate, onSwipe }: UseSwipeCardProps) => {
 
       setStampType(stamp)
       setShowStamp(true)
-      await new Promise((resolve) => setTimeout(resolve, 400))
+      
+      // Start API call in parallel with the stamp delay for snappiness
+      const swipePromise = onSwipe?.(type)
+      
+      await new Promise((resolve) => setTimeout(resolve, 350))
       setShowStamp(false)
 
       await controls.start({
@@ -112,8 +116,11 @@ export const useSwipeCard = ({ candidate, onSwipe }: UseSwipeCardProps) => {
         scale: 0.8,
         transition: { duration: 0.4, ease: [0.4, 0, 0.2, 1] },
       })
+
+      // Ensure API call is finished before we fully resolve
+      await swipePromise
     },
-    [controls]
+    [controls, onSwipe]
   )
 
   const handleDragEnd = useCallback(
@@ -130,13 +137,10 @@ export const useSwipeCard = ({ candidate, onSwipe }: UseSwipeCardProps) => {
 
       if (isSwipeUp && Math.abs(swipeY) > Math.abs(swipeX)) {
         await triggerSwipe('super')
-        onSwipe?.('super')
       } else if (isSwipeRight) {
         await triggerSwipe('smash')
-        onSwipe?.('smash')
       } else if (isSwipeLeft) {
         await triggerSwipe('pass')
-        onSwipe?.('pass')
       } else {
         await controls.start({
           x: 0,
@@ -147,7 +151,7 @@ export const useSwipeCard = ({ candidate, onSwipe }: UseSwipeCardProps) => {
         y.set(0)
       }
     },
-    [controls, onSwipe, x, y, triggerSwipe]
+    [controls, x, y, triggerSwipe]
   )
 
   return {
