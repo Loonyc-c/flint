@@ -52,7 +52,7 @@ export const SwipeFeature = () => {
     currentCandidate,
     showMatchModal,
     handleUndo,
-    onSwipeAction: (type) => void onSwipeAction(type),
+    onSwipeAction: (type) => onSwipeAction(type),
   });
 
   const handleRefresh = useCallback(async () => {
@@ -98,7 +98,7 @@ export const SwipeFeature = () => {
               <SwipeCard 
                 ref={cardRef} 
                 candidate={currentCandidate} 
-                onSwipe={(type) => void onSwipeAction(type, true)}
+                onSwipe={(type) => onSwipeAction(type, true)}
               />
             </motion.div>
           )}
@@ -126,7 +126,7 @@ export const SwipeFeature = () => {
         className="px-4 py-5 sm:py-6 shrink-0 bg-gradient-to-t from-white via-white to-transparent dark:from-neutral-900 dark:via-neutral-900"
       >
         <SwipeControls
-          onSwipe={(type) => void onSwipeAction(type)}
+          onSwipe={(type) => onSwipeAction(type)}
           onUndo={handleUndo}
           canUndo={canUndo}
           isSwiping={isSwiping}
