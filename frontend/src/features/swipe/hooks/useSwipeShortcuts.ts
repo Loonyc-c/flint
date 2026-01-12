@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect } from 'react'
-import { type SwipeAction } from '../types'
+import { type SwipeAction } from '@shared/types'
 import { type User } from '@shared/types'
 
 interface UseSwipeShortcutsProps {

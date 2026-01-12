@@ -1,17 +1,16 @@
-'use client'
+"use client";
 
-import { useState, useRef, useCallback } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { useSwipe } from '../hooks/useSwipe'
-import { useSwipeShortcuts } from '../hooks/useSwipeShortcuts'
-import { SwipeCard, type SwipeCardRef } from './SwipeCard'
-import { SwipeControls } from './SwipeControls'
-import { MatchModal } from './MatchModal'
-import { type User } from '@shared/types'
-import { EmptyState } from './states/EmptyState'
-import { SwipeSkeleton } from './states/SwipeSkeleton'
-import { SwipeHeader } from './SwipeHeader'
-import { type SwipeAction } from '../types'
+import { useState, useRef, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { useSwipe } from "../hooks/useSwipe";
+import { useSwipeShortcuts } from "../hooks/useSwipeShortcuts";
+import { SwipeCard, type SwipeCardRef } from "./SwipeCard";
+import { SwipeControls } from "./controls/SwipeControls";
+import { MatchModal } from "./modals/MatchModal";
+import { type User, type SwipeAction } from "@shared/types";
+import { SwipeHeader } from "./controls/SwipeHeader";
+import { EmptyState } from "./states/EmptyState";
+import { SwipeSkeleton } from "./states/SwipeSkeleton";
 
 export const SwipeFeature = () => {
   const {
@@ -24,53 +23,53 @@ export const SwipeFeature = () => {
     fetchCandidates,
     isSwiping,
     hasMore,
-  } = useSwipe()
+  } = useSwipe();
 
-  const cardRef = useRef<SwipeCardRef>(null)
-  const [matchedUser, setMatchedUser] = useState<User | null>(null)
-  const [showMatchModal, setShowMatchModal] = useState(false)
-  const [isRefreshing, setIsRefreshing] = useState(false)
+  const cardRef = useRef<SwipeCardRef>(null);
+  const [matchedUser, setMatchedUser] = useState<User | null>(null);
+  const [showMatchModal, setShowMatchModal] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const onSwipeAction = useCallback(
-    async (type: SwipeAction) => {
-      if (isSwiping || !currentCandidate) return
+    async (type: SwipeAction, fromDrag = false) => {
+      if (isSwiping || !currentCandidate) return;
 
-      if (cardRef.current) {
-        await cardRef.current.triggerSwipe(type)
+      if (cardRef.current && !fromDrag) {
+        await cardRef.current.triggerSwipe(type);
       }
 
-      const result = await handleSwipe(type)
+      const result = await handleSwipe(type);
 
       if (result && result.isMatch) {
-        setMatchedUser(currentCandidate)
-        setShowMatchModal(true)
+        setMatchedUser(currentCandidate);
+        setShowMatchModal(true);
       }
     },
     [isSwiping, currentCandidate, handleSwipe]
-  )
+  );
 
   useSwipeShortcuts({
     currentCandidate,
     showMatchModal,
     handleUndo,
-    onSwipeAction,
-  })
+    onSwipeAction: (type) => onSwipeAction(type),
+  });
 
   const handleRefresh = useCallback(async () => {
-    setIsRefreshing(true)
-    await fetchCandidates()
-    setIsRefreshing(false)
-  }, [fetchCandidates])
+    setIsRefreshing(true);
+    await fetchCandidates();
+    setIsRefreshing(false);
+  }, [fetchCandidates]);
 
   const containerClass =
-    'w-full flex flex-col bg-gradient-to-b from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-900'
+    "w-full flex flex-col bg-gradient-to-b from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-900";
 
   if (isLoading && !currentCandidate) {
     return (
       <div className={containerClass}>
         <SwipeSkeleton />
       </div>
-    )
+    );
   }
 
   if (!hasMore && !isLoading && !currentCandidate) {
@@ -78,7 +77,7 @@ export const SwipeFeature = () => {
       <div className={containerClass}>
         <EmptyState onRefresh={handleRefresh} isRefreshing={isRefreshing} />
       </div>
-    )
+    );
   }
 
   return (
@@ -96,7 +95,11 @@ export const SwipeFeature = () => {
               transition={{ duration: 0.3 }}
               className="absolute inset-0 px-4 sm:px-6"
             >
-              <SwipeCard ref={cardRef} candidate={currentCandidate} />
+              <SwipeCard 
+                ref={cardRef} 
+                candidate={currentCandidate} 
+                onSwipe={(type) => onSwipeAction(type, true)}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -123,7 +126,7 @@ export const SwipeFeature = () => {
         className="px-4 py-5 sm:py-6 shrink-0 bg-gradient-to-t from-white via-white to-transparent dark:from-neutral-900 dark:via-neutral-900"
       >
         <SwipeControls
-          onSwipe={(type) => void onSwipeAction(type)}
+          onSwipe={(type) => onSwipeAction(type)}
           onUndo={handleUndo}
           canUndo={canUndo}
           isSwiping={isSwiping}
@@ -136,5 +139,5 @@ export const SwipeFeature = () => {
         onClose={() => setShowMatchModal(false)}
       />
     </div>
-  )
-}
+  );
+};

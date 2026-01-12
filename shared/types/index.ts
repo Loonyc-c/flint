@@ -19,7 +19,7 @@ export type {
   GoogleLoginRequest
 } from './auth'
 
-export type { Interaction, Match, MatchWithUser, MatchLastMessagePreview, LikePreview, SwipeRequest, SwipeResponse } from './match'
+export type { Interaction, Match, MatchWithUser, MatchLastMessagePreview, LikePreview, SwipeRequest, SwipeResponse, SwipeAction } from './match'
 export { InteractionType } from './match'
 export * from './enums'
 export * from './base'

@@ -3,7 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, MessageCircle, Sparkles, PartyPopper } from 'lucide-react'
 import { type User } from '@shared/types'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
 import Image from 'next/image'
 
 interface MatchContentProps {

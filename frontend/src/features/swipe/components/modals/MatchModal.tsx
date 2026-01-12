@@ -3,8 +3,8 @@
 import { useEffect, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { type User } from '@shared/types'
-import { MatchEffects } from './modal/MatchEffects'
-import { MatchContent } from './modal/MatchContent'
+import { MatchEffects } from './MatchEffects'
+import { MatchContent } from './MatchContent'
 
 interface MatchModalProps {
   isOpen: boolean

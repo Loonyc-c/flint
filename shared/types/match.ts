@@ -3,6 +3,8 @@ export enum InteractionType {
   SUPER = 'super'
 }
 
+export type SwipeAction = 'smash' | 'super' | 'pass'
+
 // Represents a user who liked you but hasn't matched yet
 export interface LikePreview {
   id: string // interaction ID

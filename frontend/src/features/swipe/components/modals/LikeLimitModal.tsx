@@ -2,7 +2,7 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Heart, Crown, Eye, Sparkles, Target } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter } from '@/i18n/routing'
 
 interface LikeLimitModalProps {
   isOpen: boolean
