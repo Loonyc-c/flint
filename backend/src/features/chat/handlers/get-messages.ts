@@ -7,10 +7,17 @@ import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { TranslationKey } from '@/features/localization/types'
 
 const handler = async (event: NormalizedEvent) => {
-  const { pathParameters: { matchId }, authorizerContext } = event
+  const { pathParameters: { matchId }, queryStringParameters, authorizerContext } = event
 
   const validMatchId = objectIdSchema.parse(matchId)
   const userId = authorizerContext?.principalId
+  
+  const limitParam = queryStringParameters?.limit
+  const limitStr = Array.isArray(limitParam) ? limitParam[0] : limitParam
+  const limit = limitStr ? parseInt(limitStr, 10) : 50
+
+  const beforeParam = queryStringParameters?.before
+  const before = Array.isArray(beforeParam) ? beforeParam[0] : beforeParam
 
   if (!userId) {
     throw new ApiException(HttpStatus.UNAUTHORIZED, ApiErrorCode.UNAUTHORIZED, {
@@ -20,7 +27,7 @@ const handler = async (event: NormalizedEvent) => {
   }
 
   try {
-    const messages = await chatService.getMessages(validMatchId, userId)
+    const messages = await chatService.getMessages(validMatchId, userId, limit, before)
     return messages
   } catch (e: unknown) {
     if (e instanceof ServiceException) {

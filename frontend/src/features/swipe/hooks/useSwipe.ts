@@ -3,13 +3,11 @@ import { type User, type SwipeResponse, InteractionType } from '@shared/types'
 import { getCandidates, swipe } from '../api/swipe'
 import { useUser } from '@/features/auth/context/UserContext'
 import { toast } from 'react-toastify'
+import { type SwipeAction } from '../types'
 
 // =============================================================================
 // Types
 // =============================================================================
-
-// UI action types - 'pass' is handled locally without API call
-type SwipeAction = 'smash' | 'super' | 'pass'
 
 interface SwipeResult extends SwipeResponse {
   limitReached?: boolean

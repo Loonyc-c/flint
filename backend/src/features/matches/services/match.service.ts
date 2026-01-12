@@ -20,7 +20,6 @@ export const matchService = {
     const { limit = 20, ageRange: filterAgeRange, lookingFor: filterLookingFor } = filters
     const userObjectId = new ObjectId(userId)
     const userCollection = await getUserCollection()
-    const interactionCollection = await getInteractionCollection()
 
     const currentUser = await userCollection.findOne({ _id: userObjectId })
     if (!currentUser?.profileCompletion || currentUser.profileCompletion < MIN_PROFILE_COMPLETION) {
@@ -30,27 +29,43 @@ export const matchService = {
     // Use passed filters if available, otherwise fall back to user preferences
     const lookingFor = filterLookingFor ?? currentUser.preferences?.lookingFor
     const ageRange = filterAgeRange ?? currentUser.preferences?.ageRange
-    
-    // Note: userAge could be used for bidirectional age filtering in the future
-    // const userAge = currentUser.profile?.age ?? DEFAULT_AGE_RANGE
 
-    // Pre-fetch interacted user IDs to optimize query
-    const interactions = await interactionCollection
-      .find({ actorId: userObjectId })
-      .project({ targetId: 1 })
-      .toArray()
-    const interactedUserIds = interactions.map((i) => i.targetId)
-
+    // Requirement 16: Scalable candidate search using $lookup anti-pattern instead of $nin
     const pipeline = [
       {
         $match: {
-          _id: { $ne: userObjectId, $nin: interactedUserIds },
+          _id: { $ne: userObjectId },
           profileCompletion: { $gte: MIN_PROFILE_COMPLETION },
           'profile.gender': lookingFor === LOOKING_FOR.ALL ? { $exists: true } : lookingFor,
           'profile.age': {
             $gte: 18,
             $lte: ageRange ?? DEFAULT_AGE_RANGE,
           },
+        },
+      },
+      {
+        $lookup: {
+          from: 'interactions',
+          let: { candidateId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$actorId', userObjectId] },
+                    { $eq: ['$targetId', '$$candidateId'] },
+                  ],
+                },
+              },
+            },
+            { $limit: 1 },
+          ],
+          as: 'hasInteracted',
+        },
+      },
+      {
+        $match: {
+          hasInteracted: { $size: 0 },
         },
       },
       { $limit: limit },
@@ -181,13 +196,22 @@ export const matchService = {
     })
   },
 
-  getMatches: async (userId: string): Promise<MatchWithUser[]> => {
+  getMatches: async (
+    userId: string,
+    limit: number = 20,
+    offset: number = 0
+  ): Promise<MatchWithUser[]> => {
     const userIdString = userId
     const matchCollection = await getMatchCollection()
     const userCollection = await getUserCollection()
 
     // Requirement 1: Query using string userId since users are stored as strings
-    const matches = await matchCollection.find({ users: userIdString }).toArray()
+    const matches = await matchCollection
+      .find({ users: userIdString })
+      .sort({ updatedAt: -1 })
+      .skip(offset)
+      .limit(limit)
+      .toArray()
 
     if (matches.length === 0) {
       return []

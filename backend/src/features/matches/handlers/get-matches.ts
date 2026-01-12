@@ -8,7 +8,7 @@ import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { TranslationKey } from '@/features/localization/types'
 
 const handler = async (event: NormalizedEvent) => {
-  const { pathParameters: {id}, authorizerContext } = event
+  const { pathParameters: {id}, queryStringParameters, authorizerContext } = event
 
   if (id !== authorizerContext?.principalId) {
     throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
@@ -18,9 +18,17 @@ const handler = async (event: NormalizedEvent) => {
   }
 
   const _id = objectIdSchema.parse(id)
+  
+  const limitParam = queryStringParameters?.limit
+  const limitStr = Array.isArray(limitParam) ? limitParam[0] : limitParam
+  const limit = limitStr ? parseInt(limitStr, 10) : 20
+
+  const offsetParam = queryStringParameters?.offset
+  const offsetStr = Array.isArray(offsetParam) ? offsetParam[0] : offsetParam
+  const offset = offsetStr ? parseInt(offsetStr, 10) : 0
 
   try {
-    const matches = await matchService.getMatches(_id)
+    const matches = await matchService.getMatches(_id, limit, offset)
 
     return matches
   } catch (e: unknown) {

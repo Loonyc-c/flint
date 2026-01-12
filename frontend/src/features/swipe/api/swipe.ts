@@ -34,11 +34,22 @@ export const swipe = async (userId: string, data: SwipeRequest): Promise<SwipeRe
  * Retrieves all matches for a user.
  *
  * @param userId - The user's ID
+ * @param params - Optional pagination parameters
  */
-export const getMatches = async (userId: string): Promise<MatchWithUser[]> =>
-  apiRequest<MatchWithUser[]>(`/matches/${userId}`, {
+export const getMatches = async (
+  userId: string,
+  params?: { limit?: number; offset?: number }
+): Promise<MatchWithUser[]> => {
+  const query = new URLSearchParams()
+  if (params?.limit) query.append('limit', params.limit.toString())
+  if (params?.offset) query.append('offset', params.offset.toString())
+
+  const queryString = query.toString() ? `?${query.toString()}` : ''
+
+  return apiRequest<MatchWithUser[]>(`/matches/${userId}${queryString}`, {
     method: 'GET'
   })
+}
 
 /**
  * Retrieves users who have liked the current user but haven't matched yet.

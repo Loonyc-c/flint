@@ -9,11 +9,22 @@ import { type Message } from '@shared/types'
  * Fetches messages for a specific match.
  *
  * @param matchId - The match ID to fetch messages for
+ * @param params - Optional pagination parameters
  */
-export const getMessages = async (matchId: string): Promise<Message[]> =>
-  apiRequest<Message[]>(`/matches/${matchId}/messages`, {
+export const getMessages = async (
+  matchId: string,
+  params?: { limit?: number; before?: string }
+): Promise<Message[]> => {
+  const query = new URLSearchParams()
+  if (params?.limit) query.append('limit', params.limit.toString())
+  if (params?.before) query.append('before', params.before)
+
+  const queryString = query.toString() ? `?${query.toString()}` : ''
+
+  return apiRequest<Message[]>(`/matches/${matchId}/messages${queryString}`, {
     method: 'GET',
   })
+}
 
 /**
  * Sends a message to a specific match.

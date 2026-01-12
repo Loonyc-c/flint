@@ -106,8 +106,13 @@ export const authService: AuthService = {
       'auth.email': email,
     })
 
+    // Requirement 15: Prevent account enumeration by using generic error message
+    // If user not found OR (user found AND password mismatch), throw same error
     if (isNil(user) || isNil(user.auth)) {
-      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+      // Simulate password check time to prevent timing attacks (optional but good practice)
+      const dummyHash = '$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJK'
+      await bcrypt.compare(password, dummyHash)
+      throw new ServiceException('err.auth.invalid_credentials', ErrorCode.UNAUTHORIZED)
     }
 
     const passMatch = isNonEmptyString(user.auth.password)
