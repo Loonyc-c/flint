@@ -7,12 +7,12 @@ export const SwipeSkeleton = () => (
   <motion.div
     initial={{ opacity: 0 }}
     animate={{ opacity: 1 }}
-    className="flex flex-col items-center justify-center h-full gap-6"
+    className="flex flex-col items-center justify-center gap-6"
   >
     {/* Animated card skeleton */}
-    <div className="relative">
+    <div className="relative w-full aspect-[1/1.5] sm:aspect-[1/1.4] max-h-[600px] mx-auto px-4 sm:px-6">
       <motion.div
-        className="w-72 h-96 sm:w-80 sm:h-[420px] bg-neutral-200 dark:bg-neutral-800 rounded-3xl shadow-xl overflow-hidden"
+        className="w-full h-full bg-neutral-200 dark:bg-neutral-800 rounded-3xl shadow-xl overflow-hidden"
         animate={{ opacity: [0.5, 0.8, 0.5] }}
         transition={{ duration: 1.5, repeat: Infinity }}
       >

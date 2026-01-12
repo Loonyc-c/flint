@@ -122,7 +122,7 @@ export const DiscoveryHub = () => {
   }
 
   return (
-    <div className="w-full flex justify-center min-h-screen lg:min-h-0 bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
+    <div className="w-full flex justify-center bg-gradient-to-br from-neutral-50 via-white to-neutral-100 dark:from-neutral-950 dark:via-neutral-900 dark:to-neutral-950">
       <div className="w-full max-w-[1200px] px-0 sm:px-4 md:px-6 lg:px-8 py-0 sm:py-6">
         <StagedCallProvider 
           matches={matches} 
@@ -133,7 +133,7 @@ export const DiscoveryHub = () => {
             
             {/* Sidebar - Desktop only */}
             <aside className={cn(
-              "w-full lg:sticky lg:top-4 lg:self-start h-[calc(100vh-2rem)] sm:h-[800px]",
+              "w-full lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-8rem)]",
               "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl",
               "sm:rounded-3xl overflow-hidden",
               "shadow-xl shadow-neutral-200/50 dark:shadow-neutral-950/50",
@@ -153,7 +153,7 @@ export const DiscoveryHub = () => {
             </aside>
 
             {/* Main Content */}
-            <main className="min-w-0 w-full flex flex-col h-[calc(100dvh-1rem)] sm:h-[800px] relative">
+            <main className="min-w-0 w-full flex flex-col relative min-h-[calc(100dvh-6rem)] lg:min-h-[800px]">
               
               {/* Mobile Navigation Bar */}
               <AnimatePresence mode="wait">

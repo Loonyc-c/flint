@@ -5,7 +5,7 @@ import { DiscoveryHub } from '@/features/swipe/components/hub/DiscoveryHub'
  * Refactored to use the Unified Discovery Hub.
  */
 const SwipePage = () => (
-  <main className="min-h-screen bg-white dark:bg-black py-4 md:py-8 px-0 md:px-4">
+  <main className="bg-white dark:bg-black py-4 md:py-8 px-0 md:px-4">
     <DiscoveryHub />
   </main>
 )

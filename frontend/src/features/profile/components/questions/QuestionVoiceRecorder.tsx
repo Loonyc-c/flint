@@ -1,137 +1,41 @@
 'use client'
 
-import React, { useState, useRef, useEffect } from 'react'
+import { useRef, useState } from 'react'
 import { Mic, Square, Play, Trash2, CheckCircle, PauseCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { motion } from 'framer-motion'
+import { useVoiceRecorder } from '@/features/profile/hooks/useVoiceRecorder'
+import { WaveformVisualizer } from './WaveformVisualizer'
 
 interface QuestionVoiceRecorderProps {
-  questionText: string
   initialAudioFile?: Blob | string
   onSave: (audioBlob: Blob | string | undefined) => void
   onCancel: () => void
 }
 
-const QuestionVoiceRecorder: React.FC<QuestionVoiceRecorderProps> = ({
-  questionText,
+const QuestionVoiceRecorder = ({
   initialAudioFile,
   onSave,
   onCancel
-}) => {
-  const [isRecording, setIsRecording] = useState(false)
-  const [recordedAudio, setRecordedAudio] = useState<Blob | string | undefined>(initialAudioFile)
-  const [audioURL, setAudioURL] = useState<string | undefined>(
-    typeof initialAudioFile === 'string' ? initialAudioFile : undefined
-  )
+}: QuestionVoiceRecorderProps) => {
+  const {
+    isRecording,
+    recordedAudio,
+    audioURL,
+    recordingTime,
+    mimeType,
+    startRecording,
+    stopRecording,
+    resetRecording
+  } = useVoiceRecorder(initialAudioFile)
+
   const [isPlayback, setIsPlayback] = useState(false)
-  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
-  const [mimeType, setMimeType] = useState<string>('audio/webm')
-  const audioChunks = useRef<Blob[]>([])
   const audioRef = useRef<HTMLAudioElement>(null)
-  const [recordingTime, setRecordingTime] = useState(0)
-  const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const [waveformBars, setWaveformBars] = useState([40, 60, 80, 60, 40, 70, 50, 90, 60, 40])
-  const waveformIntervalRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    // Determine supported mime type with codec hints for better browser compatibility
-    const types = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/mp4;codecs=mp4a',
-      'audio/mp4',
-      'audio/ogg;codecs=opus',
-      'audio/wav'
-    ]
-    for (const type of types) {
-      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) {
-        setMimeType(type)
-        break
-      }
-    }
-  }, [])
-
-  useEffect(() => {
-    if (recordedAudio && typeof recordedAudio !== 'string') {
-      const url = URL.createObjectURL(recordedAudio)
-      setAudioURL(url)
-      return () => URL.revokeObjectURL(url)
-    } else if (typeof recordedAudio === 'string') {
-      setAudioURL(recordedAudio)
-    }
-  }, [recordedAudio])
-
-  useEffect(() => {
-    if (isRecording) {
-      timerRef.current = setInterval(() => {
-        setRecordingTime(prevTime => prevTime + 1)
-      }, 1000)
-      
-      waveformIntervalRef.current = setInterval(() => {
-        setWaveformBars(prev => prev.map(() => Math.random() * 100 + 20))
-      }, 150)
-    } else {
-      if (timerRef.current) clearInterval(timerRef.current)
-      if (waveformIntervalRef.current) clearInterval(waveformIntervalRef.current)
-      setRecordingTime(0)
-    }
-    return () => {
-      if (timerRef.current) clearInterval(timerRef.current)
-      if (waveformIntervalRef.current) clearInterval(waveformIntervalRef.current)
-    }
-  }, [isRecording])
-
-  // Playback waveform animation
-  useEffect(() => {
-    if (isPlayback) {
-      waveformIntervalRef.current = setInterval(() => {
-        setWaveformBars(prev => prev.map(() => Math.random() * 100 + 20))
-      }, 150)
-    } else if (!isRecording) {
-      if (waveformIntervalRef.current) clearInterval(waveformIntervalRef.current)
-      setWaveformBars([40, 60, 80, 60, 40, 70, 50, 90, 60, 40])
-    }
-  }, [isPlayback, isRecording])
 
   const formatTime = (seconds: number) => {
     const minutes = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${minutes.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`
-  }
-
-  const startRecording = async () => {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream, { mimeType })
-
-      recorder.ondataavailable = event => {
-        if (event.data.size > 0) {
-          audioChunks.current.push(event.data)
-        }
-      }
-
-      recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks.current, { type: mimeType })
-        setRecordedAudio(audioBlob)
-        audioChunks.current = []
-        stream.getTracks().forEach(track => track.stop())
-      }
-
-      recorder.start()
-      setIsRecording(true)
-      setMediaRecorder(recorder)
-      setRecordedAudio(undefined)
-    } catch (err) {
-      console.error('Error accessing microphone:', err)
-      alert('Could not access microphone. Please ensure permissions are granted.')
-    }
-  }
-
-  const stopRecording = () => {
-    if (mediaRecorder && isRecording) {
-      mediaRecorder.stop()
-      setIsRecording(false)
-    }
   }
 
   const togglePlayback = async () => {
@@ -153,8 +57,7 @@ const QuestionVoiceRecorder: React.FC<QuestionVoiceRecorderProps> = ({
   }
 
   const handleDelete = () => {
-    setRecordedAudio(undefined)
-    setAudioURL(undefined)
+    resetRecording()
     setIsPlayback(false)
     if (audioRef.current) {
       audioRef.current.pause()
@@ -162,16 +65,8 @@ const QuestionVoiceRecorder: React.FC<QuestionVoiceRecorderProps> = ({
     }
   }
 
-  const handleSave = () => {
-    onSave(recordedAudio)
-  }
-
   return (
     <div className="space-y-6">
-      <p className="text-xl font-bold text-neutral-800 dark:text-neutral-200 leading-tight">
-        {questionText}
-      </p>
-
       {!recordedAudio && !isRecording && (
         <Button 
           onClick={startRecording} 
@@ -197,15 +92,8 @@ const QuestionVoiceRecorder: React.FC<QuestionVoiceRecorderProps> = ({
               Recording {formatTime(recordingTime)}
             </div>
             
-            <div className="flex items-center justify-center gap-1 h-16 w-full bg-red-50 dark:bg-red-900/20 rounded-2xl px-6">
-              {waveformBars.map((height, i) => (
-                <motion.div
-                  key={i}
-                  className="w-1.5 bg-red-500 rounded-full"
-                  animate={{ height: `${height}%` }}
-                  transition={{ duration: 0.15, ease: 'easeInOut' }}
-                />
-              ))}
+            <div className="w-full bg-red-50 dark:bg-red-900/20 rounded-2xl px-6">
+               <WaveformVisualizer isActive={true} color="bg-red-500" />
             </div>
           </div>
         </div>
@@ -238,18 +126,12 @@ const QuestionVoiceRecorder: React.FC<QuestionVoiceRecorderProps> = ({
               </motion.button>
 
               <div className="flex-1 space-y-2">
-                <div className="flex items-center justify-center gap-1 h-16 bg-neutral-50 dark:bg-neutral-900 rounded-2xl px-4">
-                  {waveformBars.map((height, i) => (
-                    <motion.div
-                      key={i}
-                      className={`w-1.5 rounded-full transition-colors ${
-                        isPlayback ? 'bg-brand' : 'bg-neutral-300 dark:bg-neutral-600'
-                      }`}
-                      animate={{ height: isPlayback ? `${height}%` : `${height * 0.6}%` }}
-                      transition={{ duration: 0.15, ease: 'easeInOut' }}
+                 <div className="bg-neutral-50 dark:bg-neutral-900 rounded-2xl px-4">
+                    <WaveformVisualizer 
+                      isActive={isPlayback} 
+                      color={isPlayback ? 'bg-brand' : 'bg-neutral-300 dark:bg-neutral-600'} 
                     />
-                  ))}
-                </div>
+                 </div>
               </div>
 
               <Button onClick={handleDelete} variant="ghost" size="icon" className="text-red-500 hover:bg-red-50 rounded-xl cursor-pointer">
@@ -260,7 +142,7 @@ const QuestionVoiceRecorder: React.FC<QuestionVoiceRecorderProps> = ({
 
           <div className="flex gap-3">
             <Button 
-              onClick={handleSave} 
+              onClick={() => onSave(recordedAudio)} 
               className="flex-1 h-12 bg-brand hover:bg-brand-300 text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer"
             >
               <CheckCircle className="h-5 w-5" /> Done

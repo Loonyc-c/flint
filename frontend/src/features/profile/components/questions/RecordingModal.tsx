@@ -62,7 +62,6 @@ export const RecordingModal = ({
             </div>
 
             <QuestionVoiceRecorder
-              questionText={selectedQuestion.text}
               initialAudioFile={question.audioFile || question.audioUrl}
               onSave={(audioFile) => {
                 onSave(audioFile);

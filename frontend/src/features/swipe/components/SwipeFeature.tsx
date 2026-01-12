@@ -63,7 +63,7 @@ export const SwipeFeature = () => {
   }, [fetchCandidates])
 
   const containerClass =
-    'h-full w-full flex flex-col overflow-hidden bg-gradient-to-b from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-900'
+    'w-full flex flex-col bg-gradient-to-b from-neutral-50 to-white dark:from-neutral-900 dark:to-neutral-900'
 
   if (isLoading && !currentCandidate) {
     return (
@@ -85,7 +85,7 @@ export const SwipeFeature = () => {
     <div className={containerClass}>
       <SwipeHeader candidateCount={candidates.length} />
 
-      <div className="relative flex-1 min-h-0 px-4 sm:px-6 pb-2">
+      <div className="relative w-full aspect-[1/1.5] sm:aspect-[1/1.4] max-h-[600px] mx-auto px-4 sm:px-6 pb-2">
         <AnimatePresence mode="wait">
           {currentCandidate && (
             <motion.div
