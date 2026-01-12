@@ -2,7 +2,8 @@ import { getMatchCollection, getMessageCollection } from '@/data/db/collection'
 import { DbMessage } from '@/data/db/types/message'
 import { ApiErrorCode, ApiException } from '@/shared/api/error'
 import { HttpStatus } from '@/data/constants'
-import { ObjectId } from 'mongodb'
+import { ObjectId, Filter } from 'mongodb'
+import { withMongoTransaction } from '@/data/db'
 
 // =============================================================================
 // Types
@@ -26,7 +27,12 @@ export const chatService = {
    * Retrieves messages for a specific match
    * Verifies user is part of the match
    */
-  getMessages: async (matchId: string, userId: string): Promise<MessageResponse[]> => {
+  getMessages: async (
+    matchId: string,
+    userId: string,
+    limit: number = 50,
+    before?: string
+  ): Promise<MessageResponse[]> => {
     const matchCollection = await getMatchCollection()
     const messageCollection = await getMessageCollection()
 
@@ -43,13 +49,20 @@ export const chatService = {
       })
     }
 
+    const query: Filter<DbMessage> = { matchId, isDeleted: false }
+    if (before) {
+      query.createdAt = { $lt: new Date(before) }
+    }
+
     // Fetch messages sorted by creation date
     const messages = await messageCollection
-      .find({ matchId, isDeleted: false })
-      .sort({ createdAt: 1 })
+      .find(query)
+      .sort({ createdAt: -1 }) // Sort desc to get latest first
+      .limit(limit)
       .toArray()
 
-    return messages.map((msg) => ({
+    // Reverse to return in chronological order
+    return messages.reverse().map((msg) => ({
       id: msg._id.toHexString(),
       matchId: msg.matchId,
       senderId: msg.senderId,
@@ -68,72 +81,75 @@ export const chatService = {
     userId: string,
     text: string
   ): Promise<MessageResponse> => {
-    const matchCollection = await getMatchCollection()
-    const messageCollection = await getMessageCollection()
+    return await withMongoTransaction(async (session) => {
+      const matchCollection = await getMatchCollection()
+      const messageCollection = await getMessageCollection()
 
-    // Verify match exists and user is a participant
-    const match = await matchCollection.findOne({
-      _id: new ObjectId(matchId),
-      users: userId,
-    })
+      // Verify match exists and user is a participant
+      const match = await matchCollection.findOne({
+        _id: new ObjectId(matchId),
+        users: userId,
+      }, { session })
 
-    if (!match) {
-      throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
-        message: 'err.auth.permission_denied',
-        isReadableMessage: true,
-      })
-    }
-
-    const now = new Date()
-
-    // Create the message
-    const dbMessage: DbMessage = {
-      matchId,
-      senderId: userId,
-      text,
-      createdAt: now,
-      updatedAt: now,
-      isDeleted: false as const,
-      createdBy: userId,
-      updatedBy: userId,
-    }
-
-    const result = await messageCollection.insertOne(dbMessage)
-
-    // Find the other user's ID
-    const otherUserId = match.users.find((id) => id !== userId)
-
-    // Update match metadata for efficient list view
-    const currentUnreadCounts = match.unreadCounts || {}
-    const newUnreadCounts = {
-      ...currentUnreadCounts,
-      [otherUserId!]: (currentUnreadCounts[otherUserId!] || 0) + 1,
-    }
-
-    await matchCollection.updateOne(
-      { _id: new ObjectId(matchId) },
-      {
-        $set: {
-          lastMessage: {
-            text,
-            senderId: userId,
-            createdAt: now,
-          },
-          unreadCounts: newUnreadCounts,
-          currentTurn: otherUserId, // It's now the other user's turn
-          updatedAt: now,
-          updatedBy: userId,
-        },
+      if (!match) {
+        throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
+          message: 'err.auth.permission_denied',
+          isReadableMessage: true,
+        })
       }
-    )
 
-    return {
-      id: result.insertedId.toHexString(),
-      matchId,
-      senderId: userId,
-      text,
-      createdAt: now.toISOString(),
-    }
+      const now = new Date()
+
+      // Create the message
+      const dbMessage: DbMessage = {
+        matchId,
+        senderId: userId,
+        text,
+        createdAt: now,
+        updatedAt: now,
+        isDeleted: false as const,
+        createdBy: userId,
+        updatedBy: userId,
+      }
+
+      const result = await messageCollection.insertOne(dbMessage, { session })
+
+      // Find the other user's ID
+      const otherUserId = match.users.find((id) => id !== userId)
+
+      // Update match metadata for efficient list view
+      const currentUnreadCounts = match.unreadCounts || {}
+      const newUnreadCounts = {
+        ...currentUnreadCounts,
+        [otherUserId!]: (currentUnreadCounts[otherUserId!] || 0) + 1,
+      }
+
+      await matchCollection.updateOne(
+        { _id: new ObjectId(matchId) },
+        {
+          $set: {
+            lastMessage: {
+              text,
+              senderId: userId,
+              createdAt: now,
+            },
+            unreadCounts: newUnreadCounts,
+            currentTurn: otherUserId, // It's now the other user's turn
+            updatedAt: now,
+            updatedBy: userId,
+          },
+        },
+        { session }
+      )
+
+      return {
+        id: result.insertedId.toHexString(),
+        matchId,
+        senderId: userId,
+        text,
+        createdAt: now.toISOString(),
+      }
+    })
   },
 
   /**

@@ -2,9 +2,10 @@
 
 import { motion, AnimatePresence } from 'framer-motion'
 import { Heart, X, RotateCcw, Star, Sparkles } from 'lucide-react'
+import { type SwipeAction } from '../types'
 
 interface SwipeControlsProps {
-  onSwipe: (type: 'smash' | 'super' | 'pass') => void
+  onSwipe: (type: SwipeAction) => void
   onUndo: () => void
   canUndo: boolean
   isSwiping: boolean

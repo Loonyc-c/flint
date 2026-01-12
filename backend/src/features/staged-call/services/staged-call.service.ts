@@ -2,6 +2,7 @@ import { getMatchCollection, getStagedCallCollection, getStagePromptCollection }
 import { DbStagedCall, DbStagePrompt } from '@/data/db/types/staged-call'
 import { MatchStage, STAGED_CALL_CONSTANTS } from '@shared/types'
 import { ObjectId } from 'mongodb'
+import { withMongoTransaction } from '@/data/db'
 
 export const stagedCallService = {
   /**
@@ -115,30 +116,42 @@ export const stagedCallService = {
     userId: string,
     accepted: boolean
   ): Promise<{ bothResponded: boolean; bothAccepted: boolean }> => {
-    const collection = await getStagePromptCollection()
-    const prompt = await collection.findOne({ matchId, resolvedAt: { $exists: false } })
-    
-    if (!prompt) {
-      return { bothResponded: false, bothAccepted: false }
-    }
+    return await withMongoTransaction(async (session) => {
+      const collection = await getStagePromptCollection()
+      const prompt = await collection.findOne(
+        { matchId, resolvedAt: { $exists: false } },
+        { session }
+      )
+      
+      if (!prompt) {
+        return { bothResponded: false, bothAccepted: false }
+      }
 
-    prompt.responses[userId] = accepted
-    const responses = Object.values(prompt.responses)
-    const bothResponded = responses.every(r => r !== null)
-    const bothAccepted = responses.every(r => r === true)
+      // Update the specific user's response atomically in memory first within transaction context
+      const currentResponses = { ...prompt.responses, [userId]: accepted }
+      
+      const responsesList = Object.values(currentResponses)
+      const bothResponded = responsesList.every(r => r !== null)
+      const bothAccepted = responsesList.every(r => r === true)
 
-    const updateData: Partial<DbStagePrompt> = {
-      responses: prompt.responses,
-      updatedAt: new Date(),
-    }
+      const updateData: Partial<DbStagePrompt> = {
+        responses: currentResponses,
+        updatedAt: new Date(),
+      }
 
-    if (bothResponded) {
-      updateData.resolvedAt = new Date()
-      updateData.result = bothAccepted ? 'both_accepted' : 'declined'
-    }
+      if (bothResponded) {
+        updateData.resolvedAt = new Date()
+        updateData.result = bothAccepted ? 'both_accepted' : 'declined'
+      }
 
-    await collection.updateOne({ _id: prompt._id }, { $set: updateData })
-    return { bothResponded, bothAccepted }
+      await collection.updateOne(
+        { _id: prompt._id },
+        { $set: updateData },
+        { session }
+      )
+      
+      return { bothResponded, bothAccepted }
+    })
   },
 
   /**

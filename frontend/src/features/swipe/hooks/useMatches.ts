@@ -18,7 +18,8 @@ export const useMatches = () => {
 
     setIsLoading(true)
     try {
-      const data = await getMatches(user.id)
+      // Fetch up to 100 matches to ensure we cover most use cases without true UI pagination yet
+      const data = await getMatches(user.id, { limit: 100 })
       
       // Transform MatchWithUser to ChatConversation
       const conversations: ChatConversation[] = data.map(match => ({
