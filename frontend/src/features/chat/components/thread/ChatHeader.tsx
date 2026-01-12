@@ -4,6 +4,7 @@ import { ArrowLeft, MoreVertical, Phone, Video } from 'lucide-react'
 import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { type ChatConversation, type MatchStage } from '@shared/types'
+import { useTranslations } from 'next-intl'
 
 interface ChatHeaderProps {
   conversation: ChatConversation
@@ -30,6 +31,7 @@ export const ChatHeader = ({
   isMyTurn,
   isConnected,
 }: ChatHeaderProps) => {
+  const t = useTranslations('chat')
   const stage = matchStage || conversation.stage || 'fresh'
   const canMakeVideoCalls = stage === 'unlocked'
   const canMakeAudioCalls = stage === 'fresh' || stage === 'unlocked'
@@ -74,15 +76,15 @@ export const ChatHeader = ({
           </h3>
           <p className="text-xs font-medium text-neutral-500 flex items-center gap-2">
             {isPartnerTyping ? (
-              <span className="text-brand animate-pulse">typing...</span>
+              <span className="text-brand animate-pulse">{t('typing')}</span>
             ) : isPartnerOnline ? (
-              <span className="text-green-500">Online</span>
+              <span className="text-green-500">{t('online')}</span>
             ) : isMyTurn ? (
-              <span className="text-brand">YOUR TURN</span>
+              <span className="text-brand">{t('yourTurnUpper')}</span>
             ) : (
-              <span>THEIR TURN</span>
+              <span>{t('theirTurnUpper')}</span>
             )}
-            {!isConnected && <span className="text-amber-500 ml-2">• Reconnecting...</span>}
+            {!isConnected && <span className="text-amber-500 ml-2">• {t('reconnecting')}</span>}
           </p>
         </div>
       </div>
@@ -93,7 +95,7 @@ export const ChatHeader = ({
           <button
             onClick={stage === 'unlocked' ? onVideoCall : handleStagedAudioCall}
             className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
-            title={stage === 'fresh' ? 'Start Stage 1 Audio Call' : 'Audio Call'}
+            title={stage === 'fresh' ? t('audioCallTitle') : t('audioCall')}
           >
             <Phone className="w-5 h-5" />
           </button>
@@ -103,7 +105,7 @@ export const ChatHeader = ({
           <button
             onClick={onVideoCall}
             className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
-            title="Video Call"
+            title={t('videoCall')}
           >
             <Video className="w-5 h-5" />
           </button>
@@ -119,7 +121,7 @@ export const ChatHeader = ({
                 : 'bg-brand/10 text-brand cursor-default'
             )}
           >
-            {stage === 'stage1_complete' ? 'Start Stage 2' : 'Stage 3 Available'}
+            {stage === 'stage1_complete' ? t('startStage2') : t('stage3Available')}
           </button>
         )}
         <button className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500">

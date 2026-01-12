@@ -2,6 +2,7 @@
 
 import { cn } from '@/lib/utils'
 import { LOOKING_FOR } from '@shared/types'
+import { useTranslations } from 'next-intl'
 
 interface GenderSelectorProps {
   value?: LOOKING_FOR
@@ -9,16 +10,17 @@ interface GenderSelectorProps {
 }
 
 export const GenderSelector = ({ value, onChange }: GenderSelectorProps) => {
+  const t = useTranslations('home.matchingPref')
   const options = [
-    { label: 'Everyone', value: LOOKING_FOR.ALL },
-    { label: 'Men', value: LOOKING_FOR.MALE },
-    { label: 'Women', value: LOOKING_FOR.FEMALE },
+    { label: t('genders.everyone'), value: LOOKING_FOR.ALL },
+    { label: t('genders.men'), value: LOOKING_FOR.MALE },
+    { label: t('genders.women'), value: LOOKING_FOR.FEMALE },
   ]
 
   return (
     <div className="flex flex-col justify-between w-full gap-4 pt-2 pb-4 border-b border-gray-200 sm:flex-row sm:items-center dark:border-neutral-700">
       <span className="text-base font-medium sm:text-lg text-neutral-800 dark:text-neutral-200">
-        Interested In
+        {t('interestedIn')}
       </span>
       <div className="flex flex-wrap gap-2">
         {options.map((option) => (

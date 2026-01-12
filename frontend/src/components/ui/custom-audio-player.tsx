@@ -156,10 +156,10 @@ export const CustomAudioPlayer = ({
 
   return (
     <div
-      className={`bg-white rounded-2xl ${config.padding} border-2 border-neutral-100 shadow-sm hover:shadow-md transition-shadow`}
+      className={`bg-card rounded-2xl ${config.padding} border-2 border-border shadow-sm hover:shadow-md transition-shadow`}
     >
       {showQuestion && question && (
-        <h3 className={`${config.questionText} font-semibold text-neutral-800 mb-4`}>{question}</h3>
+        <h3 className={`${config.questionText} font-semibold text-foreground mb-4`}>{question}</h3>
       )}
 
       <div className={`flex items-center ${config.gap}`}>
@@ -168,18 +168,18 @@ export const CustomAudioPlayer = ({
           onClick={togglePlayPause}
           whileHover={{ scale: 1.05 }}
           whileTap={{ scale: 0.95 }}
-          className={`shrink-0 ${config.playButton} rounded-full bg-linear-to-br from-[#B33A2E] to-[#CF5144] flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow cursor-pointer`}
+          className={`shrink-0 ${config.playButton} rounded-full bg-linear-to-br from-brand to-brand-200 flex items-center justify-center shadow-lg hover:shadow-xl transition-shadow cursor-pointer`}
         >
           {isPlaying ? (
-            <Pause className={`${config.playIcon} text-white`} fill="white" />
+            <Pause className={`${config.playIcon} text-brand-foreground`} fill="currentColor" />
           ) : (
-            <Play className={`${config.playIcon} text-white ml-0.5`} fill="white" />
+            <Play className={`${config.playIcon} text-brand-foreground ml-0.5`} fill="currentColor" />
           )}
         </motion.button>
 
         <div className="flex-1 flex flex-col gap-2">
           <div
-            className={`flex items-center justify-center gap-1 ${config.waveformHeight} bg-linear-to-r from-neutral-50 to-neutral-100 rounded-xl px-4`}
+            className={`flex items-center justify-center gap-1 ${config.waveformHeight} bg-linear-to-r from-muted to-muted/50 rounded-xl px-4`}
           >
             {waveformBars.map((height, i) => {
               const progress = currentTime || 0
@@ -191,7 +191,7 @@ export const CustomAudioPlayer = ({
                 <motion.div
                   key={i}
                   className={`${config.barWidth} rounded-full transition-colors duration-300 ${
-                    isPassed ? 'bg-linear-to-t from-[#B33A2E] to-[#CF5144]' : 'bg-neutral-300'
+                    isPassed ? 'bg-linear-to-t from-brand to-brand-200' : 'bg-muted-foreground/30'
                   }`}
                   animate={{
                     height: isPlaying ? `${height}%` : `${height * 0.6}%`
@@ -206,7 +206,7 @@ export const CustomAudioPlayer = ({
           </div>
 
           <div
-            className={`flex items-center justify-between ${config.timeText} text-neutral-500 px-1`}
+            className={`flex items-center justify-between ${config.timeText} text-muted-foreground px-1`}
           >
             <span className="font-medium">{formatTime(currentTime)}</span>
             <span>{formatTime(duration)}</span>

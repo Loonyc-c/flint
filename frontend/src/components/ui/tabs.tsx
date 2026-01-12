@@ -96,7 +96,7 @@ export const Tabs = ({
                   layoutId="clickedbutton"
                   transition={{ type: 'spring', bounce: 0.3, duration: 0.6 }}
                   className={cn(
-                    'absolute inset-0 rounded-full bg-gray-200 dark:bg-zinc-800',
+                    'absolute inset-0 rounded-full bg-secondary',
                     activeTabClassName
                   )}
                 />
@@ -104,7 +104,7 @@ export const Tabs = ({
 
               <span
                 className={cn(
-                  'relative z-10 font-medium text-black dark:text-white leading-none',
+                  'relative z-10 font-medium text-foreground leading-none',
                   'text-[clamp(11px,3.2vw,16px)]'
                 )}
               >

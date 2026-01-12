@@ -5,6 +5,7 @@ import { MapPin, Volume2, Pause, ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { type User } from '@shared/types'
 import { CarouselDots } from './CarouselDots'
+import { useTranslations } from 'next-intl'
 
 interface CardPhotoProps {
   candidate: User
@@ -27,6 +28,8 @@ export const CardPhoto = ({
   isPlayingVoice,
   handleToggleVoice,
 }: CardPhotoProps) => {
+  const t = useTranslations('swipe.card')
+
   return (
     <div className="relative h-[50%] min-h-[200px] bg-neutral-900 shrink-0 overflow-hidden">
       {photos.length > 0 ? (
@@ -55,7 +58,7 @@ export const CardPhoto = ({
             <div className="w-16 h-16 mx-auto mb-3 rounded-full bg-neutral-700 flex items-center justify-center">
               <span className="text-3xl">👤</span>
             </div>
-            <span className="text-sm text-neutral-500">No Photo</span>
+            <span className="text-sm text-neutral-500">{t('noPhoto')}</span>
           </div>
         </div>
       )}
@@ -73,7 +76,7 @@ export const CardPhoto = ({
           <button
             onClick={prevPhoto}
             className="absolute inset-y-0 left-0 z-10 w-1/3 flex items-center justify-start pl-2 opacity-0 hover:opacity-100 transition-opacity"
-            aria-label="Previous photo"
+            aria-label={t('prevPhoto')}
           >
             <div className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
               <ChevronLeft className="w-5 h-5 text-white" />
@@ -82,7 +85,7 @@ export const CardPhoto = ({
           <button
             onClick={nextPhoto}
             className="absolute inset-y-0 right-0 z-10 w-1/3 flex items-center justify-end pr-2 opacity-0 hover:opacity-100 transition-opacity"
-            aria-label="Next photo"
+            aria-label={t('nextPhoto')}
           >
             <div className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
               <ChevronRight className="w-5 h-5 text-white" />
@@ -108,7 +111,7 @@ export const CardPhoto = ({
             </h2>
             <div className="flex items-center gap-1.5 text-white/70 mt-1">
               <MapPin className="w-3.5 h-3.5" />
-              <span className="text-sm">Nearby</span>
+              <span className="text-sm">{t('nearby')}</span>
             </div>
           </div>
 
@@ -130,7 +133,7 @@ export const CardPhoto = ({
                     }
                     transition-all duration-300
                   `}
-              aria-label={isPlayingVoice ? 'Pause voice intro' : 'Play voice intro'}
+              aria-label={isPlayingVoice ? t('pauseVoice') : t('playVoice')}
             >
               {isPlayingVoice ? (
                 <Pause className="w-5 h-5 text-white fill-white" />

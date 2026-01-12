@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, PhoneOff, Mic, Video } from 'lucide-react'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -30,6 +31,7 @@ export const OutgoingStagedCallModal = ({
   callType,
   onCancel,
 }: OutgoingStagedCallModalProps) => {
+  const t = useTranslations('video.staged')
   const audioContextRef = useRef<AudioContext | null>(null)
   const oscillatorRef = useRef<OscillatorNode | null>(null)
   const intervalRef = useRef<NodeJS.Timeout | null>(null)
@@ -175,10 +177,10 @@ export const OutgoingStagedCallModal = ({
                 transition={{ repeat: Infinity, duration: 1.5 }}
                 className="text-green-400 mb-2"
               >
-                Calling...
+                {t('calling')}
               </motion.p>
               <p className="text-neutral-400 text-sm mb-6">
-                Stage {stage} {callType === 'audio' ? 'Audio' : 'Video'} Call
+                {t('stageInfo', { stage, type: t(`types.${callType}`) })}
               </p>
 
               {/* Cancel Button */}
@@ -190,7 +192,7 @@ export const OutgoingStagedCallModal = ({
               >
                 <PhoneOff className="w-7 h-7" />
               </motion.button>
-              <p className="text-neutral-500 text-xs mt-3">Tap to cancel</p>
+              <p className="text-neutral-500 text-xs mt-3">{t('outgoing')}</p>
             </div>
           </motion.div>
         </motion.div>

@@ -60,7 +60,7 @@ export const ProfileAvatar = ({
               r={NORMALIZED_RADIUS}
               cx={RADIUS + 5}
               cy={RADIUS + 5}
-              className="text-neutral-100 dark:text-neutral-800"
+              className="text-muted"
             />
             {/* Progress Circle */}
             <circle
@@ -84,12 +84,12 @@ export const ProfileAvatar = ({
           <motion.div
             whileTap={{ scale: 0.95 }}
             onClick={onEdit}
-            className="absolute inset-[14px] rounded-full overflow-hidden bg-neutral-100 dark:bg-neutral-800 cursor-pointer shadow-inner border-4 border-white dark:border-neutral-900 z-10"
+            className="absolute inset-[14px] rounded-full overflow-hidden bg-muted cursor-pointer shadow-inner border-4 border-card z-10"
           >
             {photo ? (
               <Image src={photo} fill className="object-cover" alt="Profile" />
             ) : (
-              <div className="w-full h-full flex flex-col items-center justify-center text-neutral-300 gap-1">
+              <div className="w-full h-full flex flex-col items-center justify-center text-muted gap-1">
                 <User className="w-12 h-12" />
               </div>
             )}
@@ -102,11 +102,11 @@ export const ProfileAvatar = ({
               )}
             >
               {isUploading ? (
-                <div className="bg-white/90 dark:bg-black/90 p-2 rounded-full shadow-lg backdrop-blur-sm">
+                <div className="p-2 shadow-lg rounded-full bg-card/90 backdrop-blur-sm">
                   <Loader2 className="w-5 h-5 text-brand animate-spin" />
                 </div>
               ) : (
-                <div className="bg-white/90 dark:bg-black/90 p-2 rounded-full opacity-0 group-hover:opacity-100 transition-opacity shadow-lg backdrop-blur-sm transform translate-y-2 group-hover:translate-y-0">
+                <div className="p-2 transition-opacity transform shadow-lg rounded-full bg-card/90 opacity-0 group-hover:opacity-100 backdrop-blur-sm translate-y-2 group-hover:translate-y-0">
                   <Camera className="w-5 h-5 text-brand" />
                 </div>
               )}
@@ -114,7 +114,7 @@ export const ProfileAvatar = ({
           </motion.div>
 
           {/* Percentage Badge */}
-          <div className="absolute -bottom-2 bg-white dark:bg-neutral-900 px-3 py-1 rounded-full shadow-lg border border-neutral-100 dark:border-neutral-800 z-20 flex items-center gap-1.5">
+          <div className="absolute -bottom-2 bg-card px-3 py-1 rounded-full shadow-lg border border-border z-20 flex items-center gap-1.5">
             <span
               className={cn('text-xs font-black', isComplete ? 'text-green-500' : 'text-brand')}
             >
@@ -124,7 +124,7 @@ export const ProfileAvatar = ({
         </div>
       </div>
 
-      <p className="mt-4 text-xs font-bold text-neutral-400 uppercase tracking-widest text-center">
+      <p className="mt-4 text-xs font-bold uppercase text-muted-foreground tracking-widest text-center">
         {isComplete ? 'Profile Complete' : 'Complete your profile'}
       </p>
     </div>

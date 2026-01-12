@@ -2,6 +2,7 @@
 
 import { motion } from "framer-motion";
 import { Users, Filter } from "lucide-react";
+import { useTranslations } from 'next-intl'
 
 interface SwipeHeaderProps {
   candidateCount: number;
@@ -12,6 +13,8 @@ export const SwipeHeader = ({
   candidateCount,
   onFilterClick,
 }: SwipeHeaderProps) => {
+  const t = useTranslations('swipe.header')
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -20,7 +23,7 @@ export const SwipeHeader = ({
     >
       <div>
         <h2 className="text-2xl sm:text-3xl italic font-black text-transparent uppercase bg-gradient-to-r from-brand to-brand-300 bg-clip-text">
-          Discover
+          {t('title')}
         </h2>
         <motion.div
           key={candidateCount}
@@ -30,8 +33,7 @@ export const SwipeHeader = ({
         >
           <Users className="w-3.5 h-3.5 text-neutral-400" />
           <p className="text-xs font-semibold tracking-wide text-neutral-400">
-            {candidateCount} {candidateCount === 1 ? "profile" : "profiles"}{" "}
-            nearby
+            {t('profilesNearby', { count: candidateCount })}
           </p>
         </motion.div>
       </div>
@@ -40,7 +42,7 @@ export const SwipeHeader = ({
         whileHover={{ scale: 1.05 }}
         whileTap={{ scale: 0.95 }}
         className="w-10 h-10 rounded-full bg-white dark:bg-neutral-800 shadow-md flex items-center justify-center text-neutral-500 hover:text-brand transition-colors cursor-pointer"
-        aria-label="Filter preferences"
+        aria-label={t('filterAria')}
         onClick={onFilterClick}
       >
         <Filter className="w-5 h-5" />

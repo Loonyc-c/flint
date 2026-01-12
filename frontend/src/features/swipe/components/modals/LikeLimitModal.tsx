@@ -3,6 +3,7 @@
 import { motion, AnimatePresence } from 'framer-motion'
 import { X, Heart, Crown, Eye, Sparkles, Target } from 'lucide-react'
 import { useRouter } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
 
 interface LikeLimitModalProps {
   isOpen: boolean
@@ -12,6 +13,7 @@ interface LikeLimitModalProps {
 }
 
 export const LikeLimitModal = ({ isOpen, onClose, limit = 5, used = 5 }: LikeLimitModalProps) => {
+  const t = useTranslations('swipe.modals.limit')
   const router = useRouter()
 
   const handleUpgrade = () => {
@@ -61,10 +63,10 @@ export const LikeLimitModal = ({ isOpen, onClose, limit = 5, used = 5 }: LikeLim
                     <Heart className="w-8 h-8 sm:w-10 sm:h-10 fill-white" />
                   </motion.div>
                   <h2 className="text-xl sm:text-2xl font-bold mb-2">
-                    Daily Like Limit Reached!
+                    {t('title')}
                   </h2>
                   <p className="text-white/90 text-sm">
-                    You&apos;ve used {used} out of {limit} free likes today
+                    {t('usage', { used, limit })}
                   </p>
                 </div>
               </div>
@@ -72,30 +74,30 @@ export const LikeLimitModal = ({ isOpen, onClose, limit = 5, used = 5 }: LikeLim
               {/* Content */}
               <div className="p-5 sm:p-6">
                 <p className="text-neutral-600 dark:text-neutral-400 text-center mb-5 sm:mb-6 text-sm sm:text-base">
-                  Upgrade to Premium to unlock unlimited likes and more amazing features!
+                  {t('upgradePrompt')}
                 </p>
 
                 {/* Premium Features */}
                 <div className="space-y-3 mb-5 sm:mb-6">
                   <FeatureItem
                     icon={Heart}
-                    title="Unlimited Likes"
-                    description="Like as many profiles as you want, every day"
+                    title={t('featureUnlimited')}
+                    description={t('featureUnlimitedDesc')}
                   />
                   <FeatureItem
                     icon={Eye}
-                    title="See Who Likes You"
-                    description="Know who's interested before you swipe"
+                    title={t('featureSeeLikes')}
+                    description={t('featureSeeLikesDesc')}
                   />
                   <FeatureItem
                     icon={Sparkles}
-                    title="AI Wingmen"
-                    description="Get personalized conversation starters and tips"
+                    title={t('featureAI')}
+                    description={t('featureAIDesc')}
                   />
                   <FeatureItem
                     icon={Target}
-                    title="Priority Matching"
-                    description="Get shown to more people and match faster"
+                    title={t('featurePriority')}
+                    description={t('featurePriorityDesc')}
                   />
                 </div>
 
@@ -106,20 +108,20 @@ export const LikeLimitModal = ({ isOpen, onClose, limit = 5, used = 5 }: LikeLim
                     className="w-full bg-gradient-to-r from-brand to-brand-300 text-white font-semibold py-3 sm:py-3.5 px-6 rounded-xl hover:from-brand-400 hover:to-brand transition-all shadow-lg shadow-brand/30 flex items-center justify-center gap-2 cursor-pointer"
                   >
                     <Crown className="w-5 h-5" />
-                    Upgrade to Premium
+                    {t('upgradeButton')}
                   </button>
 
                   <button
                     onClick={onClose}
                     className="w-full bg-neutral-100 dark:bg-neutral-700 text-neutral-700 dark:text-neutral-300 font-medium py-3 px-6 rounded-xl hover:bg-neutral-200 dark:hover:bg-neutral-600 transition-colors cursor-pointer"
                   >
-                    Maybe Later
+                    {t('maybeLater')}
                   </button>
                 </div>
 
                 {/* Reset Info */}
                 <p className="text-xs text-neutral-500 dark:text-neutral-400 text-center mt-4">
-                  Your free likes will reset in 24 hours
+                  {t('resetInfo')}
                 </p>
               </div>
             </div>
@@ -128,7 +130,7 @@ export const LikeLimitModal = ({ isOpen, onClose, limit = 5, used = 5 }: LikeLim
       )}
     </AnimatePresence>
   )
-}
+} 
 
 // Feature Item Component
 interface FeatureItemProps {

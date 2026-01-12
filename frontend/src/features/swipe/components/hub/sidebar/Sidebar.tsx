@@ -90,8 +90,8 @@ export const Sidebar = ({
               ))
             ) : (
               <SidebarEmptyState 
-                title="No chats waiting"
-                subtitle="Start swiping to find matches!"
+                title={t('noChatsTitle')}
+                subtitle={t('noChatsSubtitle')}
               />
             )}
           </SidebarSection>
@@ -114,8 +114,8 @@ export const Sidebar = ({
               ))
             ) : (
               <SidebarEmptyState 
-                title="All caught up!"
-                subtitle="Waiting for replies..."
+                title={t('allCaughtUpTitle')}
+                subtitle={t('allCaughtUpSubtitle')}
               />
             )}
           </SidebarSection>

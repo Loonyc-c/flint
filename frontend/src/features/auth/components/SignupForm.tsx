@@ -12,6 +12,7 @@ import GoogleAuthButton from './GoogleAuthButton'
 import { AuthFormWrapper } from './AuthFormWrapper'
 import { FormInput } from '@/components/ui/form-input'
 import { BottomGradient } from '@/utils'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -26,6 +27,8 @@ interface SignupFormProps {
 // =============================================================================
 
 const SignupForm = ({ onSuccess }: SignupFormProps) => {
+  const t = useTranslations('auth.signup')
+  const tc = useTranslations('common')
   const router = useRouter()
   const [isLoading, setIsLoading] = useState(false)
 
@@ -42,7 +45,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
 
     try {
       await signup(data)
-      toast.success('Account created successfully!')
+      toast.success(t('success'))
       if (onSuccess) {
         onSuccess()
       } else {
@@ -54,7 +57,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
       } else if (err instanceof Error) {
         toast.error(err.message)
       } else {
-        toast.error('An unexpected error occurred. Please try again.')
+        toast.error(tc('error'))
       }
     } finally {
       setIsLoading(false)
@@ -62,13 +65,13 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
   }
 
   return (
-    <AuthFormWrapper title="Welcome to Flint">
+    <AuthFormWrapper title={t('title')}>
       <form className="my-8" onSubmit={handleSubmit(onSubmit)}>
         <div className="mb-4 flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
           <FormInput
             id="signup-firstname"
-            label="First name"
-            placeholder="Tyler"
+            label={t('firstNameLabel')}
+            placeholder={t('firstNamePlaceholder')}
             type="text"
             error={errors.firstName}
             disabled={isLoading}
@@ -76,8 +79,8 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
           />
           <FormInput
             id="signup-lastname"
-            label="Last name"
-            placeholder="Durden"
+            label={t('lastNameLabel')}
+            placeholder={t('lastNamePlaceholder')}
             type="text"
             error={errors.lastName}
             disabled={isLoading}
@@ -86,8 +89,8 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         </div>
         <FormInput
           id="signup-email"
-          label="Email Address"
-          placeholder="projectmayhem@fc.com"
+          label={t('emailLabel')}
+          placeholder={t('emailPlaceholder')}
           type="email"
           error={errors.email}
           disabled={isLoading}
@@ -96,8 +99,8 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
         />
         <FormInput
           id="signup-password"
-          label="Password"
-          placeholder="••••••••"
+          label={t('passwordLabel')}
+          placeholder={t('passwordPlaceholder')}
           type="password"
           error={errors.password}
           disabled={isLoading}
@@ -109,7 +112,7 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
           type="submit"
           disabled={isLoading}
         >
-          {isLoading ? 'Signing up...' : 'Sign up →'}
+          {isLoading ? t('loading') : t('button')}
           <BottomGradient />
         </button>
         <div className="bg-linear-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-px w-full" />

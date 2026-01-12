@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Camera, Heart, Phone, Instagram, MessageCircle, X } from 'lucide-react'
 import { STAGED_CALL_CONSTANTS, type ContactInfoDisplay } from '@shared/types'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -34,19 +35,6 @@ const contactIcons: Record<string, React.ElementType> = {
   other: MessageCircle,
 }
 
-const contactLabels: Record<string, string> = {
-  phone: 'Phone',
-  instagram: 'Instagram',
-  telegram: 'Telegram',
-  snapchat: 'Snapchat',
-  whatsapp: 'WhatsApp',
-  wechat: 'WeChat',
-  facebook: 'Facebook',
-  twitter: 'Twitter',
-  linkedin: 'LinkedIn',
-  other: 'Other',
-}
-
 // =============================================================================
 // Component
 // =============================================================================
@@ -58,6 +46,8 @@ export const ContactExchangeModal = ({
   expiresAt,
   onClose,
 }: ContactExchangeModalProps) => {
+  const t = useTranslations('video.staged.exchange')
+  const tc = useTranslations('common')
   const [remainingTime, setRemainingTime] = useState<number>(STAGED_CALL_CONSTANTS.CONTACT_DISPLAY_DURATION)
 
   // Countdown timer
@@ -109,7 +99,7 @@ export const ContactExchangeModal = ({
               className="absolute -top-12 left-1/2 -translate-x-1/2 bg-brand px-4 py-2 rounded-full shadow-lg shadow-brand/30 flex items-center gap-2"
             >
               <Camera className="w-4 h-4 text-white" />
-              <span className="text-white font-bold text-sm">Screenshot Now!</span>
+              <span className="text-white font-bold text-sm">{t('screenshot')}</span>
             </motion.div>
 
             {/* Header */}
@@ -121,14 +111,14 @@ export const ContactExchangeModal = ({
               >
                 <Heart className="w-8 h-8 text-white fill-white" />
               </motion.div>
-              <h2 className="text-xl font-bold text-white">{partnerName}&apos;s Contact</h2>
-              <p className="text-neutral-400 text-sm mt-1">You&apos;ve unlocked their contact info!</p>
+              <h2 className="text-xl font-bold text-white">{t('partnerContact', { name: partnerName })}</h2>
+              <p className="text-neutral-400 text-sm mt-1">{t('unlocked')}</p>
             </div>
 
             {/* Timer Bar */}
             <div className="mb-6">
               <div className="flex justify-between text-xs mb-1">
-                <span className="text-neutral-400">Time remaining</span>
+                <span className="text-neutral-400">{t('timeRemaining')}</span>
                 <span className={seconds <= 10 ? 'text-red-400 font-bold' : 'text-brand'}>{seconds}s</span>
               </div>
               <div className="h-2 bg-neutral-800 rounded-full overflow-hidden">
@@ -149,14 +139,14 @@ export const ContactExchangeModal = ({
                         <Icon className="w-5 h-5 text-brand" />
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-neutral-400">{contactLabels[key]}</p>
+                        <p className="text-xs text-neutral-400">{t(`labels.${key}`)}</p>
                         <p className="text-white font-medium truncate">{value}</p>
                       </div>
                     </motion.div>
                   )
                 })
               ) : (
-                <p className="text-neutral-400 text-center py-4">No contact info shared</p>
+                <p className="text-neutral-400 text-center py-4">{t('empty')}</p>
               )}
             </div>
 
@@ -164,7 +154,7 @@ export const ContactExchangeModal = ({
             <motion.button whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }} onClick={onClose}
               className="w-full py-3 px-6 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors">
               <X className="w-5 h-5" />
-              Close
+              {tc('close')}
             </motion.button>
           </motion.div>
         </motion.div>

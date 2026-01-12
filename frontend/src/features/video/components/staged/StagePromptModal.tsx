@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Video, Mic, ArrowRight, X, Sparkles } from 'lucide-react'
 import { STAGED_CALL_CONSTANTS } from '@shared/types'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -28,6 +29,7 @@ export const StagePromptModal = ({
   onAccept,
   onDecline,
 }: StagePromptModalProps) => {
+  const t = useTranslations('video.staged.prompt')
   const [remainingTime, setRemainingTime] = useState<number>(STAGED_CALL_CONSTANTS.PROMPT_TIMEOUT)
 
   // Countdown timer
@@ -53,8 +55,8 @@ export const StagePromptModal = ({
   const progress = remainingTime / STAGED_CALL_CONSTANTS.PROMPT_TIMEOUT
 
   const nextStageInfo = fromStage === 1
-    ? { icon: Video, title: 'Video Call', desc: 'See each other for 2 minutes', color: 'brand' }
-    : { icon: Sparkles, title: 'Exchange Contacts', desc: 'Share your contact info', color: 'green' }
+    ? { icon: Video, title: t('videoTitle'), desc: t('videoDesc'), color: 'brand' }
+    : { icon: Sparkles, title: t('contactsTitle'), desc: t('contactsDesc'), color: 'green' }
 
   return (
     <AnimatePresence>
@@ -69,7 +71,7 @@ export const StagePromptModal = ({
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative bg-gradient-to-br from-neutral-900 to-neutral-800 rounded-3xl p-8 max-w-sm w-full text-center shadow-2xl overflow-hidden"
+            className="relative bg-gradient-to-br from-neutral-900 to-neutral-800 rounded-3xl p-8 max-sm w-full text-center shadow-2xl overflow-hidden"
           >
             {/* Progress Ring */}
             <div className="absolute top-4 right-4">
@@ -104,13 +106,13 @@ export const StagePromptModal = ({
             </div>
 
             {/* Title */}
-            <h2 className="text-2xl font-bold text-white mb-2">Continue to {nextStageInfo.title}?</h2>
+            <h2 className="text-2xl font-bold text-white mb-2">{t('continueTitle', { title: nextStageInfo.title })}</h2>
             <p className="text-neutral-400 mb-8">{nextStageInfo.desc}</p>
 
             {/* Waiting indicator */}
             <div className="mb-6 py-3 px-4 bg-white/5 rounded-xl">
               <p className="text-sm text-neutral-300">
-                Waiting for both of you to respond...
+                {t('waiting')}
               </p>
               <div className="flex justify-center gap-2 mt-2">
                 <motion.span
@@ -140,7 +142,7 @@ export const StagePromptModal = ({
                 className="flex-1 py-3 px-6 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors"
               >
                 <X className="w-5 h-5" />
-                Not Now
+                {t('notNow')}
               </motion.button>
               <motion.button
                 whileHover={{ scale: 1.02 }}
@@ -153,7 +155,7 @@ export const StagePromptModal = ({
                 }`}
               >
                 <nextStageInfo.icon className="w-5 h-5" />
-                Let&apos;s Go!
+                {t('letsGo')}
               </motion.button>
             </div>
           </motion.div>

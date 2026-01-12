@@ -6,6 +6,7 @@ import { PhoneOff, Mic, MicOff } from 'lucide-react'
 import { useAgora } from '../../hooks/useAgora'
 import { cn } from '@/lib/utils'
 import Image from 'next/image'
+import { useTranslations } from 'next-intl'
 
 // =============================================================================
 // Types
@@ -47,6 +48,9 @@ export const StagedAudioCallModal = ({
   onClose,
   onCallEnded,
 }: StagedAudioCallModalProps) => {
+  const t = useTranslations('video.staged')
+  const th = useTranslations('video.header')
+
   const {
     isConnected,
     isConnecting,
@@ -118,7 +122,7 @@ export const StagedAudioCallModal = ({
               <h2 className="text-2xl font-bold text-white mb-2">{partnerName}</h2>
               <p className="text-4xl font-mono font-bold text-brand">{formatTime(remainingTime)}</p>
               <p className="text-neutral-400 text-sm mt-2">
-                {stage === 1 ? 'Stage 1: Audio Call' : 'Stage 2: Video Call'}
+                {stage === 1 ? t('stage1') : t('stage2')}
               </p>
             </motion.div>
 
@@ -126,7 +130,7 @@ export const StagedAudioCallModal = ({
             <div className="flex items-center justify-center gap-2 mb-8">
               <div className={cn("w-2 h-2 rounded-full", isConnected ? "bg-green-500 animate-pulse" : "bg-amber-500")} />
               <span className="text-neutral-400 text-sm">
-                {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : error || 'Waiting...'}
+                {isConnecting ? th('connecting') : isConnected ? th('connected') : error || th('waiting')}
               </span>
             </div>
 

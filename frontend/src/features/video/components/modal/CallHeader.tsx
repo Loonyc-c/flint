@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { X } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useTranslations } from 'next-intl'
 
 interface CallHeaderProps {
   isConnected: boolean
@@ -28,6 +29,8 @@ export const CallHeader = ({
   remoteUserName,
   onClose,
 }: CallHeaderProps) => {
+  const t = useTranslations('video.header')
+
   return (
     <motion.div
       initial={{ opacity: 0, y: -20 }}
@@ -60,7 +63,7 @@ export const CallHeader = ({
             <h2 className="text-white font-bold">{remoteUserName}</h2>
             <div className="flex items-center gap-2">
               <p className="text-white/60 text-sm">
-                {isConnecting ? 'Connecting...' : isConnected ? 'Connected' : 'Waiting...'}
+                {isConnecting ? t('connecting') : isConnected ? t('connected') : t('waiting')}
               </p>
               {isConnected && remainingTime > 0 && (
                 <>

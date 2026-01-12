@@ -4,19 +4,22 @@ import LoginForm from '@/features/auth/components/LoginForm'
 import SignupForm from '@/features/auth/components/SignupForm'
 import { Tabs } from '@/components/ui/tabs'
 import AuthHeader from '@/features/auth/components/AuthHeader'
+import { useTranslations } from 'next-intl'
 
 /**
  * Authentication page with login and signup tabs.
  */
 const AuthPage = () => {
+  const t = useTranslations('auth.tabs')
+
   const tabs = [
     {
-      title: 'Login',
+      title: t('login'),
       value: 'Login',
       content: <LoginForm />
     },
     {
-      title: 'SignUp',
+      title: t('signup'),
       value: 'SignUp',
       content: <SignupForm />
     }

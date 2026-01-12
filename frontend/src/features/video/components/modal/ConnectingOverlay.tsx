@@ -1,12 +1,15 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
+import { useTranslations } from 'next-intl'
 
 interface ConnectingOverlayProps {
   isConnecting: boolean
 }
 
 export const ConnectingOverlay = ({ isConnecting }: ConnectingOverlayProps) => {
+  const t = useTranslations('video.staged.overlay')
+
   return (
     <AnimatePresence>
       {isConnecting && (
@@ -22,8 +25,8 @@ export const ConnectingOverlay = ({ isConnecting }: ConnectingOverlayProps) => {
               transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
               className="w-16 h-16 mx-auto mb-4 border-4 border-brand/30 border-t-brand rounded-full"
             />
-            <p className="text-white text-lg font-medium">Connecting to call...</p>
-            <p className="text-white/60 text-sm mt-1">Please wait</p>
+            <p className="text-white text-lg font-medium">{t('connecting')}</p>
+            <p className="text-white/60 text-sm mt-1">{t('pleaseWait')}</p>
           </div>
         </motion.div>
       )}

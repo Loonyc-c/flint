@@ -1,6 +1,193 @@
 {
+  "Metadata": {
+    "title": "Flint - Зүрх сэтгэлээрээ холбогд",
+    "description": "Дуут болон видео дуудлагаар жинхэнэ харилцааг олоорой."
+  },
   "HomePage": {
-    "loading": "Ачааллаж байна..."
+    "loading": "Ачааллаж байна...",
+    "tabs": {
+      "findMatch": "Хүн хайх",
+      "matchingPreferences": "Тохиргоо",
+      "subscription": "Эрх"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Flint-д нэвтрэх",
+      "emailLabel": "Имэйл хаяг",
+      "emailPlaceholder": "projectmayhem@fc.com",
+      "passwordLabel": "Нууц үг",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Нууц үгээ мартсан уу?",
+      "button": "Нэвтрэх →",
+      "loading": "Нэвтэрч байна...",
+      "success": "Амжилттай нэвтэрлээ!"
+    },
+    "signup": {
+      "title": "Flint-д тавтай морил",
+      "firstNameLabel": "Нэр",
+      "firstNamePlaceholder": "Тайлер",
+      "lastNameLabel": "Овог",
+      "lastNamePlaceholder": "Дерден",
+      "emailLabel": "Имэйл хаяг",
+      "emailPlaceholder": "projectmayhem@fc.com",
+      "passwordLabel": "Нууц үг",
+      "passwordPlaceholder": "••••••••",
+      "button": "Бүртгүүлэх →",
+      "loading": "Бүртгэж байна...",
+      "success": "Амжилттай бүртгүүллээ!"
+    },
+    "header": {
+      "home": "Нүүр",
+      "getStarted": "Эхлэх",
+      "signOut": "Гарах",
+      "userProfile": "Хэрэглэгчийн мэдээлэл"
+    },
+    "tabs": {
+      "login": "Нэвтрэх",
+      "signup": "Бүртгүүлэх"
+    },
+    "resetPassword": {
+      "loading": "Ачааллаж байна..."
+    },
+    "forgetPassword": {
+      "title": "Нууц үгээ мартсан уу?",
+      "subtitle": "Санаа зоволтгүй! Имэйл хаягаа оруулна уу, бид танд сэргээх холбоос илгээх болно.",
+      "emailLabel": "Имэйл хаяг",
+      "emailPlaceholder": "projectmayhem@fc.com",
+      "button": "Сэргээх холбоос илгээх →",
+      "loading": "Илгээж байна...",
+      "success": "Нууц үг сэргээх имэйл илгээгдлээ! Inbox-оо шалгана уу.",
+      "backToLogin": "← Нэвтрэх хэсэг рүү буцах",
+      "sentTitle": "Имэйлээ шалгана уу",
+      "sentMessage": "Хэрэв {email} хаягтай бүртгэл байгаа бол та удахгүй нууц үг сэргээх холбоос хүлээн авах болно.",
+      "sentSpam": "Имэйл ирээгүй юу? Spam folder-оо шалгах эсвэл дахин оролдоно уу."
+    }
+  },
+  "home": {
+    "findMatch": {
+      "title": "Хүнээ хайх",
+      "subtitle": "Мэдрэмжтэй холбоо тогтоох аяллаа эхлүүлээрэй.",
+      "chooseStyle": "Хайх аргаа сонгох",
+      "liveCall": {
+        "title": "Шууд дуудлага",
+        "description": "Дуут дуудлагаар шууд холбогдох",
+        "button": "Дуудлага эхлүүлэх"
+      },
+      "swipe": {
+        "title": "Свайп",
+        "description": "Өөрийн хэмнэлээр танилцах",
+        "button": "Свайп эхлэх"
+      },
+      "aiWingman": {
+        "title": "AI Wingman бэлэн",
+        "description": "Өөртөө тохирсон ярианы санаа болон зөвлөгөө аваарай.",
+        "premiumTitle": "Премиум боломж",
+        "premiumDescription": "AI Wingman-г ашиглан хувийн зөвлөгөө авахын тулд эрхээ ахиулна уу",
+        "viewPlans": "Багцууд харах",
+        "playful": "Playful",
+        "thoughtful": "Thoughtful",
+        "chill": "Chill"
+      }
+    },
+    "matchingPref": {
+      "title": "Хайх хүрээ",
+      "ageRange": "Насны хүрээ",
+      "years": "нас",
+      "distanceSoon": "Хамгийн хол зай (Удахгүй)",
+      "distance": "Зай",
+      "km": "км",
+      "distanceHelper": "Байршилд суурилсан хайлтыг хөгжүүлж байна.",
+      "interestedIn": "Сонирхож буй хүйс",
+      "genders": {
+        "everyone": "Бүгд",
+        "men": "Эрэгтэй",
+        "women": "Эмэгтэй"
+      }
+    },
+    "subscription": {
+      "redirecting": "Төлбөрийн хуудас руу шилжиж байна..."
+    }
+  },
+  "swipe": {
+    "header": {
+      "title": "Танилцах",
+      "profilesNearby": "Ойр хавьд {count} хүн байна",
+      "filterAria": "Шүүлтүүр"
+    },
+    "card": {
+      "voiceIntro": "Дуут танилцуулга",
+      "voiceIntroPlaying": "Уншиж байна...",
+      "voiceIntroTap": "Дууг нь сонсох",
+      "voiceIntroEmpty": "Бичлэг байхгүй",
+      "about": "Тухай",
+      "getToKnowMe": "Намайг таньж мэд",
+      "question": "Асуулт {number}",
+      "noAnswer": "Хариултгүй",
+      "moreQuestions": "+{count} илүү асуулт",
+      "noPhoto": "Зураггүй",
+      "nearby": "Ойрхон",
+      "prevPhoto": "Өмнөх зураг",
+      "nextPhoto": "Дараагийн зураг",
+      "pauseVoice": "Дуут танилцуулга зогсоох",
+      "playVoice": "Дуут танилцуулга тоглуулах"
+    },
+    "controls": {
+      "undo": "Буцах",
+      "pass": "Өнгөрөх",
+      "super": "Супер",
+      "smash": "Таалагдлаа",
+      "undoAria": "Сүүлийн үйлдлийг буцаах (Z)",
+      "passAria": "Өнгөрөх (←)",
+      "superAria": "Супер (↑)",
+      "smashAria": "Таалагдлаа (→)"
+    },
+    "states": {
+      "noMoreTitle": "Дууслаа!",
+      "noMoreSubtitle": "Таны орчимд байгаа бүх хүнийг харуулж дууслаа. Дараа ирж шинэ хүмүүстэй танилцаарай.",
+      "refreshing": "Шинэчилж байна...",
+      "refreshButton": "Дахин ачаалах",
+      "finding": "Хүмүүс хайж байна..."
+    },
+    "modals": {
+      "match": {
+        "title": "Таарлаа!",
+        "subtitle": "Та хоёр бие биедээ таалагдсан байна!",
+        "startChatting": "Чатлах",
+        "keepSwiping": "Үргэлжлүүлэн үзэх"
+      },
+      "limit": {
+        "title": "Өдрийн лимит дууслаа!",
+        "usage": "Та өнөөдөр {limit}-с {used}-г ашигласан байна",
+        "upgradePrompt": "Премиум эрх авч хязгааргүй лайк болон бусад боломжуудыг нээгээрэй!",
+        "featureUnlimited": "Хязгааргүй лайк",
+        "featureUnlimitedDesc": "Өдөр бүр хүссэн хэмжээгээрээ лайк дар",
+        "featureSeeLikes": "Хэн танд лайк дарсныг харах",
+        "featureSeeLikesDesc": "Свайп хийхээсээ өмнө хэн сонирхож байгааг мэд",
+        "featureAI": "AI Wingmen",
+        "featureAIDesc": "Хувийн ярианы эхлэл болон зөвлөгөө авах",
+        "featurePriority": "Давуу эрхтэй харагдах",
+        "featurePriorityDesc": "Илүү олон хүнд харагдаж хурдан таарах",
+        "upgradeButton": "Эрхээ ахиулах",
+        "maybeLater": "Дараа болох уу",
+        "resetInfo": "Таны лайк 24 цагийн дараа шинэчлэгдэнэ"
+      }
+    },
+    "hub": {
+      "comingSoon": "Удахгүй",
+      "likesTitle": "Удахгүй",
+      "likesSubtitle": "Хэн танд лайк дарсныг хараарай! Энэ хэсэг удахгүй нээгдэнэ.",
+      "matchCount": "{count} хүн",
+      "soon": "Удахгүй",
+      "new": "Шинэ",
+      "likesYou": "Танд таалагдсан",
+      "tapToReveal": "Харах",
+      "noLikes": "Лайк ирээгүй байна",
+      "noLikesDesc": "Хэн нэгэн таныг сонирхвол энд харагдах болно. Профайлаа шинэ байлгаарай!",
+      "seeWhoLikes": "Хэн танд лайк дарсныг хар",
+      "seeWhoLikesDesc": "Эрхээ ахиулж хэн таныг сонирхож байгааг мэдээрэй",
+      "upgrade": "Ахиулах"
+    }
   },
   "chat": {
     "messages": "Зурвасууд",
@@ -9,9 +196,197 @@
     "likes": "Таалагдсан",
     "yourTurn": "Таны ээлж",
     "theirTurn": "Түүний ээлж",
-    "hiddenChats": "Нуугдсан чат"
+    "hiddenChats": "Нуугдсан чат",
+    "typing": "бичиж байна...",
+    "online": "Онлайн",
+    "yourTurnUpper": "ТАНЫ ЭЭЛЖ",
+    "theirTurnUpper": "ТҮҮНИЙ ЭЭЛЖ",
+    "reconnecting": "• Холбогдож байна...",
+    "audioCallTitle": "1-р шатны дуудлага эхлүүлэх",
+    "audioCall": "Дуут дуудлага",
+    "videoCall": "Видео дуудлага",
+    "startStage2": "2-р шат эхлэх",
+    "stage3Available": "3-р шат боломжтой",
+    "placeholder": "Зурвас бичих...",
+    "notFound": "Чат олдсонгүй",
+    "sayHello": "Сайн уу гэж хэлээрэй!",
+    "breakIce": "{name}-тэй яриа өдөөрэй",
+    "goBack": "Буцах",
+    "noChatsTitle": "Хүлээгдэж буй чат алга",
+    "noChatsSubtitle": "Хүн хайж эхлээрэй!",
+    "allCaughtUpTitle": "Бүх зурваст хариулсан!",
+    "allCaughtUpSubtitle": "Хариу хүлээж байна..."
+  },
+  "profile": {
+    "page": {
+      "uploading": "ХУУЛЖ БАЙНА...",
+      "saving": "ХАДГАЛЖ БАЙНА...",
+      "saveProfile": "ХАДГАЛАХ",
+      "saveChanges": "ӨӨРЧЛӨЛТ ХАДГАЛАХ"
+    },
+    "info": {
+      "nicknameLabel": "Бусдад харагдах нэр",
+      "nicknamePlaceholder": "Нэр",
+      "ageLabel": "Нас",
+      "genderLabel": "Хүйс",
+      "genders": {
+        "male": "Эрэгтэй",
+        "female": "Эмэгтэй",
+        "other": "Бусад"
+      },
+      "aboutMe": "Миний тухай",
+      "bioPlaceholder": "Өөрийнхөө тухай хуваалцаарай..."
+    },
+    "interests": {
+      "title": "Сонирхол",
+      "edit": "ЗАСАХ",
+      "empty": "Та юунд дуртай vэ? Сонирхлоо нэмээрэй.",
+      "modalTitle": "Сонирхол сонгох",
+      "selectedCount": "{count} сонгосон",
+      "items": {
+        "GYM": "Фитнесс",
+        "MUSIC": "Хөгжим",
+        "MOVIES": "Кино",
+        "READING": "Ном унших",
+        "TRAVEL": "Аялал",
+        "GAMING": "Тоглоом",
+        "COOKING": "Хоол хийх",
+        "ART": "Урлаг",
+        "SPORTS": "Спорт",
+        "DANCING": "Бүжиг"
+      }
+    },
+    "questions": {
+      "title": "Асуултууд",
+      "edit": "Асуулт засах",
+      "add": "Асуулт нэмэх",
+      "done": "Болсон",
+      "editingPrompts": "Асуулт сонгох",
+      "selectedCount": "{count}/3 сонгосон",
+      "answeredCount": "Та {count} асуултанд хариулсан байна",
+      "empty": "Асуултанд хариулаагүй байна",
+      "duplicateError": "Энэ асуултыг өмнө нь сонгосон байна.",
+      "recordingModal": {
+        "title": "АСУУЛТ {number}"
+      },
+      "recorder": {
+        "playbackError": "Дуу тоглуулах боломжгүй байна.",
+        "recordButton": "Дуугаар хариулах",
+        "stopButton": "Бичлэгийг зогсоох",
+        "recordingStatus": "Бичиж байна {time}",
+        "done": "Болсон",
+        "cancel": "Болих"
+      },
+      "modal": {
+        "title": "Асуулт сонгох",
+        "slotInfo": "{number}-р асуулт (нийт 3)",
+        "categories": {
+          "general": "Ерөнхий"
+        }
+      }
+    },
+    "contact": {
+      "title": "Холбоо барих мэдээлэл",
+      "subtitle": "3-р шатыг дуусгасны дараа тааралцсан хүнтэйгээ хуваалцах мэдээллээ оруулна уу",
+      "empty": "Холбоо барих мэдээлэл байхгүй",
+      "noDetails": "Мэдээлэл оруулаагүй байна",
+      "partnerContact": "{name}-н холбоо барих",
+      "verified": "Баталгаажсан",
+      "unverified": "Баталгаажаагүй",
+      "saveButton": "Хадгалах",
+      "saving": "Хадгалж байна...",
+      "footerNote": "Таны мэдээлэл зөвхөн 3-р шатыг хамт дуусгасан хүнд л харагдах болно",
+      "labels": {
+        "phone": "Утасны дугаар",
+        "instagram": "Инстаграм",
+        "telegram": "Телеграм",
+        "snapchat": "Снапчат",
+        "whatsapp": "Ватсап",
+        "wechat": "Вичат",
+        "facebook": "Фэйсбүүк",
+        "twitter": "Твиттер",
+        "linkedin": "Линкедин",
+        "other": "Бусад"
+      },
+      "placeholders": {
+        "phone": "+976 0000 0000",
+        "instagram": "@хэрэглэгчийн_нэр",
+        "telegram": "@хэрэглэгчийн_нэр",
+        "snapchat": "хэрэглэгчийн_нэр",
+        "whatsapp": "+976 0000 0000",
+        "wechat": "вичат_айди",
+        "other": "Бусад мэдээлэл"
+      }
+    },
+    "voice": {
+      "title": "Дуут танилцуулга",
+      "subtitle": "Өөрийнхөө дуу хоолойг сонсгоорой",
+      "record": "БИЧИХ",
+      "modal": {
+        "title": "Дуут танилцуулга"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "you": "Та",
+      "partner": "Найз",
+      "errorTitle": "Холболтын алдаа",
+      "tryAgain": "Дахин оролдох"
+    },
+    "header": {
+      "connecting": "Холбогдож байна...",
+      "connected": "Холбогдсон",
+      "waiting": "Хүлээж байна..."
+    },
+    "staged": {
+      "stage1": "1-р шат: Дуут дуудлага",
+      "stage2": "2-р шат: Видео дуудлага",
+      "incoming": "Видео дуудлага ирж байна...",
+      "outgoing": "Цуцлах",
+      "calling": "Залгаж байна...",
+      "stageInfo": "{stage}-р шатны {type} дуудлага",
+      "types": {
+        "audio": "Дуут",
+        "video": "Видео"
+      },
+      "prompt": {
+        "videoTitle": "Видео дуудлага",
+        "videoDesc": "2 минутын турш бие биенээ харах",
+        "contactsTitle": "Дугаар солилцох",
+        "contactsDesc": "Холбоо барих мэдээллээ хуваалцах",
+        "continueTitle": "{title} руу шилжих үү?",
+        "waiting": "Хоёуланг нь хариулахыг хүлээж байна...",
+        "notNow": "Одоо биш",
+        "letsGo": "Эхэлцгээе!"
+      },
+      "exchange": {
+        "screenshot": "Зургийг нь аваарай!",
+        "unlocked": "Холбоо барих мэдээллийг нээлээ!",
+        "timeRemaining": "Үлдсэн хугацаа",
+        "empty": "Мэдээлэл алга",
+        "partnerContact": "{name}-н холбоо барих",
+        "labels": {
+          "phone": "Утас",
+          "instagram": "Инстаграм",
+          "telegram": "Телеграм",
+          "snapchat": "Снапчат",
+          "whatsapp": "Ватсап",
+          "wechat": "Вичат",
+          "facebook": "Фэйсбүүк",
+          "twitter": "Твиттер",
+          "linkedin": "Линкедин",
+          "other": "Бусад"
+        }
+      },
+      "overlay": {
+        "connecting": "Холбогдож байна...",
+        "pleaseWait": "Түр хүлээнэ үү"
+      }
+    }
   },
   "common": {
-    "close": "Хаах"
+    "close": "Хаах",
+    "error": "Алдаа гарлаа. Дахин оролдоно уу."
   }
 }
