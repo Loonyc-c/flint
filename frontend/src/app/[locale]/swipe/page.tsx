@@ -1,13 +1,27 @@
-import { DiscoveryHub } from '@/features/swipe/components/hub/DiscoveryHub'
+"use client";
 
-/**
- * Swipe page for discovering and matching with other users.
- * Refactored to use the Unified Discovery Hub.
- */
-const SwipePage = () => (
-  <main className="bg-white dark:bg-black py-4 md:py-8 px-0 md:px-4">
-    <DiscoveryHub />
-  </main>
-)
+import { motion } from "framer-motion";
+import { SwipeFeature } from "@/features/swipe/components/SwipeFeature";
 
-export default SwipePage
+const pageVariants = {
+  initial: { opacity: 0, x: 20 },
+  animate: { opacity: 1, x: 0 },
+  exit: { opacity: 0, x: -20 },
+};
+
+const SwipeIndexPage = () => {
+  return (
+    <motion.div
+      key="swipe"
+      variants={pageVariants}
+      initial="initial"
+      animate="animate"
+      exit="exit"
+      className="flex-1 min-h-0 w-full overflow-hidden bg-white/50 dark:bg-neutral-900/50 sm:rounded-3xl sm:shadow-xl"
+    >
+      <SwipeFeature />
+    </motion.div>
+  );
+};
+
+export default SwipeIndexPage;
