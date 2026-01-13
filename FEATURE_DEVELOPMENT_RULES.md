@@ -90,13 +90,27 @@ To ensure stability across all devices and prevent scrollbar issues:
     *   **Services (`services/`):** Pure business logic. No `req`/`res` objects.
 *   **Context:** User session data is always in `req.context` (not `req.user`).
 
-### Error Handling
-*   Wrap **ALL** async handlers with a higher-order function (e.g., `catchAsync`).
-*   Throw named errors: `throw new AppError('Message', 400)`.
+---
+
+## 4. 🔌 Real-time & Socket Standards (Socket.io)
+
+### Event Naming & Payloads
+*   **Pattern:** Use kebab-case for events: `feature-action` (e.g., `live-call-join`, `chat-message-sent`).
+*   **Context:** ALWAYS include a `matchId` or session-specific ID in payloads to allow for targeted emissions.
+
+### State Management & Cleanup
+*   **Mandatory Cleanup:** Every socket handler MUST implement a `disconnect` listener to purge the user from any in-memory state (Queues, Active Call Maps).
+*   **Memory vs. Persistence:** In-memory `Map/Set` is allowed for high-frequency matchmaking but MUST be documented as a candidate for Redis migration if horizontal scaling is required.
+
+### Ephemeral IDs
+*   **Prefixing:** IDs generated outside of MongoDB (e.g., UUIDs for temporary sessions) MUST be prefixed (e.g., `live_`, `tmp_`) to distinguish them from ObjectIds in logs and shared types.
+
+### Agora Integration
+*   **Numeric UIDs:** Agora requires numeric UIDs. ALWAYS use `agoraService.generateNumericUid(userId)` when interacting with RTC channels to maintain consistency between string-based MongoDB IDs and numeric RTC requirements.
 
 ---
 
-## 4. 📝 Execution Workflow (CoT)
+## 5. 📝 Execution Workflow (CoT)
 
 When presented with a coding task, follow this internal process:
 

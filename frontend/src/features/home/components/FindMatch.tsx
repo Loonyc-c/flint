@@ -1,43 +1,61 @@
-'use client'
+"use client";
 
-import { useRouter } from '@/i18n/routing'
-import { Phone, Users, Sparkles, Smile, Brain, Coffee, Lock } from 'lucide-react'
-import { Card } from '@/components/ui/card'
-import { Button } from '@/components/ui/button'
-import { useTranslations } from 'next-intl'
+import { useRouter } from "@/i18n/routing";
+import {
+  Phone,
+  Users,
+  Sparkles,
+  Smile,
+  Brain,
+  Coffee,
+  Lock,
+} from "lucide-react";
+import { Card } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { useTranslations } from "next-intl";
+import { useState } from "react";
+import { LiveCallOverlay } from "./LiveCallOverlay";
 
 // =============================================================================
 // Sub-Components
 // =============================================================================
 
-const LiveCallCard = () => {
-  const t = useTranslations('home.findMatch')
+interface LiveCallCardProps {
+  onClick: () => void;
+}
+
+const LiveCallCard = ({ onClick }: LiveCallCardProps) => {
+  const t = useTranslations("home.findMatch");
 
   return (
     <button
-      disabled
-      className="p-6 border-2 shadow-sm bg-card border-border hover:border-brand rounded-2xl flex flex-col items-center gap-4 transition-all hover:shadow-lg group disabled:opacity-50 disabled:cursor-not-allowed"
+      onClick={onClick}
+      className="p-6 border-2 shadow-sm bg-card border-border hover:border-brand rounded-2xl flex flex-col items-center gap-4 transition-all hover:shadow-lg group"
     >
       <div className="flex items-center justify-center w-16 h-16 transition-colors rounded-full bg-brand text-brand-foreground group-hover:bg-brand-300">
         <Phone className="w-8 h-8" />
       </div>
       <div className="text-center">
-        <h4 className="mb-2 text-lg font-semibold text-foreground">{t('liveCall.title')}</h4>
-        <p className="text-sm text-muted-foreground">{t('liveCall.description')}</p>
+        <h4 className="mb-2 text-lg font-semibold text-foreground">
+          {t("liveCall.title")}
+        </h4>
+        <p className="text-sm text-muted-foreground">
+          {t("liveCall.description")}
+        </p>
       </div>
       <div className="w-full px-5 py-2.5 rounded-2xl bg-brand group-hover:bg-brand-300 font-medium text-brand-foreground text-center text-sm transition-colors">
-        {t('liveCall.button')}
+        {t("liveCall.button")}
       </div>
     </button>
-  )
-}
+  );
+};
 
 interface SwipeCardProps {
-  onNavigate: () => void
+  onNavigate: () => void;
 }
 
 const SwipeCard = ({ onNavigate }: SwipeCardProps) => {
-  const t = useTranslations('home.findMatch')
+  const t = useTranslations("home.findMatch");
 
   return (
     <div
@@ -48,19 +66,23 @@ const SwipeCard = ({ onNavigate }: SwipeCardProps) => {
         <Users className="w-8 h-8" />
       </div>
       <div className="text-center">
-        <h4 className="mb-2 text-lg font-semibold text-foreground">{t('swipe.title')}</h4>
-        <p className="text-sm text-muted-foreground">{t('swipe.description')}</p>
+        <h4 className="mb-2 text-lg font-semibold text-foreground">
+          {t("swipe.title")}
+        </h4>
+        <p className="text-sm text-muted-foreground">
+          {t("swipe.description")}
+        </p>
       </div>
       <div className="w-full px-5 py-2.5 rounded-2xl bg-black dark:bg-white font-medium text-white dark:text-black text-center text-sm transition-colors group-hover:bg-black-200 dark:group-hover:bg-neutral-200">
-        {t('swipe.button')}
+        {t("swipe.button")}
       </div>
     </div>
-  )
-}
+  );
+};
 
 const AIWingmanCard = () => {
-  const t = useTranslations('home.findMatch')
-  const hasSubscription = false // Mocked for UI
+  const t = useTranslations("home.findMatch");
+  const hasSubscription = false; // Mocked for UI
 
   return (
     <Card className="relative w-full overflow-hidden border-0 shadow-lg sm:w-11/12 lg:w-3/4 bg-linear-to-br from-card to-muted">
@@ -68,10 +90,14 @@ const AIWingmanCard = () => {
         {!hasSubscription && (
           <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-black/50 backdrop-blur-sm rounded-none">
             <Lock className="w-12 h-12 text-white" />
-            <p className="text-lg font-semibold text-white">{t('aiWingman.premiumTitle')}</p>
-            <p className="text-sm text-white/80 max-w-xs">{t('aiWingman.premiumDescription')}</p>
+            <p className="text-lg font-semibold text-white">
+              {t("aiWingman.premiumTitle")}
+            </p>
+            <p className="text-sm text-white/80 max-w-xs">
+              {t("aiWingman.premiumDescription")}
+            </p>
             <Button className="rounded-lg transition-colors bg-brand hover:bg-brand/90 text-brand-foreground">
-              {t('aiWingman.viewPlans')}
+              {t("aiWingman.viewPlans")}
             </Button>
           </div>
         )}
@@ -80,11 +106,13 @@ const AIWingmanCard = () => {
           <div className="flex items-center justify-center w-12 h-12 shadow-lg rounded-full sm:w-14 sm:h-14 bg-brand/90 text-brand-foreground">
             <Sparkles className="w-6 h-6 sm:w-7 sm:h-7" />
           </div>
-          <h3 className="text-lg sm:text-xl font-semibold">{t('aiWingman.title')}</h3>
+          <h3 className="text-lg sm:text-xl font-semibold">
+            {t("aiWingman.title")}
+          </h3>
         </div>
 
         <p className="text-sm leading-relaxed text-muted-foreground max-w-184">
-          {t('aiWingman.description')}
+          {t("aiWingman.description")}
         </p>
 
         <div className="grid w-full grid-cols-3 gap-3 sm:gap-4">
@@ -93,7 +121,7 @@ const AIWingmanCard = () => {
               <Smile className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <span className="text-[11px] sm:text-xs text-muted-foreground">
-              {t('aiWingman.playful')}
+              {t("aiWingman.playful")}
             </span>
           </div>
 
@@ -102,7 +130,7 @@ const AIWingmanCard = () => {
               <Brain className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <span className="text-[11px] sm:text-xs text-muted-foreground">
-              {t('aiWingman.thoughtful')}
+              {t("aiWingman.thoughtful")}
             </span>
           </div>
 
@@ -111,14 +139,14 @@ const AIWingmanCard = () => {
               <Coffee className="w-5 h-5 sm:w-6 sm:h-6" />
             </div>
             <span className="text-[11px] sm:text-xs text-muted-foreground">
-              {t('aiWingman.chill')}
+              {t("aiWingman.chill")}
             </span>
           </div>
         </div>
       </div>
     </Card>
-  )
-}
+  );
+};
 
 // =============================================================================
 // Main Component
@@ -128,29 +156,30 @@ const AIWingmanCard = () => {
  * Find Match page section with matching style options and AI wingman feature.
  */
 const FindMatch = () => {
-  const router = useRouter()
-  const t = useTranslations('home.findMatch')
+  const router = useRouter();
+  const t = useTranslations("home.findMatch");
+  const [showLiveCall, setShowLiveCall] = useState(false);
 
   return (
     <div className="w-full flex justify-center">
       <section className="w-full max-w-[1200px] px-4 md:px-6 lg:px-8 flex flex-col items-center gap-6 sm:gap-8">
         {/* Header Block */}
         <div className="w-full flex flex-col items-center gap-2 text-center">
-          <div className="text-2xl font-bold text-brand">{t('title')}</div>
+          <div className="text-2xl font-bold text-brand">{t("title")}</div>
           <h2 className="text-neutral-700 dark:text-neutral-300 font-light text-xs sm:text-sm md:text-base leading-relaxed max-w-200">
-            {t('subtitle')}
+            {t("subtitle")}
           </h2>
         </div>
 
         {/* Start Matching Section */}
         <div className="w-full sm:w-4/5 md:w-3/4 lg:w-2/3 flex flex-col items-center gap-4">
           <h3 className="text-lg sm:text-xl font-semibold text-neutral-900 dark:text-neutral-100">
-            {t('chooseStyle')}
+            {t("chooseStyle")}
           </h3>
 
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-            <LiveCallCard />
-            <SwipeCard onNavigate={() => router.push('/swipe')} />
+            <LiveCallCard onClick={() => setShowLiveCall(true)} />
+            <SwipeCard onNavigate={() => router.push("/swipe")} />
           </div>
         </div>
 
@@ -158,9 +187,14 @@ const FindMatch = () => {
         <div className="w-full flex justify-center">
           <AIWingmanCard />
         </div>
+
+        <LiveCallOverlay 
+          isOpen={showLiveCall} 
+          onClose={() => setShowLiveCall(false)} 
+        />
       </section>
     </div>
-  )
-}
+  );
+};
 
-export default FindMatch
+export default FindMatch;

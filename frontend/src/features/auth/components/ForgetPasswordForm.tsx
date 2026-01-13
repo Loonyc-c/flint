@@ -28,7 +28,7 @@ const EmailSentView = ({ email }: EmailSentViewProps) => {
       <div className="my-8 text-center">
         <p className="text-neutral-600 dark:text-neutral-400 mb-4">
           {t.rich('sentMessage', {
-            email: (chunks) => <strong>{email}</strong>
+            email: (_chunks) => <strong>{email}</strong>
           })}
         </p>
         <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">

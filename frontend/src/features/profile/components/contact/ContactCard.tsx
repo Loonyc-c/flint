@@ -55,7 +55,7 @@ export const ContactCard = ({
 
   // Filter valid contacts
   const validContacts = Object.entries(contactInfo).filter(
-    ([key, value]) => value && key !== 'isContactVerified' && contactConfig[key]
+    ([key, value]) => value && key !== 'verifiedPlatforms' && contactConfig[key]
   )
 
   if (validContacts.length === 0) {
@@ -67,6 +67,8 @@ export const ContactCard = ({
     )
   }
 
+  const isAnyVerified = (contactInfo.verifiedPlatforms?.length || 0) > 0
+
   return (
     <div className={cn('rounded-2xl bg-white dark:bg-neutral-800 shadow-lg overflow-hidden', className)}>
       {/* Header */}
@@ -77,11 +79,11 @@ export const ContactCard = ({
             {showVerification && (
               <div className={cn(
                 'flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full',
-                contactInfo.isContactVerified
+                isAnyVerified
                   ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400'
                   : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400'
               )}>
-                {contactInfo.isContactVerified ? (
+                {isAnyVerified ? (
                   <>
                     <CheckCircle className="w-3.5 h-3.5" />
                     {t('verified')}

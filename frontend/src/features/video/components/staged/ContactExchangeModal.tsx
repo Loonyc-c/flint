@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Camera, Heart, Phone, Instagram, MessageCircle, X } from 'lucide-react'
+import { Camera, Heart, Phone, Instagram, MessageCircle, X, CheckCircle2 } from 'lucide-react'
 import { STAGED_CALL_CONSTANTS, type ContactInfoDisplay } from '@shared/types'
 import { useTranslations } from 'next-intl'
 
@@ -72,10 +72,12 @@ export const ContactExchangeModal = ({
   const seconds = Math.ceil(remainingTime / 1000)
   const progress = remainingTime / STAGED_CALL_CONSTANTS.CONTACT_DISPLAY_DURATION
 
-  // Filter out empty contacts
+  // Filter out empty contacts and metadata
   const validContacts = Object.entries(contactInfo).filter(
-    ([key, value]) => value && key !== 'isContactVerified'
+    ([key, value]) => value && key !== 'verifiedPlatforms' && key !== 'isContactVerified'
   )
+
+  const verifiedPlatforms = contactInfo.verifiedPlatforms || []
 
   return (
     <AnimatePresence>
@@ -132,14 +134,28 @@ export const ContactExchangeModal = ({
               {validContacts.length > 0 ? (
                 validContacts.map(([key, value]) => {
                   const Icon = contactIcons[key] || MessageCircle
+                  const isVerified = verifiedPlatforms.includes(key)
+                  
                   return (
                     <motion.div key={key} initial={{ opacity: 0, x: -10 }} animate={{ opacity: 1, x: 0 }}
                       className="flex items-center gap-3 p-3 bg-white/5 rounded-xl">
-                      <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center">
+                      <div className="w-10 h-10 rounded-full bg-brand/20 flex items-center justify-center relative">
                         <Icon className="w-5 h-5 text-brand" />
+                        {isVerified && (
+                          <div className="absolute -top-1 -right-1 bg-white rounded-full p-0.5">
+                            <CheckCircle2 className="w-3 h-3 text-success fill-success/20" />
+                          </div>
+                        )}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-xs text-neutral-400">{t(`labels.${key}`)}</p>
+                        <div className="flex items-center justify-between">
+                          <p className="text-xs text-neutral-400">{t(`labels.${key}`)}</p>
+                          {isVerified && (
+                            <span className="text-[8px] font-bold text-success uppercase tracking-tighter">
+                              {t('verified')}
+                            </span>
+                          )}
+                        </div>
                         <p className="text-white font-medium truncate">{value}</p>
                       </div>
                     </motion.div>

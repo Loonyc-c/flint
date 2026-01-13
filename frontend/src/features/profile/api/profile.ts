@@ -56,3 +56,13 @@ export const getContactInfo = async (
   apiRequest<{ contactInfo: UserContactInfo | null }>(`/profile/${userId}/contact`, {
     method: 'GET'
   })
+
+/**
+ * Gets the URL to initiate Instagram connection.
+ * 
+ * @param userId - The user's ID
+ */
+export const getInstagramConnectUrl = (userId: string): string => {
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9999/v1'
+  return `${baseUrl}/profile/${userId}/instagram/connect`
+}

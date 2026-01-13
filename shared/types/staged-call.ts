@@ -67,6 +67,7 @@ export interface ContactInfoDisplay {
   twitter?: string
   linkedin?: string
   other?: string
+  verifiedPlatforms?: string[]
 }
 
 // Timing constants for staged calls

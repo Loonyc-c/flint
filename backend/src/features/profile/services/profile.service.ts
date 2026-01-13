@@ -92,6 +92,41 @@ export const profileService = {
     return result.contactInfo || data
   },
 
+  verifyPlatform: async (userId: string, platform: string, handle: string): Promise<UserContactInfo> => {
+    const userCollection = await getUserCollection()
+    const userObjectId = new ObjectId(userId)
+
+    const user = await userCollection.findOne({ _id: userObjectId })
+    if (isNil(user)) {
+      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+    }
+
+    const currentContactInfo = user.contactInfo || { verifiedPlatforms: [] }
+    const verifiedPlatforms = [...(currentContactInfo.verifiedPlatforms || [])]
+    
+    if (!verifiedPlatforms.includes(platform)) {
+      verifiedPlatforms.push(platform)
+    }
+
+    const updatedContactInfo: UserContactInfo = {
+      ...currentContactInfo,
+      [platform]: handle,
+      verifiedPlatforms,
+    }
+
+    const result = await userCollection.findOneAndUpdate(
+      { _id: userObjectId },
+      { $set: { contactInfo: updatedContactInfo, updatedAt: new Date() } },
+      { returnDocument: 'after' }
+    )
+
+    if (isNil(result)) {
+      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+    }
+
+    return result.contactInfo || updatedContactInfo
+  },
+
   getContactInfo: async (userId: string): Promise<UserContactInfo | null> => {
     const userCollection = await getUserCollection()
     const user = await userCollection.findOne({ _id: new ObjectId(userId) })

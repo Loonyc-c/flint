@@ -4,6 +4,7 @@ import { socketAuthMiddleware, AuthenticatedSocket } from './middleware/auth.mid
 import { registerChatHandlers } from './handlers/chat.handler'
 import { registerVideoHandlers } from './handlers/video.handler'
 import { registerStagedCallHandlers } from './handlers/staged-call.handler'
+import { registerLiveCallHandlers } from './handlers/live-call.handler'
 
 let io: Server | null = null
 
@@ -50,6 +51,7 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
     registerChatHandlers(io!, authSocket)
     registerVideoHandlers(io!, authSocket)
     registerStagedCallHandlers(io!, authSocket)
+    registerLiveCallHandlers(io!, authSocket)
 
     // Handle disconnection
     socket.on('disconnect', (reason) => {
