@@ -26,7 +26,7 @@ export const MessageList = ({
   const t = useTranslations('chat')
 
   return (
-    <div className="flex-1 p-4 space-y-4 overflow-y-auto custom-scrollbar bg-muted/30">
+    <div className="flex-1 min-h-0 p-4 space-y-4 overflow-y-auto custom-scrollbar bg-muted/30">
       {isLoading ? (
         <div className="flex items-center justify-center h-full">
           <div className="w-8 h-8 border-2 rounded-full animate-spin border-brand border-t-transparent" />

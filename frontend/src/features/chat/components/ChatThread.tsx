@@ -44,7 +44,7 @@ export const ChatThread = ({ conversation, onClose, onVideoCall, matchStage }: C
   } = useChatThread({ conversation })
 
   return (
-    <div className="flex flex-col h-full bg-white dark:bg-neutral-900 relative">
+    <div className="flex flex-col h-full overflow-hidden bg-background relative">
       <ChatHeader
         conversation={conversation}
         onClose={onClose}

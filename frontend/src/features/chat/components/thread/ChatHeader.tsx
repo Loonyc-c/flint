@@ -37,7 +37,7 @@ export const ChatHeader = ({
   const canMakeAudioCalls = stage === 'fresh' || stage === 'unlocked'
 
   return (
-    <div className="px-6 py-4 border-b border-neutral-200 dark:border-neutral-800 flex items-center justify-between shrink-0 bg-white dark:bg-neutral-900 z-10">
+    <div className="px-6 py-4 border-b border-border flex items-center justify-between shrink-0 bg-background z-10">
       <div className="flex items-center gap-4">
         <button
           onClick={onClose}

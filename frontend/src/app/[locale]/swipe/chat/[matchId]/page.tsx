@@ -62,7 +62,7 @@ const ChatPage = () => {
       initial="initial"
       animate="animate"
       exit="exit"
-      className="h-full w-full overflow-hidden sm:rounded-3xl bg-white dark:bg-neutral-900 shadow-2xl"
+      className="h-full w-full overflow-hidden sm:rounded-3xl bg-background shadow-2xl"
     >
       <ChatThread
         conversation={conversation}
