@@ -49,7 +49,7 @@ export const DiscoveryHubLayout = ({ children }: DiscoveryHubLayoutProps) => {
             <aside
               className={cn(
                 "w-full lg:sticky lg:top-24 lg:self-start lg:h-[calc(100vh-8rem)]",
-                "bg-white/80 dark:bg-neutral-900/80 backdrop-blur-xl sm:rounded-3xl overflow-hidden shadow-xl hidden lg:block"
+                "bg-background/80 backdrop-blur-xl sm:rounded-3xl overflow-hidden shadow-xl hidden lg:block"
               )}
             >
               <Sidebar
@@ -64,13 +64,13 @@ export const DiscoveryHubLayout = ({ children }: DiscoveryHubLayoutProps) => {
               />
             </aside>
 
-            <main className="min-w-0 w-full flex flex-col relative min-h-[calc(100dvh-6rem)] lg:min-h-[800px]">
+            <main className="min-w-0 w-full flex flex-col relative h-[calc(100dvh-6rem)] lg:h-[calc(100vh-8rem)] overflow-hidden">
               <DiscoveryMobileNav
                 isSwipeView={isSwipeView}
                 matchCount={matches.length}
                 unreadCount={matches.filter((m) => m.unreadCount > 0).length}
               />
-              <div className="flex-1 flex flex-col">{children}</div>
+              <div className="flex-1 min-h-0 flex flex-col">{children}</div>
             </main>
           </div>
         </StagedCallProvider>

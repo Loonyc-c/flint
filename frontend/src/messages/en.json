@@ -21,7 +21,7 @@
       "forgotPassword": "Forgot Password?",
       "button": "Login →",
       "loading": "Logging in...",
-      "success": "Login successful!"
+      "success": "Welcome back!"
     },
     "signup": {
       "title": "Welcome to Flint",
@@ -35,7 +35,7 @@
       "passwordPlaceholder": "••••••••",
       "button": "Sign up →",
       "loading": "Signing up...",
-      "success": "Account created successfully!"
+      "success": "You're in! Welcome to Flint."
     },
     "header": {
       "home": "Home",
@@ -57,7 +57,7 @@
       "emailPlaceholder": "projectmayhem@fc.com",
       "button": "Send Reset Link →",
       "loading": "Sending...",
-      "success": "Password reset email sent! Check your inbox.",
+      "success": "We've sent a reset link to your email.",
       "backToLogin": "← Back to Login",
       "sentTitle": "Check Your Email",
       "sentMessage": "If an account exists with {email}, you will receive a password reset link shortly.",
@@ -143,8 +143,8 @@
       "smashAria": "Smash (→)"
     },
     "states": {
-      "noMoreTitle": "No more profiles!",
-      "noMoreSubtitle": "We've shown you everyone in your area. Try adjusting your preferences or come back later for new matches.",
+      "noMoreTitle": "That's everyone for now!",
+      "noMoreSubtitle": "You've seen all potential matches nearby. Check back later for new faces!",
       "refreshing": "Refreshing...",
       "refreshButton": "Refresh Profiles",
       "finding": "Finding People..."
@@ -219,10 +219,10 @@
   },
   "profile": {
     "page": {
-      "uploading": "UPLOADING...",
-      "saving": "SAVING...",
-      "saveProfile": "SAVE PROFILE",
-      "saveChanges": "SAVE CHANGES"
+      "uploading": "Uploading...",
+      "saving": "Saving...",
+      "saveProfile": "Save Profile",
+      "saveChanges": "Save Changes"
     },
     "info": {
       "nicknameLabel": "How others see you (Nickname)",
@@ -239,7 +239,7 @@
     },
     "interests": {
       "title": "Interests",
-      "edit": "EDIT",
+      "edit": "Edit",
       "empty": "What do you love? Tap edit to add interests.",
       "modalTitle": "Select Interests",
       "selectedCount": "{count} selected",
@@ -270,7 +270,7 @@
         "title": "QUESTION {number}"
       },
       "recorder": {
-        "playbackError": "Could not play audio. The format might be unsupported by your browser.",
+        "playbackError": "We couldn't play this audio. Please try recording again.",
         "recordButton": "Record Voice Answer",
         "stopButton": "Stop Recording",
         "recordingStatus": "Recording {time}",
@@ -321,7 +321,7 @@
     "voice": {
       "title": "Voice Intro",
       "subtitle": "Let them hear your vibe",
-      "record": "RECORD",
+      "record": "Record",
       "modal": {
         "title": "Voice Intro"
       }
@@ -331,7 +331,7 @@
     "modal": {
       "you": "You",
       "partner": "Partner",
-      "errorTitle": "Connection Error",
+      "errorTitle": "Call Connection Lost",
       "tryAgain": "Try Again"
     },
     "header": {
@@ -387,6 +387,6 @@
   },
   "common": {
     "close": "Close",
-    "error": "An unexpected error occurred. Please try again."
+    "error": "Something went wrong. Let's try that again."
   }
 }

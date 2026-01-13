@@ -85,11 +85,10 @@ export const Tabs = ({
               data-tab={tab.value}
               className={cn(
                 'relative flex-1 min-w-0 inline-flex items-center justify-center',
-                'px-3 sm:px-4 py-1.5 sm:py-2 rounded-full',
-                'text-center cursor-pointer',
+                'h-9 sm:h-11 px-3 sm:px-4 rounded-full',
+                'text-center cursor-pointer select-none',
                 tabClassName
               )}
-              style={{ transformStyle: 'preserve-3d' }}
             >
               {isActive && (
                 <motion.div
@@ -105,7 +104,7 @@ export const Tabs = ({
               <span
                 className={cn(
                   'relative z-10 font-medium text-foreground leading-none',
-                  'text-[clamp(11px,3.2vw,16px)]'
+                  'text-xs sm:text-sm'
                 )}
               >
                 {tab.title}
