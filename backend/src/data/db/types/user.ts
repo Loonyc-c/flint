@@ -1,5 +1,5 @@
 import {
-  SubScription,
+  Subscription,
   UserContactInfo,
   UserPreferences,
   UserProfile,
@@ -12,8 +12,9 @@ export type User = WithId<DbUser>
 export type DbUser = BaseCollection & {
   auth: UserAuth
   profile?: UserProfile
-  subScription: SubScription
+  subscription: Subscription
   preferences: UserPreferences
   contactInfo?: UserContactInfo
+  voiceIntro?: string // Optional
   profileCompletion: number
 }

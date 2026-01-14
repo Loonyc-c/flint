@@ -1,18 +1,14 @@
-"use client";
+'use client'
 
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+import { useTranslations } from 'next-intl'
+
+/**
+ * Placeholder component for subscription page redirect.
+ * Currently displays a loading spinner.
+ */
 const SubscriptionRedirect = () => {
-  // Logic commented out
-  // const navigate = useNavigate();
-  // useEffect(() => { navigate("/subscription"); }, [navigate]);
-
-  return (
-    <div className="flex items-center justify-center min-h-100">
-      <div className="text-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-4 border-b-4 border-[#B33A2E] mx-auto mb-4"></div>
-        <p className="text-gray-600">Redirecting to subscription page...</p>
-      </div>
-    </div>
-  );
-};
-
-export default SubscriptionRedirect;
+  const t = useTranslations('home.subscription')
+  return <LoadingSpinner text={t('redirecting')} fullScreen={false} />
+}
+export default SubscriptionRedirect

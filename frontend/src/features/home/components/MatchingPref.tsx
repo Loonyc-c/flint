@@ -1,95 +1,259 @@
-"use client";
+'use client'
 
-import { Target, MapPin } from "lucide-react";
+import { Target, MapPin } from 'lucide-react'
+
+import { useEffect, useState, useRef } from 'react'
+
+import { useUser } from '@/features/auth/context/UserContext'
+
+import { getReference, updateReference } from '../api/reference'
+
+import { type UserPreferences } from '@shared/types'
+
+import { LoadingSpinner } from '@/components/ui/loading-spinner'
+
+import { RangeSlider } from '@/components/ui/range-slider'
+
+import { GenderSelector } from './matching/GenderSelector'
+
+import { useTranslations } from 'next-intl'
+
+
+
+const MAX_DISTANCE = 50
+
+
 
 const MatchingPref = () => {
-  // Logic commented out
-  // const { t } = useTranslation();
-  // const { authUser } = useAuthStore();
-  // const { updateProfile } = useProfileStore();
 
-  const maxDistance = 50;
+  const t = useTranslations('home.matchingPref')
+
+  const { user } = useUser()
+
+  const [preferences, setPreferences] = useState<UserPreferences | null>(null)
+
+  const [isLoading, setIsLoading] = useState(true)
+
+
+
+  const preferencesRef = useRef<UserPreferences | null>(null)
+
+  const initialPreferencesRef = useRef<UserPreferences | null>(null)
+
+  const userIdRef = useRef<string | undefined>(undefined)
+
+
+
+  useEffect(() => {
+
+    preferencesRef.current = preferences
+
+    userIdRef.current = user?.id
+
+  }, [preferences, user?.id])
+
+
+
+  useEffect(() => {
+
+    const fetchPreferences = async () => {
+
+      if (!user?.id) return
+
+      try {
+
+        const data = await getReference(user.id)
+
+        setPreferences(data)
+
+        initialPreferencesRef.current = data
+
+        preferencesRef.current = data
+
+      } catch (error) {
+
+        console.error('Failed to fetch preferences:', error)
+
+      } finally {
+
+        setIsLoading(false)
+
+      }
+
+    }
+
+
+
+    fetchPreferences()
+
+  }, [user?.id])
+
+
+
+  useEffect(() => {
+
+    return () => {
+
+      const currentPrefs = preferencesRef.current
+
+      const initialPrefs = initialPreferencesRef.current
+
+      const userId = userIdRef.current
+
+
+
+      if (!userId || !currentPrefs || !initialPrefs) return
+
+
+
+      const isDirty =
+
+        currentPrefs.ageRange !== initialPrefs.ageRange ||
+
+        currentPrefs.lookingFor !== initialPrefs.lookingFor
+
+
+
+      if (isDirty) {
+
+        updateReference(
+
+          userId,
+
+          {
+
+            ageRange: currentPrefs.ageRange,
+
+            lookingFor: currentPrefs.lookingFor,
+
+          },
+
+          { keepalive: true }
+
+        ).catch((err) => {
+
+          console.error('Failed to save preferences on exit:', err)
+
+        })
+
+      }
+
+    }
+
+  }, [])
+
+
+
+  const handleUpdate = (updates: Partial<UserPreferences>) => {
+
+    if (!preferences) return
+
+    setPreferences({ ...preferences, ...updates })
+
+  }
+
+
+
+  if (isLoading) {
+
+    return <LoadingSpinner />
+
+  }
+
+
 
   return (
-    <div className="w-full flex justify-center">
-      <div className="w-full max-w-160 bg-white dark:bg-neutral-800 border border-gray-200 dark:border-neutral-700 rounded-2xl shadow-sm p-6 sm:p-8 md:p-10 flex flex-col gap-8">
-        {/* Header */}
-        <div className="flex items-center gap-3 text-neutral-900 dark:text-neutral-100 pb-2 border-b border-gray-200 dark:border-neutral-700">
-          <Target className="w-6 h-6 text-brand" />
-          <h2 className="text-xl sm:text-2xl font-bold">Matching Range</h2>
-        </div>
 
-        {/* Age Range Section (Mocked) */}
-        <div className="flex flex-col gap-4">
-          <label className="text-base sm:text-lg font-medium text-neutral-800 dark:text-neutral-200">
-            Age Range
-          </label>
-          <div className="w-full px-2">
-            {/* Visual Mock of Slider */}
-            <div className="relative w-full h-1 bg-gray-200 rounded-full">
-              <div className="absolute left-1/4 right-1/4 h-full bg-[#D9776D] rounded-full"></div>
-              <div className="absolute left-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#D9776D] rounded-full shadow border-2 border-white"></div>
-              <div className="absolute right-1/4 top-1/2 -translate-y-1/2 w-4 h-4 bg-[#D9776D] rounded-full shadow border-2 border-white"></div>
-            </div>
-            <div className="mt-2 flex justify-between text-sm text-gray-500">
-              <span>18</span>
-              <span>25 - 35</span>
-              <span>100</span>
-            </div>
-          </div>
-        </div>
+    <div className="flex justify-center w-full">
 
-        {/* Gender Preference Section (Mocked) */}
-        <div className="w-full flex items-center justify-between pt-2 pb-4 border-b border-gray-200 dark:border-neutral-700">
-          <span className="text-base sm:text-lg font-medium text-neutral-800 dark:text-neutral-200">
-            Interested In
-          </span>
-          {/* Mocked Gender Toggle */}
-          <div className="flex gap-2">
-            <div className="px-3 py-1 rounded-full bg-brand text-white text-sm">
-              Everyone
-            </div>
-            <div className="px-3 py-1 rounded-full bg-gray-100 dark:bg-neutral-700 text-sm text-gray-600 dark:text-gray-300">
-              Men
-            </div>
-            <div className="px-3 py-1 rounded-full bg-gray-100 dark:bg-neutral-700 text-sm text-gray-600 dark:text-gray-300">
-              Women
-            </div>
-          </div>
-        </div>
+      <div className="flex flex-col w-full gap-8 p-6 bg-white border border-gray-200 shadow-sm max-w-160 dark:bg-neutral-800 dark:border-neutral-700 rounded-2xl sm:p-8 md:p-10">
 
-        {/* Max Distance Section */}
-        <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between pb-2 border-b border-gray-200 dark:border-neutral-700">
+
           <div className="flex items-center gap-3 text-neutral-900 dark:text-neutral-100">
-            <MapPin className="w-5 h-5 text-brand" />
-            <span className="text-base sm:text-lg font-medium">
-              Maximum Distance
-            </span>
+
+            <Target className="w-6 h-6 text-brand" />
+
+            <h2 className="text-xl font-bold sm:text-2xl">{t('title')}</h2>
+
           </div>
 
-          <div className="flex flex-col gap-2">
-            <div className="flex justify-between items-center text-sm sm:text-base text-neutral-800 dark:text-neutral-200">
-              <span>Distance</span>
-              <span className="font-semibold text-brand">{maxDistance} km</span>
-            </div>
-
-            {/* Mocked MUI Slider with standard HTML range for visual */}
-            <input
-              type="range"
-              min="1"
-              max="500"
-              defaultValue={maxDistance}
-              className="w-full h-1 bg-gray-200 rounded-lg appearance-none cursor-pointer accent-[#D9776D]"
-            />
-
-            <p className="text-xs sm:text-sm text-neutral-600 dark:text-neutral-400 mt-1">
-              Show me people within {maxDistance} km from my location
-            </p>
-          </div>
         </div>
-      </div>
-    </div>
-  );
-};
 
-export default MatchingPref;
+
+
+        <RangeSlider
+
+          label={t('ageRange')}
+
+          value={preferences?.ageRange ?? 30}
+
+          min={18}
+
+          max={60}
+
+          unit={t('years')}
+
+          onChange={(val) => handleUpdate({ ageRange: val })}
+
+        />
+
+
+
+        <GenderSelector
+
+          value={preferences?.lookingFor}
+
+          onChange={(val) => handleUpdate({ lookingFor: val })}
+
+        />
+
+
+
+        <div className="flex flex-col gap-4 opacity-50 cursor-not-allowed">
+
+          <div className="flex items-center gap-3 text-neutral-900 dark:text-neutral-100">
+
+            <MapPin className="w-5 h-5 text-brand" />
+
+            <span className="text-base font-medium sm:text-lg">
+
+              {t('distanceSoon')}
+
+            </span>
+
+          </div>
+
+
+
+          <RangeSlider
+
+            label={t('distance')}
+
+            value={MAX_DISTANCE}
+
+            min={1}
+
+            max={500}
+
+            unit={t('km')}
+
+            disabled
+
+            helperText={t('distanceHelper')}
+
+          />
+
+        </div>
+
+      </div>
+
+    </div>
+
+  )
+
+}
+
+
+
+export default MatchingPref

@@ -1,20 +1,18 @@
-import { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
+import type { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
 
 export type UserProfile = {
   nickName: string
   age: number
   gender: USER_GENDER
   bio: string
-  interest: INTERESTS[]
-  photos: string[]
+  interests: INTERESTS[]
+  photo: string
+  photos?: string[]
   voiceIntro: string
-  questions: {
-    questionId: string
-    audioUrl: string
-  }[]
+  questions: QuestionAnswer[]
 }
 
-export type SubScription = {
+export type Subscription = {
   plan: SUBSCRIPTION_PLANS
   startDate?: Date
   endDate?: Date
@@ -37,12 +35,14 @@ export type UserContactInfo = {
   twitter?: string
   linkedin?: string
   other?: string
-  isContactVerified: boolean
+  verifiedPlatforms: string[]
 }
 
 export interface QuestionAnswer {
   questionId: string
   audioUrl: string
+  uploadId: string
+  audioFile?: Blob | string
 }
 
 export interface ProfileUpdateRequest {
@@ -51,11 +51,10 @@ export interface ProfileUpdateRequest {
   gender: USER_GENDER
   bio: string
   interests: INTERESTS[]
-  photos: string[]
+  photo: string
   voiceIntro: string
   questions: QuestionAnswer[]
 }
-
 export interface ProfileResponse {
   isComplete: boolean
   profile?: ProfileUpdateRequest
@@ -68,4 +67,9 @@ export interface UserAuth {
   password: string
   passwordResetToken?: string
   passwordResetExpires?: Date
+}
+
+export interface ReferenceUpdateRequest {
+  ageRange: number
+  lookingFor: LOOKING_FOR
 }

@@ -1,140 +1,230 @@
-'use client'
+"use client";
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { profileUpdateSchema, ProfileCreationFormData } from '@shared/validations'
-import { getProfile, updateProfile } from '@/features/profile/api/profile'
-import { toast } from 'react-toastify'
-import { calculateProfileCompleteness } from '@shared/lib'
-import { INTERESTS } from '@shared/types/enums'
+import { useState } from "react";
 
-import { ProfileHeader } from './ProfileHeader'
-import { PhotoGrid } from './PhotoGrid'
-import { BasicInfoSection, BioSection } from './BasicInfoSections'
-import { InterestsSection, InterestsModal } from './InterestsSection'
-import { QuestionsSection, QuestionsModal } from './QuestionsSection'
-import { VoiceIntroWidget } from './VoiceIntroWidget'
-import { useAuthenticatedUser } from '@/features/auth/context/UserContext'
+import { useAuthenticatedUser } from "@/features/auth/context/UserContext";
+
+import { ProfileAvatar } from "./avatar/ProfileAvatar";
+
+import { BasicInfoSection, BioSection } from "./info/BasicInfoSections";
+
+import { InterestsSection, InterestsModal } from "./interests/InterestsSection";
+
+import { QuestionsSection } from "./questions/QuestionsSection";
+
+import { VoiceIntroWidget } from "./voice/VoiceIntroWidget";
+
+import { useProfilePhoto } from "../hooks/useProfilePhoto";
+
+import { useProfileForm } from "../hooks/useProfileForm";
+
+import { type INTERESTS } from "@shared/types/enums";
+
+import { useTranslations } from "next-intl";
+
+// =============================================================================
+
+// Sub-Components
+
+// =============================================================================
+
+interface SaveButtonProps {
+  onClick: () => void;
+
+  isSaving: boolean;
+
+  hasPendingPhoto: boolean;
+
+  className?: string;
+}
+
+const MobileSaveButton = ({
+  onClick,
+  isSaving,
+  hasPendingPhoto,
+}: SaveButtonProps) => {
+  const t = useTranslations("profile.page");
+
+  return (
+    <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-40 lg:hidden">
+      <button
+        onClick={onClick}
+        disabled={isSaving}
+        className="w-full bg-brand hover:bg-brand-300 text-white font-black py-5 rounded-2xl shadow-2xl shadow-brand/40 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm cursor-pointer"
+      >
+        {isSaving
+          ? hasPendingPhoto
+            ? t("uploading")
+            : t("saving")
+          : t("saveProfile")}
+      </button>
+    </div>
+  );
+};
+
+const DesktopSaveButton = ({
+  onClick,
+  isSaving,
+  hasPendingPhoto,
+  className,
+}: SaveButtonProps) => {
+  const t = useTranslations("profile.page");
+
+  return (
+    <button
+      onClick={onClick}
+      disabled={isSaving}
+      className={`w-full bg-brand hover:bg-brand-300 text-white font-black py-4 rounded-xl shadow-xl shadow-brand/20 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm cursor-pointer ${className}`}
+    >
+      {isSaving
+        ? hasPendingPhoto
+          ? t("uploading")
+          : t("saving")
+        : t("saveChanges")}
+    </button>
+  );
+};
+
+// =============================================================================
+
+// Main Component
+
+// =============================================================================
 
 export const ProfilePage = () => {
-  const { user } = useAuthenticatedUser()
+  const { user } = useAuthenticatedUser();
 
-  const [completeness, setCompleteness] = useState(0)
-  const [isSaving, setIsLoading] = useState(false)
-  const [showInterestsModal, setShowInterestsModal] = useState(false)
-  const [activeQuestionSlot, setActiveQuestionSlot] = useState<number | null>(null)
+  const [showInterestsModal, setShowInterestsModal] = useState(false);
+
+  const {
+    fileInputRef,
+
+    pendingPhotoFile,
+
+    photoPreviewUrl,
+
+    handlePhotoSelect,
+
+    clearPendingPhoto,
+
+    triggerFileInput,
+  } = useProfilePhoto();
+
+  const { form, formData, completeness, isSaving, onSave } = useProfileForm(
+    user.id,
+
+    pendingPhotoFile,
+
+    clearPendingPhoto
+  );
 
   const {
     register,
-    handleSubmit,
-    watch,
-    reset,
+
     setValue,
-    formState: { errors }
-  } = useForm<ProfileCreationFormData>({
-    resolver: zodResolver(profileUpdateSchema),
-    defaultValues: {
-      nickName: '',
-      age: 18,
-      bio: '',
-      interests: [],
-      photos: [],
-      questions: []
-    }
-  })
 
-  const formData = watch()
-
-  useEffect(() => {
-    const fetchProfile = async () => {
-      try {
-        const data = await getProfile(user.id)
-        if (data.isComplete && data.profile) {
-          reset(data.profile)
-        }
-      } catch {
-        // Requirement 14: Removed detailed error logging
-        // Profile fetch errors are handled by showing empty form
-      }
-    }
-    fetchProfile()
-  }, [reset, user.id])
-
-  useEffect(() => {
-    const score = calculateProfileCompleteness(formData)
-    setCompleteness(score)
-  }, [formData])
+    formState: { errors },
+  } = form;
 
   const toggleInterest = (interest: INTERESTS) => {
-    const current = formData.interests || []
-    if (current.includes(interest)) {
-      setValue(
-        'interests',
-        current.filter(i => i !== interest),
-        { shouldValidate: true }
-      )
-    } else {
-      setValue('interests', [...current, interest], { shouldValidate: true })
-    }
-  }
+    const current = formData.interests || [];
 
-  const selectQuestion = (questionId: string) => {
-    if (activeQuestionSlot === null) return
-    const currentQuestions = [...(formData.questions || [])]
-    currentQuestions[activeQuestionSlot] = { questionId, audioUrl: '' }
-    setValue('questions', currentQuestions, { shouldValidate: true })
-    setActiveQuestionSlot(null)
-  }
+    const updated = current.includes(interest)
+      ? current.filter((i) => i !== interest)
+      : [...current, interest];
 
-  const onManualSave = async (data: ProfileCreationFormData) => {
-    setIsLoading(true)
-    try {
-      await updateProfile(user.id, data)
-      toast.success('Profile updated!')
-    } catch (error: unknown) {
-      const message = error instanceof Error ? error.message : 'Save failed'
-      toast.error(message)
-    } finally {
-      setIsLoading(false)
-    }
-  }
+    setValue("interests", updated, { shouldValidate: true });
+  };
 
   return (
-    <div className="min-h-screen bg-neutral-50 dark:bg-black pb-32">
-      <ProfileHeader completeness={completeness} />
-
-      <main className="max-w-2xl mx-auto p-4 space-y-6 mt-4">
-        <PhotoGrid photos={formData.photos || []} />
-
-        <BasicInfoSection register={register} errors={errors} />
-
-        <BioSection register={register} errors={errors} />
-
-        <InterestsSection
-          selectedInterests={formData.interests || []}
-          onEdit={() => setShowInterestsModal(true)}
-          error={errors.interests?.message}
+    <div className="bg-neutral-50 dark:bg-black pb-32 lg:pb-12">
+      <main className="max-w-7xl mx-auto p-4 lg:p-8">
+        <input
+          type="file"
+          ref={fileInputRef}
+          className="hidden"
+          accept="image/jpeg,image/png,image/webp"
+          onChange={handlePhotoSelect}
         />
 
-        <QuestionsSection
-          questions={formData.questions || []}
-          onEditSlot={setActiveQuestionSlot}
-          error={errors.questions?.message}
-        />
+        <div className="lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
+          {/* Sidebar (Avatar & Actions) */}
 
-        <VoiceIntroWidget />
+          <div className="lg:col-span-4 space-y-6">
+            <div className="lg:sticky lg:top-8 space-y-8">
+              <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
+                <ProfileAvatar
+                  photo={photoPreviewUrl || formData.photo || ""}
+                  completeness={completeness}
+                  onEdit={triggerFileInput}
+                  isUploading={isSaving && !!pendingPhotoFile}
+                />
+              </div>
 
-        {/* Floating Save Button */}
-        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 w-full max-w-xs px-4 z-40">
-          <button
-            onClick={handleSubmit(onManualSave)}
-            disabled={isSaving}
-            className="w-full bg-brand hover:bg-brand-300 text-white font-black py-5 rounded-2xl shadow-2xl shadow-brand/40 transition-all active:scale-95 disabled:opacity-50 tracking-widest text-sm"
-          >
-            {isSaving ? 'SYNCING...' : 'SAVE PROFILE'}
-          </button>
+              {/* Desktop Voice Intro */}
+
+              <div className="hidden lg:block">
+                <VoiceIntroWidget
+                  initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
+                  onVoiceChange={(audio) =>
+                    setValue("voiceIntroFile", audio, { shouldValidate: true })
+                  }
+                />
+              </div>
+
+              {/* Desktop Save Button */}
+
+              <div className="hidden lg:block">
+                <DesktopSaveButton
+                  onClick={onSave}
+                  isSaving={isSaving}
+                  hasPendingPhoto={!!pendingPhotoFile}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Main Content (Forms) */}
+
+          <div className="lg:col-span-8 space-y-6 mt-6 lg:mt-0">
+            <BasicInfoSection register={register} errors={errors} />
+
+            <BioSection register={register} errors={errors} />
+
+            <InterestsSection
+              selectedInterests={formData.interests || []}
+              onEdit={() => setShowInterestsModal(true)}
+              error={errors.interests?.message}
+            />
+
+            <QuestionsSection
+              questions={formData.questions || []}
+              onUpdateQuestions={(updatedQuestions) =>
+                setValue("questions", updatedQuestions, {
+                  shouldValidate: true,
+                })
+              }
+              error={errors.questions?.message}
+            />
+
+            {/* Mobile Voice Intro */}
+
+            <div className="lg:hidden">
+              <VoiceIntroWidget
+                initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
+                onVoiceChange={(audio) =>
+                  setValue("voiceIntroFile", audio, { shouldValidate: true })
+                }
+              />
+            </div>
+          </div>
         </div>
+
+        <MobileSaveButton
+          onClick={onSave}
+          isSaving={isSaving}
+          hasPendingPhoto={!!pendingPhotoFile}
+        />
       </main>
 
       <InterestsModal
@@ -143,13 +233,6 @@ export const ProfilePage = () => {
         selectedInterests={formData.interests || []}
         onToggle={toggleInterest}
       />
-
-      <QuestionsModal
-        slotIndex={activeQuestionSlot}
-        onClose={() => setActiveQuestionSlot(null)}
-        onSelect={selectQuestion}
-        selectedQuestionIds={(formData.questions || []).map(q => q.questionId)}
-      />
     </div>
-  )
-}
+  );
+};

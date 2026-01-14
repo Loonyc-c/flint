@@ -14,7 +14,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
+# Python lib directories (not frontend/src/lib/)
+/lib/
 lib64/
 parts/
 sdist/
@@ -195,3 +196,6 @@ temp_repo/
 data/raw/
 index_data/
 mcp_cache/
+.env*.local
+
+legacy-frontend/

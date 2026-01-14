@@ -1,12 +1,18 @@
-import React from 'react'
+'use client'
+
 import Image from 'next/image'
 import { LogOut, User } from 'lucide-react'
-import { useRouter } from 'next/navigation'
+import { useRouter, Link } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
-import Link from 'next/link'
 import MainLogo from './ui/logo'
+import { useTranslations } from 'next-intl'
 
+/**
+ * Main header component displayed on authenticated pages.
+ * Provides navigation and user profile access.
+ */
 const MainHeader = () => {
+  const t = useTranslations('auth.header')
   const { user, logout } = useUser()
   const router = useRouter()
 
@@ -16,15 +22,7 @@ const MainHeader = () => {
   }
 
   return (
-    <header
-      className="
-        sticky top-0 z-50 w-full
-        bg-white/90 dark:bg-neutral-900/90 backdrop-blur
-        border-b border-neutral-200 dark:border-neutral-700
-        px-5 py-4 flex items-center justify-between
-        pt-[env(safe-area-inset-top)]
-      "
-    >
+    <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur border-b border-border px-5 py-4 flex items-center justify-between pt-[env(safe-area-inset-top)]">
       <Link className="flex items-center gap-4" href="/">
         <MainLogo />
         <Image
@@ -41,12 +39,12 @@ const MainHeader = () => {
           <li>
             <Link
               href="/profile"
-              className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+              className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
             >
-              {user?.profile?.photos?.[1] ? (
+              {user?.profile?.photo ? (
                 <Image
-                  src={user.profile.photos[1]}
-                  alt={user.name || 'User Profile'}
+                  src={user.profile.photo}
+                  alt={user.name || t('userProfile')}
                   width={40}
                   height={40}
                   className="h-10 w-10 rounded-full object-cover border-2 border-brand hover:border-brand/70 transition-colors"
@@ -62,10 +60,10 @@ const MainHeader = () => {
           <li>
             <button
               onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 rounded-md bg-red-50 text-red-600 hover:bg-red-100 transition-colors cursor-pointer"
+              className="flex items-center gap-2 px-4 py-2 rounded-md bg-destructive/10 text-destructive hover:bg-destructive/20 transition-colors cursor-pointer"
             >
               <LogOut className="h-4 w-4" />
-              <span>Sign out</span>
+              <span>{t('signOut')}</span>
             </button>
           </li>
         </ul>

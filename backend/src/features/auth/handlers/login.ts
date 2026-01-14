@@ -19,7 +19,7 @@ const handler = async (event: NormalizedEvent): Promise<LoginResponse> => {
       firstName: user.auth.firstName,
       lastName: user.auth.lastName,
       email: user.auth.email,
-      subScription: user.subScription,
+      subscription: user.subscription,
     })
 
     // Requirement 2: Return response matching LoginResponse type from shared/types

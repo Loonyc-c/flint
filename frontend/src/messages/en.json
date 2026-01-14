@@ -1,0 +1,414 @@
+{
+  "Metadata": {
+    "title": "Flint - Connect with Heart",
+    "description": "Find meaningful connections through voice and video."
+  },
+  "HomePage": {
+    "loading": "Loading...",
+    "tabs": {
+      "findMatch": "Find Match",
+      "matchingPreferences": "Matching Preferences",
+      "subscription": "Subscription"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "Log into Flint",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "projectmayhem@fc.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "forgotPassword": "Forgot Password?",
+      "button": "Login →",
+      "loading": "Logging in...",
+      "success": "Welcome back!"
+    },
+    "signup": {
+      "title": "Welcome to Flint",
+      "firstNameLabel": "First name",
+      "firstNamePlaceholder": "Tyler",
+      "lastNameLabel": "Last name",
+      "lastNamePlaceholder": "Durden",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "projectmayhem@fc.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "button": "Sign up →",
+      "loading": "Signing up...",
+      "success": "You're in! Welcome to Flint."
+    },
+    "header": {
+      "home": "Home",
+      "getStarted": "Get Started",
+      "signOut": "Sign out",
+      "userProfile": "User Profile"
+    },
+    "tabs": {
+      "login": "Login",
+      "signup": "SignUp"
+    },
+    "resetPassword": {
+      "loading": "Loading..."
+    },
+    "forgetPassword": {
+      "title": "Forgot Password?",
+      "subtitle": "No worries! Enter your email and we'll send you a reset link.",
+      "emailLabel": "Email Address",
+      "emailPlaceholder": "projectmayhem@fc.com",
+      "button": "Send Reset Link →",
+      "loading": "Sending...",
+      "success": "We've sent a reset link to your email.",
+      "backToLogin": "← Back to Login",
+      "sentTitle": "Check Your Email",
+      "sentMessage": "If an account exists with {email}, you will receive a password reset link shortly.",
+      "sentSpam": "Didn't receive the email? Check your spam folder or try again."
+    }
+  },
+  "home": {
+    "findMatch": {
+      "title": "Find Your Match",
+      "subtitle": "Start your journey to find meaningful connections.",
+      "chooseStyle": "Choose Matching Style",
+      "liveCall": {
+        "title": "Live Call",
+        "description": "Connect instantly via voice call",
+        "button": "Start Call",
+        "finding": "Finding your match...",
+        "findingDesc": "We are looking for someone who matches your preferences.",
+        "matchFound": "Match found!",
+        "connecting": "Connecting you to your live call...",
+        "searching": "Searching...",
+        "cancel": "Cancel",
+        "error": "Error",
+        "matchCreated": "Match created! Check your conversations.",
+        "callEnded": "Call ended"
+      },
+      "swipe": {
+        "title": "Swipe",
+        "description": "Discover profiles at your own pace",
+        "button": "Start Swiping"
+      },
+      "aiWingman": {
+        "title": "AI Wingman Ready",
+        "description": "Get real-time suggestions and icebreakers tailored to your matches.",
+        "premiumTitle": "Premium Feature",
+        "premiumDescription": "Upgrade to access AI Wingman and get personalized conversation help",
+        "viewPlans": "View Plans",
+        "playful": "Playful",
+        "thoughtful": "Thoughtful",
+        "chill": "Chill"
+      }
+    },
+    "matchingPref": {
+      "title": "Matching Range",
+      "ageRange": "Age range",
+      "years": "years",
+      "distanceSoon": "Maximum Distance (Coming Soon)",
+      "distance": "Distance",
+      "km": "km",
+      "distanceHelper": "Location-based matching is being implemented.",
+      "interestedIn": "Interested In",
+      "genders": {
+        "everyone": "Everyone",
+        "men": "Men",
+        "women": "Women"
+      }
+    },
+    "subscription": {
+      "redirecting": "Redirecting to subscription page..."
+    }
+  },
+  "swipe": {
+    "header": {
+      "title": "Discover",
+      "profilesNearby": "{count, plural, =1 {# profile nearby} other {# profiles nearby}}",
+      "filterAria": "Filter preferences"
+    },
+    "card": {
+      "voiceIntro": "Voice Intro",
+      "voiceIntroPlaying": "Playing...",
+      "voiceIntroTap": "Tap to hear their voice",
+      "voiceIntroEmpty": "Not recorded yet",
+      "about": "About",
+      "getToKnowMe": "Get to know me",
+      "question": "Question {number}",
+      "noAnswer": "No answer yet",
+      "moreQuestions": "+{count} more questions",
+      "noPhoto": "No Photo",
+      "nearby": "Nearby",
+      "prevPhoto": "Previous photo",
+      "nextPhoto": "Next photo",
+      "pauseVoice": "Pause voice intro",
+      "playVoice": "Play voice intro"
+    },
+    "controls": {
+      "undo": "Undo",
+      "pass": "Pass",
+      "super": "Super",
+      "smash": "Smash",
+      "undoAria": "Undo last swipe (Z)",
+      "passAria": "Pass (←)",
+      "superAria": "Super (↑)",
+      "smashAria": "Smash (→)"
+    },
+    "states": {
+      "noMoreTitle": "That's everyone for now!",
+      "noMoreSubtitle": "You've seen all potential matches nearby. Check back later for new faces!",
+      "refreshing": "Refreshing...",
+      "refreshButton": "Refresh Profiles",
+      "finding": "Finding People..."
+    },
+    "modals": {
+      "match": {
+        "title": "It's a Match!",
+        "subtitle": "You and {name} like each other!",
+        "startChatting": "Start Chatting",
+        "keepSwiping": "Keep Swiping"
+      },
+      "limit": {
+        "title": "Daily Like Limit Reached!",
+        "usage": "You've used {used} out of {limit} free likes today",
+        "upgradePrompt": "Upgrade to Premium to unlock unlimited likes and more amazing features!",
+        "featureUnlimited": "Unlimited Likes",
+        "featureUnlimitedDesc": "Like as many profiles as you want, every day",
+        "featureSeeLikes": "See Who Likes You",
+        "featureSeeLikesDesc": "Know who's interested before you swipe",
+        "featureAI": "AI Wingmen",
+        "featureAIDesc": "Get personalized conversation starters and tips",
+        "featurePriority": "Priority Matching",
+        "featurePriorityDesc": "Get shown to more people and match faster",
+        "upgradeButton": "Upgrade to Premium",
+        "maybeLater": "Maybe Later",
+        "resetInfo": "Your free likes will reset in 24 hours"
+      }
+    },
+    "hub": {
+      "comingSoon": "Coming soon",
+      "likesTitle": "Coming Soon",
+      "likesSubtitle": "See who likes you! This feature is coming soon.",
+      "matchCount": "{count} people",
+      "soon": "Soon",
+      "new": "New",
+      "likesYou": "Likes you",
+      "tapToReveal": "Tap to reveal",
+      "noLikes": "No likes yet",
+      "noLikesDesc": "When someone likes your profile, they'll show up here. Keep your profile fresh to attract more likes!",
+      "seeWhoLikes": "See who likes you",
+      "seeWhoLikesDesc": "Upgrade to reveal all your admirers instantly",
+      "upgrade": "Upgrade"
+    }
+  },
+  "chat": {
+    "messages": "Messages",
+    "settings": "Settings",
+    "matches": "Matches",
+    "likes": "Likes",
+    "yourTurn": "Your Turn",
+    "theirTurn": "Their Turn",
+    "hiddenChats": "Hidden Chats",
+    "typing": "typing...",
+    "online": "Online",
+    "yourTurnUpper": "YOUR TURN",
+    "theirTurnUpper": "THEIR TURN",
+    "reconnecting": "• Reconnecting...",
+    "audioCallTitle": "Start Stage 1 Audio Call",
+    "audioCall": "Audio Call",
+    "videoCall": "Video Call",
+    "startStage2": "Start Stage 2",
+    "stage3Available": "Stage 3 Available",
+    "placeholder": "Type a message...",
+    "notFound": "Conversation not found",
+    "sayHello": "Say Hello!",
+    "breakIce": "Break the ice with {name}",
+    "goBack": "Go back",
+    "noChatsTitle": "No chats waiting",
+    "noChatsSubtitle": "Start swiping to find matches!",
+    "allCaughtUpTitle": "All caught up!",
+    "allCaughtUpSubtitle": "Waiting for replies..."
+  },
+  "profile": {
+    "page": {
+      "uploading": "Uploading...",
+      "saving": "Saving...",
+      "saveProfile": "Save Profile",
+      "saveChanges": "Save Changes"
+    },
+    "info": {
+      "nicknameLabel": "How others see you (Nickname)",
+      "nicknamePlaceholder": "Display Name",
+      "ageLabel": "Your Age",
+      "genderLabel": "Gender",
+      "genders": {
+        "male": "Male",
+        "female": "Female",
+        "other": "Other"
+      },
+      "aboutMe": "About Me",
+      "bioPlaceholder": "Share a bit of your story..."
+    },
+    "interests": {
+      "title": "Interests",
+      "edit": "Edit",
+      "empty": "What do you love? Tap edit to add interests.",
+      "modalTitle": "Select Interests",
+      "selectedCount": "{count} selected",
+      "items": {
+        "Travel": "Travel",
+        "Movies": "Movies",
+        "Fitness": "Fitness",
+        "Photography": "Photography",
+        "Technology": "Technology",
+        "Gaming": "Gaming",
+        "Nature": "Nature",
+        "Writing": "Writing",
+        "Coffee": "Coffee",
+        "Hiking": "Hiking",
+        "Music": "Music",
+        "Books": "Books",
+        "Cooking": "Cooking",
+        "Art": "Art",
+        "Sports": "Sports",
+        "Fashion": "Fashion",
+        "Dancing": "Dancing",
+        "Yoga": "Yoga",
+        "Wine": "Wine",
+        "Cycling": "Cycling"
+      }
+    },
+    "questions": {
+      "title": "Profile Questions",
+      "edit": "Edit Questions",
+      "add": "Add Questions",
+      "done": "Done",
+      "editingPrompts": "Editing Prompts",
+      "selectedCount": "{count}/3 selected",
+      "answeredCount": "You have answered {count} {count, plural, =1 {question} other {questions}}",
+      "empty": "No questions answered yet",
+      "duplicateError": "This question is already selected in another slot.",
+      "recordingModal": {
+        "title": "QUESTION {number}"
+      },
+      "recorder": {
+        "playbackError": "We couldn't play this audio. Please try recording again.",
+        "recordButton": "Record Voice Answer",
+        "stopButton": "Stop Recording",
+        "recordingStatus": "Recording {time}",
+        "done": "Done",
+        "cancel": "Cancel"
+      },
+      "modal": {
+        "title": "Select a Question",
+        "slotInfo": "For slot {number} of 3",
+        "categories": {
+          "general": "General"
+        }
+      }
+    },
+    "contact": {
+      "title": "Contact Information",
+      "subtitle": "Add your contact details to share with matches after completing Stage 3",
+      "empty": "No contact information available",
+      "noDetails": "No contact details added yet",
+      "partnerContact": "{name}'s Contact",
+      "verified": "Verified",
+      "unverified": "Unverified",
+      "connect": "Connect",
+      "disconnect": "Disconnect",
+      "verifiedBadge": "Verified",
+      "saveButton": "Save Contact Info",
+      "saving": "Saving...",
+      "footerNote": "Your contact info will only be shared with matches who complete Stage 3 with you",
+      "labels": {
+        "phone": "Phone Number",
+        "instagram": "Instagram",
+        "telegram": "Telegram",
+        "snapchat": "Snapchat",
+        "whatsapp": "WhatsApp",
+        "wechat": "WeChat",
+        "facebook": "Facebook",
+        "twitter": "Twitter",
+        "linkedin": "LinkedIn",
+        "other": "Other"
+      },
+      "placeholders": {
+        "phone": "+1 234 567 8900",
+        "instagram": "@yourusername",
+        "telegram": "@yourusername",
+        "snapchat": "yourusername",
+        "whatsapp": "+1 234 567 8900",
+        "wechat": "yourwechatid",
+        "other": "Any other contact info"
+      }
+    },
+    "voice": {
+      "title": "Voice Intro",
+      "subtitle": "Let them hear your vibe",
+      "record": "Record",
+      "modal": {
+        "title": "Voice Intro"
+      }
+    }
+  },
+  "video": {
+    "modal": {
+      "you": "You",
+      "partner": "Partner",
+      "errorTitle": "Call Connection Lost",
+      "tryAgain": "Try Again"
+    },
+    "header": {
+      "connecting": "Connecting...",
+      "connected": "Connected",
+      "waiting": "Waiting..."
+    },
+    "staged": {
+      "stage1": "Stage 1: Audio Call",
+      "stage2": "Stage 2: Video Call",
+      "incoming": "Incoming video call...",
+      "outgoing": "Tap to cancel",
+      "calling": "Calling...",
+      "stageInfo": "Stage {stage} {type} Call",
+      "types": {
+        "audio": "Audio",
+        "video": "Video"
+      },
+      "prompt": {
+        "videoTitle": "Video Call",
+        "videoDesc": "See each other for 2 minutes",
+        "contactsTitle": "Exchange Contacts",
+        "contactsDesc": "Share your contact info",
+        "continueTitle": "Continue to {title}?",
+        "waiting": "Waiting for both of you to respond...",
+        "notNow": "Not Now",
+        "letsGo": "Let's Go!"
+      },
+      "exchange": {
+        "screenshot": "Screenshot Now!",
+        "unlocked": "You've unlocked their contact info!",
+        "timeRemaining": "Time remaining",
+        "empty": "No contact info shared",
+        "partnerContact": "{name}'s Contact",
+        "labels": {
+          "phone": "Phone",
+          "instagram": "Instagram",
+          "telegram": "Telegram",
+          "snapchat": "Snapchat",
+          "whatsapp": "WhatsApp",
+          "wechat": "WeChat",
+          "facebook": "Facebook",
+          "twitter": "Twitter",
+          "linkedin": "LinkedIn",
+          "other": "Other"
+        }
+      },
+      "overlay": {
+        "connecting": "Connecting to call...",
+        "pleaseWait": "Please wait"
+      }
+    }
+  },
+  "common": {
+    "close": "Close",
+    "error": "Something went wrong. Let's try that again."
+  }
+}

@@ -11,7 +11,15 @@ const handler = async (event: NormalizedEvent) => {
   const {
     pathParameters: { id },
     body,
+    authorizerContext,
   } = event
+
+  if (id !== authorizerContext?.principalId) {
+    throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
+      message: 'err.auth.permission_denied',
+      isReadableMessage: true,
+    })
+  }
 
   const _id = objectIdSchema.parse(id)
 

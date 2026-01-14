@@ -12,12 +12,13 @@
     "target": "esnext",
     "strict": true,
     "strictNullChecks": true,
-    "skipLibCheck": true, // workspace- ээс болоод frontend-ийн react-dom backend node_modules- ороод build error.
+    "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
       "@/*": ["src/*"],
       "@shared/*": ["src/shared-types/*"]
-    }
+    },
+    "resolveJsonModule": true
   },
   "include": ["src/**/*", "api/**/*"],
   "exclude": ["node_modules", "dist"]

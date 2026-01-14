@@ -1,68 +1,81 @@
-import { ProfileUpdateRequest } from '../../types/user'
+import type { ProfileUpdateRequest } from '../../types/user'
+
+interface ProfileForCalculation extends Partial<ProfileUpdateRequest> {
+  audioFile?: unknown
+}
+
+interface QuestionForCalculation {
+  questionId?: string
+  audioUrl?: string
+  audioFile?: unknown
+}
 
 /**
+
  * Calculates the profile completeness score based on filled fields.
- *
- * Base Requirements (Must exist to be valid profile): 50 points
- * - Nickname, Age, Gender
- * - At least 1 Photo
- * - Voice Intro
- *
- * Bonus Points (To reach 80% threshold):
- * - Photo #2: +10
- * - Photo #3: +10
- * - Questions (max 3): +5 each
- * - Bio: +5
- * - Interests: +5
- * - Preferences (Implicitly checked): +5
- *
- * @param profile The user profile data
- * @returns Score from 0 to 100
+
  */
-export const calculateProfileCompleteness = (profile: ProfileUpdateRequest): number => {
+
+export const calculateProfileCompleteness = (profile: ProfileForCalculation): number => {
+
   let score = 0
 
-  // 1. Base Requirements (Assuming validation passed, these exist)
-  // If validation hasn't passed, this shouldn't be called, but we check anyway.
-  const hasBase =
-    profile.nickName &&
-    profile.age &&
-    profile.gender &&
-    profile.photos &&
-    profile.photos.length >= 1 &&
-    profile.voiceIntro
 
-  if (hasBase) {
-    score += 50
-  } else {
-    return 0 // Fundamental missing
+
+  // 1. Base Requirements (Leniency added)
+
+  if (profile.nickName) score += 15
+
+  if (profile.age) score += 15
+
+  if (profile.gender) score += 10
+
+  if (profile.photo) score += 20
+
+
+
+  // 1.1 Voice Intro (Optional but adds score)
+
+  if (profile.voiceIntro) {
+
+    score += 10
+
   }
 
-  // 2. Extra Photos (Max 20)
-  // Index 0 is base, so check index 1 and 2
-  if (profile.photos.length >= 2) score += 10
-  if (profile.photos.length >= 3) score += 10
 
-  // 3. Questions (Max 15)
+
+  // 2. Questions (Max 15)
+
   if (profile.questions && Array.isArray(profile.questions)) {
-    const answeredCount = profile.questions.length
+
+    const answeredCount = profile.questions.filter((q: QuestionForCalculation) => q.questionId && (q.audioUrl || q.audioFile)).length
+
     score += Math.min(answeredCount, 3) * 5
+
   }
 
-  // 4. Bio (Max 5)
+
+
+  // 3. Bio (Max 10)
+
   if (profile.bio && profile.bio.trim().length > 0) {
-    score += 5
+
+    score += 10
+
   }
 
-  // 5. Interests (Max 5)
+
+
+  // 4. Interests (Max 10)
+
   if (profile.interests && profile.interests.length > 0) {
+
     score += 5
+
   }
 
-  // 6. Preferences (Assumed set during creation)
-  // Since this calculator takes ProfileCreationRequest, preferences might not be strictly part of it
-  // depending on how we structured the type, but let's assume if they made a profile, they have default preferences.
-  score += 5
+
 
   return Math.min(score, 100)
+
 }

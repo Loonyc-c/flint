@@ -1,38 +1,68 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react'
+import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { jwtDecode } from 'jwt-decode'
-// Requirement 4: Import AuthTokenPayload from shared types instead of local definition
-import { User, AuthTokenPayload } from '@shared/types'
+import { type User, type AuthTokenPayload } from '@shared/types'
+
+// =============================================================================
+// Constants
+// =============================================================================
+
+const STORAGE_KEY = 'flint_access_token'
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface UserContextType {
   user: User | null
+  token: string | null
   isLoading: boolean
   login: (token: string) => void
   logout: () => void
   isAuthenticated: boolean
 }
 
+interface UserProviderProps {
+  children: ReactNode
+}
+
+// =============================================================================
+// Context
+// =============================================================================
+
 const UserContext = createContext<UserContextType | undefined>(undefined)
 
-const STORAGE_KEY = 'flint_access_token'
+// =============================================================================
+// Provider Component
+// =============================================================================
 
-export const UserProvider = ({ children }: { children: React.ReactNode }) => {
+/**
+ * UserProvider manages authentication state throughout the application.
+ * It handles JWT token storage, decoding, and expiration validation.
+ */
+export const UserProvider = ({ children }: UserProviderProps) => {
   const [user, setUser] = useState<User | null>(null)
+  const [token, setToken] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(true)
 
-  const decodeAndSetUser = useCallback((token: string) => {
+  /**
+   * Decodes a JWT token and updates user state.
+   * Clears token if expired or invalid.
+   */
+  const decodeAndSetUser = useCallback((storedToken: string) => {
     try {
-      const decoded = jwtDecode<AuthTokenPayload>(token)
+      const decoded = jwtDecode<AuthTokenPayload>(storedToken)
 
+      // Check token expiration
       if (decoded.exp * 1000 < Date.now()) {
         localStorage.removeItem(STORAGE_KEY)
         setUser(null)
+        setToken(null)
         return
       }
 
-      // Requirement 9: Removed console.log({ decoded }) to prevent logging sensitive user data
-
+      setToken(storedToken)
       setUser({
         id: decoded.data.userId,
         firstName: decoded.data.firstName,
@@ -41,49 +71,64 @@ export const UserProvider = ({ children }: { children: React.ReactNode }) => {
         name: `${decoded.data.lastName} ${decoded.data.firstName}`
       })
     } catch {
-      // Requirement 14: Removed console.error to prevent logging sensitive error details
       localStorage.removeItem(STORAGE_KEY)
       setUser(null)
+      setToken(null)
     }
   }, [])
 
+  // Initialize auth state on mount
   useEffect(() => {
-    const initAuth = () => {
-      const token = localStorage.getItem(STORAGE_KEY)
-      if (token) {
-        decodeAndSetUser(token)
-      }
-      setIsLoading(false)
+    const token = localStorage.getItem(STORAGE_KEY)
+    if (token) {
+      decodeAndSetUser(token)
     }
-
-    initAuth()
+    setIsLoading(false)
   }, [decodeAndSetUser])
 
-  const login = (token: string) => {
-    localStorage.setItem(STORAGE_KEY, token)
-    decodeAndSetUser(token)
-  }
+  /**
+   * Stores the token and updates user state.
+   */
+  const login = useCallback(
+    (token: string) => {
+      localStorage.setItem(STORAGE_KEY, token)
+      decodeAndSetUser(token)
+    },
+    [decodeAndSetUser]
+  )
 
-  const logout = () => {
+  /**
+   * Clears the token and user state.
+   */
+  const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
     setUser(null)
+    setToken(null)
+  }, [])
+
+  const value: UserContextType = {
+    user,
+    token,
+    isLoading,
+    login,
+    logout,
+    isAuthenticated: !!user
   }
 
-  return (
-    <UserContext.Provider
-      value={{
-        user,
-        isLoading,
-        login,
-        logout,
-        isAuthenticated: !!user
-      }}
-    >
-      {children}
-    </UserContext.Provider>
-  )
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
 }
-export const useUser = () => {
+
+// =============================================================================
+// Hooks
+// =============================================================================
+
+/**
+ * Hook to access the user context.
+ * Must be used within a UserProvider.
+ *
+ * @throws Error if used outside of UserProvider
+ */
+export const useUser = (): UserContextType => {
   const context = useContext(UserContext)
   if (context === undefined) {
     throw new Error('useUser must be used within a UserProvider')
@@ -92,9 +137,10 @@ export const useUser = () => {
 }
 
 /**
- * useAuthenticatedUser - Use this in protected routes where AuthGuard guarantees authentication
- * Returns a non-null user, throwing an error if called when user is null
- * This eliminates the need for null checks in every component
+ * Hook for protected routes where AuthGuard guarantees authentication.
+ * Returns a non-null user, eliminating the need for null checks.
+ *
+ * @throws Error if called when user is null (should never happen in protected routes)
  */
 export const useAuthenticatedUser = () => {
   const { user, ...rest } = useUser()

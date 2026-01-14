@@ -7,7 +7,7 @@ import dayjs from 'dayjs'
 import jwt from 'jsonwebtoken'
 import { DbUser } from '@/data/db/types/user'
 import { ErrorCode, ServiceException } from '@/features/error'
-import bcrypt from 'bcryptjs'
+import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 import sendEmail from './email.service'
@@ -24,7 +24,7 @@ export type AuthorizerPayload = {
   firstName: string
   lastName: string
   email: string
-  subScription: {
+  subscription: {
     plan: SUBSCRIPTION_PLANS
     startDate?: Date
     enDate?: Date
@@ -106,8 +106,13 @@ export const authService: AuthService = {
       'auth.email': email,
     })
 
+    // Requirement 15: Prevent account enumeration by using generic error message
+    // If user not found OR (user found AND password mismatch), throw same error
     if (isNil(user) || isNil(user.auth)) {
-      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
+      // Simulate password check time to prevent timing attacks (optional but good practice)
+      const dummyHash = '$2a$10$abcdefghijklmnopqrstuvwxyzABCDEFGHIJK'
+      await bcrypt.compare(password, dummyHash)
+      throw new ServiceException('err.auth.invalid_credentials', ErrorCode.UNAUTHORIZED)
     }
 
     const passMatch = isNonEmptyString(user.auth.password)
@@ -146,7 +151,7 @@ export const authService: AuthService = {
           email,
           password: hashedPassword,
         },
-        subScription: {
+        subscription: {
           plan: SUBSCRIPTION_PLANS.FREE,
           isActive: true,
         },
@@ -299,46 +304,36 @@ export const authService: AuthService = {
       const { email, given_name: firstName, family_name: lastName } = payload
 
       const userCollection = await getUserCollection()
-      let user = await userCollection.findOne({ 'auth.email': email })
-      let isNewUser = false
 
-      if (isNil(user)) {
-        isNewUser = true
-        const doc: DbUser = {
-          auth: {
-            firstName,
-            lastName,
-            email,
-            password: '',
-          },
-          subScription: {
-            plan: SUBSCRIPTION_PLANS.FREE,
+      const result = await userCollection.findOneAndUpdate(
+        { 'auth.email': email },
+        {
+          $setOnInsert: {
+            auth: { firstName, lastName, email, password: '' },
+            subscription: { plan: SUBSCRIPTION_PLANS.FREE, isActive: true },
+            preferences: { ageRange: DEFAULT_AGE_RANGE, lookingFor: LOOKING_FOR.ALL },
+            profileCompletion: 0,
+            isDeleted: false as const,
             isActive: true,
+            createdAt: new Date(),
+            createdBy: 'system',
           },
-          preferences: {
-            ageRange: DEFAULT_AGE_RANGE,
-            lookingFor: LOOKING_FOR.ALL,
+          $set: {
+            updatedAt: new Date(),
+            updatedBy: 'system',
           },
-          profileCompletion: 0,
-          isDeleted: false as const,
-          isActive: true,
-          updatedAt: new Date(),
-          createdAt: new Date(),
-          updatedBy: 'system',
-          createdBy: 'system',
-        }
+        },
+        { upsert: true, returnDocument: 'after', includeResultMetadata: true },
+      )
 
-        const res = await userCollection.insertOne(doc)
-        if (!res.acknowledged) {
-          throw new ServiceException('err.system.internal_error', ErrorCode.INTERNAL_ERROR)
-        }
-        user = await userCollection.findOne({ _id: res.insertedId })
-        if (isNil(user)) {
-          throw new ServiceException('err.system.internal_error', ErrorCode.INTERNAL_ERROR)
-        }
+      if (!result || !result.value) {
+        throw new ServiceException('err.system.internal_error', ErrorCode.INTERNAL_ERROR)
       }
 
-      return { user, isNewUser }
+      return {
+        user: result.value,
+        isNewUser: !!result.lastErrorObject?.upserted,
+      }
     } catch (error) {
       // Requirement 14: Remove detailed error logging for security
       // Error details could expose sensitive information

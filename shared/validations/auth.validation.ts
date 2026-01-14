@@ -6,7 +6,6 @@
 
 import { z } from 'zod'
 
-
 type IsNil = (value: unknown) => value is null | undefined
 export const isNil: IsNil = (value): value is null | undefined => {
   return value === null || value === undefined
@@ -33,8 +32,10 @@ export const emailSchema = z
   .min(1, 'Email is required')
   .transform((email: string) => {
     const trimmed = email.trim().toLowerCase()
-    const [localPart, domain] = trimmed.split('@')
-    if (domain === 'gmail.com') {
+    const parts = trimmed.split('@')
+    const localPart = parts[0]
+    const domain = parts[1]
+    if (localPart && domain === 'gmail.com') {
       return `${localPart.replace(/\./g, '')}@${domain}`
     }
     return trimmed
@@ -139,6 +140,5 @@ export const baseSchemas = {
 export const googleSchema = z.object({
   token: z.string().min(1, 'Google token is required')
 })
-
 
 export const objectIdSchema = z.string().regex(/^[0-9a-fA-F]{24}$/, 'String must be valid ObjectId')

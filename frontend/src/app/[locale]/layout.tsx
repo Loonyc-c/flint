@@ -1,0 +1,66 @@
+import type { Metadata as _Metadata } from 'next'
+import { Geist, Geist_Mono } from 'next/font/google'
+import '@/app/globals.css'
+import { Providers } from '@/app/providers'
+import { NextIntlClientProvider } from 'next-intl'
+import { getMessages, getTranslations } from 'next-intl/server'
+import { notFound } from 'next/navigation'
+import { isValidLocale, type Locale } from '@/i18n/routing'
+
+const geistSans = Geist({
+  variable: '--font-geist-sans',
+  subsets: ['latin']
+})
+
+const geistMono = Geist_Mono({
+  variable: '--font-geist-mono',
+  subsets: ['latin']
+})
+
+export const generateMetadata = async ({ params }: { params: Promise<{ locale: string }> }) => {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'Metadata' })
+
+  return {
+    title: t('title'),
+    description: t('description')
+  }
+}
+
+/**
+ * Props for the RootLayout component.
+ * Uses Next.js 15+ async params pattern.
+ */
+interface RootLayoutProps {
+  children: React.ReactNode
+  params: Promise<{ locale: string }>
+}
+
+/**
+ * RootLayout component.
+ * Uses Next.js 15+ async params pattern.
+ */
+const RootLayout = async ({ children, params }: RootLayoutProps) => {
+  const { locale: localeParam } = await params
+
+  // Type-safe locale validation without `as any`
+  if (!isValidLocale(localeParam)) {
+    notFound()
+  }
+
+  // At this point, TypeScript knows locale is of type Locale
+  const locale: Locale = localeParam
+  const messages = await getMessages()
+
+  return (
+    <html lang={locale} suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <NextIntlClientProvider messages={messages}>
+          <Providers>{children}</Providers>
+        </NextIntlClientProvider>
+      </body>
+    </html>
+  )
+}
+
+export default RootLayout

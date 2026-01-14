@@ -1,91 +1,107 @@
-"use client";
+'use client'
 
-import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { requestForgetPassword } from "@/features/auth/api/auth";
-import {
-  ForgetPasswordFormData,
-  forgetPasswordSchema,
-} from "@shared/validations";
-import { ApiError } from "@/lib/api-client";
-import { toast } from "react-toastify";
-import Link from "next/link";
-import { BottomGradient } from "@/utils";
+import { useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { zodResolver } from '@hookform/resolvers/zod'
+import { Link } from '@/i18n/routing'
+import { toast } from 'react-toastify'
+import { requestForgetPassword } from '@/features/auth/api/auth'
+import { type ForgetPasswordFormData, forgetPasswordSchema } from '@shared/validations'
+import { ApiError } from '@/lib/api-client'
+import { AuthFormWrapper } from './AuthFormWrapper'
+import { FormInput } from '@/components/ui/form-input'
+import { BottomGradient } from '@/utils'
+import { useTranslations } from 'next-intl'
 
-import { AuthFormWrapper } from "./AuthFormWrapper";
-import { FormInput } from "@/components/ui/form-input";
+// =============================================================================
+// Sub-Components
+// =============================================================================
+
+interface EmailSentViewProps {
+  email: string
+}
+
+const EmailSentView = ({ email }: EmailSentViewProps) => {
+  const t = useTranslations('auth.forgetPassword')
+  return (
+    <AuthFormWrapper title={t('sentTitle')}>
+      <div className="my-8 text-center">
+        <p className="text-neutral-600 dark:text-neutral-400 mb-4">
+          {t.rich('sentMessage', {
+            email: (_chunks) => <strong>{email}</strong>
+          })}
+        </p>
+        <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
+          {t('sentSpam')}
+        </p>
+        <Link
+          href="/auth"
+          className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer inline-block"
+        >
+          {t('backToLogin')}
+        </Link>
+      </div>
+    </AuthFormWrapper>
+  )
+}
+
+// =============================================================================
+// Main Component
+// =============================================================================
 
 const ForgetPasswordForm = () => {
-  const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
+  const t = useTranslations('auth.forgetPassword')
+  const tc = useTranslations('common')
+  const [isLoading, setIsLoading] = useState(false)
+  const [emailSent, setEmailSent] = useState(false)
 
   const {
     register,
     handleSubmit,
     formState: { errors },
-    getValues,
+    getValues
   } = useForm<ForgetPasswordFormData>({
-    resolver: zodResolver(forgetPasswordSchema),
-  });
+    resolver: zodResolver(forgetPasswordSchema)
+  })
 
   const onSubmit = async (data: ForgetPasswordFormData) => {
-    setIsLoading(true);
+    setIsLoading(true)
 
     try {
-      await requestForgetPassword(data);
-      setEmailSent(true);
-      toast.success("Password reset email sent! Check your inbox.");
+      await requestForgetPassword(data)
+      setEmailSent(true)
+      toast.success(t('success'))
     } catch (err) {
-      // Requirement 14: Removed detailed error logging
       if (err instanceof ApiError) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else if (err instanceof Error) {
-        toast.error(err.message);
+        toast.error(err.message)
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error(tc('error'))
       }
     } finally {
-      setIsLoading(false);
+      setIsLoading(false)
     }
-  };
+  }
 
   if (emailSent) {
-    return (
-      <AuthFormWrapper title="Check Your Email">
-        <div className="my-8 text-center">
-          <p className="text-neutral-600 dark:text-neutral-400 mb-4">
-            If an account exists with <strong>{getValues("email")}</strong>,
-            you will receive a password reset link shortly.
-          </p>
-          <p className="text-sm text-neutral-500 dark:text-neutral-500 mb-6">
-            Didn&apos;t receive the email? Check your spam folder or try again.
-          </p>
-          <Link
-            href="/auth"
-            className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer inline-block"
-          >
-            ← Back to Login
-          </Link>
-        </div>
-      </AuthFormWrapper>
-    );
+    return <EmailSentView email={getValues('email')} />
   }
 
   return (
     <AuthFormWrapper
-      title="Forgot Password?"
-      subtitle="No worries! Enter your email and we'll send you a reset link."
+      title={t('title')}
+      subtitle={t('subtitle')}
     >
       <form className="my-8" onSubmit={handleSubmit(onSubmit)}>
         <FormInput
           id="forget-email"
-          label="Email Address"
-          placeholder="projectmayhem@fc.com"
+          label={t('emailLabel')}
+          placeholder={t('emailPlaceholder')}
           type="email"
           error={errors.email}
           disabled={isLoading}
-          {...register("email")}
+          {...register('email')}
           containerClassName="mb-4"
         />
 
@@ -94,7 +110,7 @@ const ForgetPasswordForm = () => {
           type="submit"
           disabled={isLoading}
         >
-          Sending...
+          {isLoading ? t('loading') : t('button')}
           <BottomGradient />
         </button>
       </form>
@@ -104,11 +120,11 @@ const ForgetPasswordForm = () => {
           href="/auth"
           className="text-sm text-brand hover:text-brand-200 font-medium cursor-pointer"
         >
-          ← Back to Login
+          {t('backToLogin')}
         </Link>
       </div>
     </AuthFormWrapper>
-  );
-};
+  )
+}
 
-export default ForgetPasswordForm;
+export default ForgetPasswordForm

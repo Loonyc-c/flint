@@ -28,5 +28,32 @@ export {
 
 export {
   profileUpdateSchema,
-  type ProfileCreationFormData
+  contactInfoSchema,
+  type ProfileCreationFormData,
+  type ContactInfoFormData
 } from './profile.validation'
+
+export {
+  referenceUpdateSchema,
+  type ReferenceUpdateFormData
+} from './reference.validation'
+
+export {
+  sendMessageSchema,
+  getMessagesQuerySchema,
+  type SendMessageRequest,
+  type GetMessagesQuery
+} from './chat.validation'
+
+export {
+  matchStageSchema,
+  stageNumberSchema,
+  stagedCallInitiateSchema,
+  stagedCallAcceptSchema,
+  stagePromptResponseSchema,
+  getMatchStageSchema,
+  type StagedCallInitiateInput,
+  type StagedCallAcceptInput,
+  type StagePromptResponseInput,
+  type GetMatchStageInput
+} from './staged-call.validation'
