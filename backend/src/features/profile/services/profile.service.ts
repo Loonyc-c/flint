@@ -46,7 +46,10 @@ export const profileService = {
 
   getProfile: async (userId: string): Promise<ProfileResponse> => {
     const userCollection = await getUserCollection()
-    const user = await userCollection.findOne({ _id: new ObjectId(userId) })
+    const user = await userCollection.findOne(
+      { _id: new ObjectId(userId) },
+      { projection: { profile: 1, preferences: 1 } },
+    )
 
     if (isNil(user)) {
       throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)

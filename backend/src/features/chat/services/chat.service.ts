@@ -191,21 +191,15 @@ export const chatService = {
     )
 
     // Reset unread count for this user
-    const currentUnreadCounts = match.unreadCounts || {}
-    const newUnreadCounts = {
-      ...currentUnreadCounts,
-      [userId]: 0,
-    }
-
     await matchCollection.updateOne(
       { _id: new ObjectId(matchId) },
       {
         $set: {
-          unreadCounts: newUnreadCounts,
+          [`unreadCounts.${userId}`]: 0,
           updatedAt: now,
           updatedBy: userId,
         },
-      }
+      },
     )
   },
 }

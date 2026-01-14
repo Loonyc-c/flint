@@ -45,7 +45,14 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     if (isOpen && status === 'idle') {
       joinQueue()
     }
-  }, [isOpen, status, joinQueue])
+    
+    // Cleanup on unmount
+    return () => {
+      if (status === 'queueing' || status === 'connecting') {
+        leaveQueue()
+      }
+    }
+  }, [isOpen, status, joinQueue, leaveQueue])
 
   useEffect(() => {
     let timer: NodeJS.Timeout
@@ -138,7 +145,7 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
       </AnimatePresence>
 
       {/* Actual Call Modal */}
-      {status === 'in-call' && matchData && (
+      {status === 'in-call' && matchData && !showPrompt && (
         <StagedAudioCallModal
           isOpen={true}
           channelName={matchData.channelName}
