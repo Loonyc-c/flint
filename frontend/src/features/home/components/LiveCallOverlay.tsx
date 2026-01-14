@@ -45,14 +45,16 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     if (isOpen && status === 'idle') {
       joinQueue()
     }
-    
-    // Cleanup on unmount
+  }, [isOpen, status, joinQueue])
+
+  // Cleanup on unmount
+  useEffect(() => {
     return () => {
-      if (status === 'queueing' || status === 'connecting') {
-        leaveQueue()
-      }
+      // This cleanup only runs when the component unmounts.
+      // It prevents leaving a user in the queue if they navigate away.
+      leaveQueue()
     }
-  }, [isOpen, status, joinQueue, leaveQueue])
+  }, [leaveQueue])
 
   useEffect(() => {
     let timer: NodeJS.Timeout
