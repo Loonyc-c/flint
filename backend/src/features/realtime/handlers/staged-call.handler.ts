@@ -291,7 +291,7 @@ const triggerContactExchange = async (io: Server, matchId: string, userIds: stri
     const partnerId = userIds.find(id => id !== user._id.toHexString())
     const partner = users.find(u => u._id.toHexString() === partnerId)
     if (partner?.contactInfo) {
-      const { isContactVerified: _verified, ...contactDisplay } = partner.contactInfo
+      const contactDisplay = partner.contactInfo
       io.to(`user:${user._id.toHexString()}`).emit('contact-exchange', {
         matchId,
         partnerContact: contactDisplay,

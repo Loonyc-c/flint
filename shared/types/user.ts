@@ -35,7 +35,7 @@ export type UserContactInfo = {
   twitter?: string
   linkedin?: string
   other?: string
-  isContactVerified: boolean
+  verifiedPlatforms: string[]
 }
 
 export interface QuestionAnswer {

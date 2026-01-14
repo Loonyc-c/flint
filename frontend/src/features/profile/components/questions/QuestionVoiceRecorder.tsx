@@ -36,7 +36,7 @@ const QuestionVoiceRecorder = ({ initialAudioFile, onSave, onCancel }: QuestionV
         await audioRef.current.play()
         setIsPlayback(true)
       }
-    } catch (err) {
+    } catch (_err) {
       alert(t('playbackError'))
     }
   }
