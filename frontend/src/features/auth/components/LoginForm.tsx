@@ -47,12 +47,18 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
 
     try {
       const { accessToken } = await login(data)
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'LoginForm.tsx:53',message:'Login API success',data:{hasAccessToken:!!accessToken,accessTokenLength:typeof accessToken==='string'?accessToken.length:null,currentPath:typeof window!=='undefined'?window.location.pathname:null},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       setAuthToken(accessToken)
 
       toast.success(t('success'))
       if (onSuccess) {
         onSuccess()
       } else {
+        // #region agent log
+        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H4',location:'LoginForm.tsx:62',message:'Navigating to /home after login',data:{currentPath:typeof window!=='undefined'?window.location.pathname:null},timestamp:Date.now()})}).catch(()=>{});
+        // #endregion
         router.push('/home')
       }
     } catch (err) {

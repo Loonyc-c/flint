@@ -58,15 +58,25 @@ export const AuthGuard = ({ children }: AuthGuardProps) => {
   const needsRedirect = (!isAuthenticated && !isPublic) || (isAuthenticated && isPublic)
   const isReady = !isLoading && !needsRedirect
 
+  // #region agent log
+  fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H1',location:'AuthGuard.tsx:61',message:'AuthGuard render decision',data:{pathname,isPublic,isAuthenticated,isLoading,needsRedirect,isReady,hasCookie:typeof document!=='undefined'?document.cookie.includes('flint_access_token='):null,hasLocalStorageToken:typeof window!=='undefined'?!!window.localStorage.getItem('flint_access_token'):null},timestamp:Date.now()})}).catch(()=>{});
+  // #endregion
+
   useEffect(() => {
     if (isLoading) return
 
     if (!isAuthenticated && !isPublic) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'AuthGuard.tsx:70',message:'Redirecting guest to /auth',data:{pathname,isPublic,isAuthenticated},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       router.replace('/auth')
       return
     }
 
     if (isAuthenticated && isPublic) {
+      // #region agent log
+      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'AuthGuard.tsx:77',message:'Redirecting authed user to /home (from public route)',data:{pathname,isPublic,isAuthenticated},timestamp:Date.now()})}).catch(()=>{});
+      // #endregion
       router.replace('/home')
     }
   }, [isAuthenticated, isLoading, isPublic, router])
