@@ -93,7 +93,7 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
       const dataForCalculation = pendingPhotoFile
         ? { ...formData, photo: 'pending' }
         : formData
-      const score = calculateProfileCompleteness(dataForCalculation)
+      const { score } = calculateProfileCompleteness(dataForCalculation)
       setCompleteness(score)
     }, 500)
 

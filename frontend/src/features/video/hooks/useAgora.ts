@@ -37,6 +37,8 @@ interface UseAgoraReturn {
   leave: () => Promise<void>
   toggleMic: () => Promise<void>
   toggleCamera: () => Promise<void>
+  muteAll: () => Promise<void>
+  unmuteAll: (audio?: boolean, video?: boolean) => Promise<void>
   error: string | null
 }
 
@@ -66,8 +68,46 @@ export const useAgora = ({
     clientRef.current = new AgoraClient()
 
     return () => {
-      clientRef.current?.destroy()
+      const client = clientRef.current
+      if (client) {
+        // Ensure tracks are stopped immediately on unmount
+        client.leave().catch(err => console.error('[useAgora] Cleanup error:', err))
+        client.destroy()
+      }
       clientRef.current = null
+    }
+  }, [])
+
+  // Mobile Audio Routing Fix
+  useEffect(() => {
+    const handleDeviceChange = async () => {
+      try {
+        const devices = await navigator.mediaDevices.enumerateDevices()
+        const audioOutputs = devices.filter(d => d.kind === 'audiooutput')
+        
+        // Prefer Bluetooth or Wired Headset
+        const headset = audioOutputs.find(d => 
+          d.label.toLowerCase().includes('bluetooth') || 
+          d.label.toLowerCase().includes('headset') ||
+          d.label.toLowerCase().includes('wired')
+        )
+
+        // Note: Agora SDK handles output routing internally via its playback devices,
+        // but explicit selection can help on some mobile browsers if supported.
+        // We log it here for debugging/verification.
+        if (headset) {
+          console.warn('[MobileAudio] Headset detected:', headset.label)
+        }
+      } catch (e) {
+        console.warn('[MobileAudio] Failed to enumerate devices', e)
+      }
+    }
+
+    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
+    handleDeviceChange() // Check on mount
+
+    return () => {
+      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
     }
   }, [])
 
@@ -168,6 +208,22 @@ export const useAgora = ({
     }
   }, [])
 
+  // Mute all (Pause)
+  const muteAll = useCallback(async (): Promise<void> => {
+    if (!clientRef.current) return
+    await clientRef.current.muteLocalTracks()
+    setIsMicEnabled(false)
+    setIsCameraEnabled(false)
+  }, [])
+
+  // Unmute all (Resume)
+  const unmuteAll = useCallback(async (audio = true, video = false): Promise<void> => {
+    if (!clientRef.current) return
+    await clientRef.current.unmuteLocalTracks(audio, video)
+    setIsMicEnabled(audio)
+    setIsCameraEnabled(video)
+  }, [])
+
   // Toggle microphone
   const toggleMic = useCallback(async (): Promise<void> => {
     if (!clientRef.current) return
@@ -199,15 +255,6 @@ export const useAgora = ({
     }
   }, [isCameraEnabled])
 
-  // Cleanup on unmount
-  useEffect(() => {
-    return () => {
-      if (isConnected) {
-        clientRef.current?.leave()
-      }
-    }
-  }, [isConnected])
-
   return {
     isConnected,
     isConnecting,
@@ -219,6 +266,8 @@ export const useAgora = ({
     leave,
     toggleMic,
     toggleCamera,
+    muteAll,
+    unmuteAll,
     error,
   }
 }

@@ -324,6 +324,37 @@ export class AgoraClient {
   }
 
   /**
+   * Mute all local tracks (disable but do not close)
+   */
+  async muteLocalTracks(): Promise<void> {
+    if (this.localAudioTrack) {
+      await this.localAudioTrack.setEnabled(false)
+    }
+    if (this.localVideoTrack) {
+      await this.localVideoTrack.setEnabled(false)
+    }
+  }
+
+  /**
+   * Unmute local tracks
+   */
+  async unmuteLocalTracks(audio = true, video = false): Promise<void> {
+    if (this.localAudioTrack && audio) {
+      await this.localAudioTrack.setEnabled(true)
+    }
+    if (this.localVideoTrack && video) {
+      await this.localVideoTrack.setEnabled(true)
+    }
+  }
+
+  /**
+   * Get available audio playback devices
+   */
+  async getAudioPlaybackDevices(): Promise<MediaDeviceInfo[]> {
+    return AgoraRTC.getPlaybackDevices()
+  }
+
+  /**
    * Get local video track
    */
   getLocalVideoTrack(): ICameraVideoTrack | null {

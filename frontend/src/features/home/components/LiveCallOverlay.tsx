@@ -1,13 +1,16 @@
 'use client'
 
 import { useState, useEffect, useRef } from 'react'
-import { motion, AnimatePresence } from 'framer-motion'
-import { Phone, Loader2, ShieldCheck } from 'lucide-react'
-import { Button } from '@/components/ui/button'
+import { motion } from 'framer-motion'
 import { useLiveCall } from '../hooks/useLiveCall'
-import { StagedAudioCallModal, StagePromptModal } from '@/features/video/components/staged'
+import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal } from '@/features/video/components/staged'
 import { useTranslations } from 'next-intl'
 import { toast } from 'react-toastify'
+import { Button } from '@/components/ui/button'
+import { LiveCallQueueOverlay } from './LiveCallQueueOverlay'
+import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
+import { useProfileReadiness } from '@/features/profile/hooks/useProfileReadiness'
+import { IcebreakerOverlay } from './IcebreakerOverlay'
 
 interface LiveCallOverlayProps {
   isOpen: boolean
@@ -21,12 +24,18 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
   const { 
     status, 
     matchData, 
+    partnerContact,
+    exchangeExpiresAt,
+    icebreaker,
     error, 
     joinQueue, 
     leaveQueue, 
     promoteToMatch,
     reset 
   } = useLiveCall()
+
+  const { score, missingFields, isReady, isLoading: isCheckingReadiness } = useProfileReadiness()
+  const [showGuidance, setShowGuidance] = useState(false)
 
   // Ref to track status for cleanup function without triggering re-renders
   const statusRef = useRef(status)
@@ -38,6 +47,7 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
   
   const [remainingTime, setRemainingTime] = useState(90000)
   const [showPrompt, setShowPrompt] = useState(false)
+  const [callStage, setCallStage] = useState<1 | 2 | 3>(1)
 
   // RCA: previously, 'status' was in the dependency array. 
   // When status changed from 'connecting' to 'in-call', the cleanup function ran.
@@ -46,8 +56,12 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
   // FIX: Removed 'status' from dependencies. Use ref for cleanup logic.
   useEffect(() => {
     // Only auto-join if we are opening fresh and idle
-    if (isOpen && status === 'idle') {
-      joinQueue()
+    if (isOpen && status === 'idle' && !isCheckingReadiness) {
+      if (isReady) {
+        joinQueue()
+      } else {
+        setShowGuidance(true)
+      }
     }
     
     // Cleanup on unmount or when isOpen changes to false
@@ -58,18 +72,35 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
         leaveQueue()
       }
     }
-  }, [isOpen, joinQueue, leaveQueue]) // Removed 'status'
+  }, [isOpen, status, isReady, isCheckingReadiness, joinQueue, leaveQueue])
+
+  // Handle specific backend errors
+  useEffect(() => {
+    if (error === 'Profile incomplete') {
+      setShowGuidance(true)
+    }
+  }, [error])
 
   // Timer logic for the call
   useEffect(() => {
     let timer: NodeJS.Timeout
+    
     if (status === 'in-call') {
-      setRemainingTime(90000)
+      // Reset time based on stage
+      const duration = callStage === 1 ? 90000 : 120000
+      setRemainingTime(duration)
+      
       timer = setInterval(() => {
         setRemainingTime(prev => {
           if (prev <= 1000) {
             clearInterval(timer)
-            setShowPrompt(true)
+            // If stage 1 ends, show prompt. If stage 2 ends, maybe end call?
+            if (callStage === 1) {
+              setShowPrompt(true)
+            } else {
+              toast.info('Time limit reached!')
+              // handleClose() // Optional: auto-close
+            }
             return 0
           }
           return prev - 1000
@@ -77,7 +108,7 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
       }, 1000)
     }
     return () => clearInterval(timer)
-  }, [status])
+  }, [status, callStage]) // Re-run when status or stage changes
 
   const handleClose = () => {
     // Manual close should always leave queue if active
@@ -85,6 +116,8 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
       leaveQueue()
     }
     reset()
+    setCallStage(1) // Reset stage
+    setShowPrompt(false)
     onClose()
   }
 
@@ -92,8 +125,15 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     setShowPrompt(false)
     if (accepted && matchData) {
       promoteToMatch(matchData.partnerId)
-      toast.success('Match created! Check your conversations.')
-      handleClose()
+      
+      if (callStage === 1) {
+        toast.success('Proceeding to Video Stage!')
+        setCallStage(2)
+      } else {
+        toast.success('Exchanging Contacts...')
+        setCallStage(3)
+      }
+      // Do NOT close. Seamless transition.
     } else {
       toast.info('Call ended')
       handleClose()
@@ -104,73 +144,71 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
 
   return (
     <>
-      <AnimatePresence>
-        {(status === 'queueing' || status === 'connecting') && (
+      {showGuidance ? (
+        <div className="fixed inset-0 z-[150] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md">
           <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[110] flex items-center justify-center bg-black/80 backdrop-blur-md"
+            initial={{ scale: 0.9, opacity: 0, y: 20 }}
+            animate={{ scale: 1, opacity: 1, y: 0 }}
+            className="w-full max-w-md"
           >
-            <div className="w-full max-w-md p-8 text-center bg-card rounded-3xl border border-border shadow-2xl mx-4">
-              <div className="relative w-24 h-24 mx-auto mb-8">
-                <motion.div
-                  animate={{ scale: [1, 1.2, 1], opacity: [0.3, 0.6, 0.3] }}
-                  transition={{ duration: 2, repeat: Infinity }}
-                  className="absolute inset-0 bg-brand rounded-full"
-                />
-                <div className="relative flex items-center justify-center w-full h-full bg-brand rounded-full text-brand-foreground">
-                  {status === 'queueing' ? (
-                    <Phone className="w-10 h-10 animate-pulse" />
-                  ) : (
-                    <ShieldCheck className="w-10 h-10" />
-                  )}
-                </div>
-              </div>
-
-              <h2 className="text-2xl font-bold mb-4">
-                {status === 'queueing' ? t('finding') : t('matchFound')}
-              </h2>
-              
-              <p className="text-muted-foreground mb-8">
-                {status === 'queueing' 
-                  ? t('findingDesc') 
-                  : t('connecting')}
-              </p>
-
-              {status === 'queueing' && (
-                <div className="flex flex-col gap-4">
-                  <div className="flex items-center justify-center gap-2 text-sm text-brand font-medium">
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    {t('searching')}
-                  </div>
-                  <Button variant="outline" onClick={handleClose} className="rounded-xl">
-                    {t('cancel')}
-                  </Button>
-                </div>
-              )}
-            </div>
+            <ProfileGuidance 
+              score={score} 
+              missingFields={missingFields} 
+              isLoading={isCheckingReadiness}
+              onClose={() => {
+                setShowGuidance(false)
+                handleClose()
+              }}
+            />
+            <button 
+              onClick={handleClose}
+              className="mt-4 w-full text-white/60 hover:text-white text-sm font-medium transition-colors"
+            >
+              Maybe Later
+            </button>
           </motion.div>
-        )}
-      </AnimatePresence>
+        </div>
+      ) : (
+        <LiveCallQueueOverlay 
+          status={status} 
+          onCancel={handleClose} 
+        />
+      )}
 
-      {/* Actual Call Modal */}
-      {status === 'in-call' && matchData && !showPrompt && (
+      {/* Actual Call Modal - KEPT MOUNTED during transition */}
+      {status === 'in-call' && matchData && callStage !== 3 && (
         <StagedAudioCallModal
           isOpen={true}
           channelName={matchData.channelName}
           partnerName={matchData.partnerName}
           remainingTime={remainingTime}
-          stage={1}
+          stage={callStage as 1 | 2}
+          isPaused={showPrompt} // Pass pause state
           onClose={handleClose}
-          onCallEnded={() => setShowPrompt(true)}
+          onCallEnded={() => setShowPrompt(true)} // Trigger prompt on end
         />
       )}
 
-      {/* Promotion Prompt */}
+      {/* AI Wingman Icebreakers */}
+      {status === 'in-call' && icebreaker && (
+        <IcebreakerOverlay questions={icebreaker.questions} />
+      )}
+
+      {/* Stage 3 - Contact Reveal */}
+      {callStage === 3 && matchData && partnerContact && exchangeExpiresAt && (
+        <ContactExchangeModal
+          isOpen={true}
+          partnerName={matchData.partnerName}
+          contactInfo={partnerContact}
+          expiresAt={exchangeExpiresAt}
+          onClose={handleClose}
+        />
+      )}
+
+      {/* Promotion Prompt - Overlay on top */}
       <StagePromptModal
         isOpen={showPrompt}
-        fromStage={1}
+        fromStage={callStage === 1 ? 1 : 2}
         expiresAt={new Date(Date.now() + 10000).toISOString()}
         onAccept={() => handlePromptResponse(true)}
         onDecline={() => handlePromptResponse(false)}
@@ -188,3 +226,4 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     </>
   )
 }
+

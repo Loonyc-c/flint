@@ -9,12 +9,16 @@ import {
   Brain,
   Coffee,
   Lock,
+  AlertCircle,
 } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LiveCallOverlay } from "./LiveCallOverlay";
+import { useSocket } from "@/features/realtime/context/SocketContext";
+import { useUser } from "@/features/auth/context/UserContext";
+import { cn } from "@/lib/utils";
 
 // =============================================================================
 // Sub-Components
@@ -22,17 +26,28 @@ import { LiveCallOverlay } from "./LiveCallOverlay";
 
 interface LiveCallCardProps {
   onClick: () => void;
+  disabled?: boolean;
 }
 
-const LiveCallCard = ({ onClick }: LiveCallCardProps) => {
+const LiveCallCard = ({ onClick, disabled }: LiveCallCardProps) => {
   const t = useTranslations("home.findMatch");
+  const tc = useTranslations("chat");
 
   return (
     <button
-      onClick={onClick}
-      className="p-6 border-2 shadow-sm bg-card border-border hover:border-brand rounded-2xl flex flex-col items-center gap-4 transition-all hover:shadow-lg group"
+      onClick={disabled ? undefined : onClick}
+      disabled={disabled}
+      className={cn(
+        "p-6 border-2 shadow-sm bg-card rounded-2xl flex flex-col items-center gap-4 transition-all relative overflow-hidden",
+        disabled 
+          ? "border-neutral-200 dark:border-neutral-800 opacity-80 cursor-not-allowed" 
+          : "border-border hover:border-brand hover:shadow-lg group cursor-pointer"
+      )}
     >
-      <div className="flex items-center justify-center w-16 h-16 transition-colors rounded-full bg-brand text-brand-foreground group-hover:bg-brand-300">
+      <div className={cn(
+        "flex items-center justify-center w-16 h-16 transition-colors rounded-full",
+        disabled ? "bg-neutral-200 text-neutral-400" : "bg-brand text-brand-foreground group-hover:bg-brand-300"
+      )}>
         <Phone className="w-8 h-8" />
       </div>
       <div className="text-center">
@@ -40,12 +55,23 @@ const LiveCallCard = ({ onClick }: LiveCallCardProps) => {
           {t("liveCall.title")}
         </h4>
         <p className="text-sm text-muted-foreground">
-          {t("liveCall.description")}
+          {disabled ? tc("userBusy") : t("liveCall.description")}
         </p>
       </div>
-      <div className="w-full px-5 py-2.5 rounded-2xl bg-brand group-hover:bg-brand-300 font-medium text-brand-foreground text-center text-sm transition-colors">
+      <div className={cn(
+        "w-full px-5 py-2.5 rounded-2xl font-medium text-center text-sm transition-colors",
+        disabled 
+          ? "bg-neutral-100 text-neutral-400" 
+          : "bg-brand group-hover:bg-brand-300 text-brand-foreground"
+      )}>
         {t("liveCall.button")}
       </div>
+      
+      {disabled && (
+        <div className="absolute top-2 right-2">
+          <AlertCircle className="w-5 h-5 text-amber-500" />
+        </div>
+      )}
     </button>
   );
 };
@@ -158,7 +184,11 @@ const AIWingmanCard = () => {
 const FindMatch = () => {
   const router = useRouter();
   const t = useTranslations("home.findMatch");
+  const { user } = useUser();
+  const { isUserBusy } = useSocket();
   const [showLiveCall, setShowLiveCall] = useState(false);
+
+  const isMeBusy = isUserBusy(user?.id || "");
 
   return (
     <div className="w-full flex justify-center">
@@ -178,7 +208,10 @@ const FindMatch = () => {
           </h3>
 
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-            <LiveCallCard onClick={() => setShowLiveCall(true)} />
+            <LiveCallCard 
+              onClick={() => setShowLiveCall(true)} 
+              disabled={isMeBusy}
+            />
             <SwipeCard onNavigate={() => router.push("/swipe")} />
           </div>
         </div>

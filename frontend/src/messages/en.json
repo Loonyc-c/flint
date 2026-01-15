@@ -208,6 +208,7 @@
     "hiddenChats": "Hidden Chats",
     "typing": "typing...",
     "online": "Online",
+    "userBusy": "User is currently in a call",
     "yourTurnUpper": "YOUR TURN",
     "theirTurnUpper": "THEIR TURN",
     "reconnecting": "• Reconnecting...",

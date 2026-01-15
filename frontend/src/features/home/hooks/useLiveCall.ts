@@ -1,7 +1,9 @@
 'use client'
 
-import { useEffect, useCallback, useState } from 'react'
+import { useEffect, useCallback, useState, useRef } from 'react'
 import { useSocket } from '@/features/realtime/context/SocketContext'
+import { type ContactInfoDisplay } from '@shared/types'
+import { useUser } from '@/features/auth/context/UserContext'
 
 export type LiveCallStatus = 'idle' | 'queueing' | 'connecting' | 'in-call' | 'error'
 
@@ -14,9 +16,18 @@ interface LiveMatchData {
   callType: string
 }
 
+export interface IcebreakerPayload {
+  matchId: string
+  questions: string[]
+  timestamp: string
+}
+
 interface UseLiveCallReturn {
   status: LiveCallStatus
   matchData: LiveMatchData | null
+  partnerContact: ContactInfoDisplay | null
+  exchangeExpiresAt: string | null
+  icebreaker: IcebreakerPayload | null
   error: string | null
   joinQueue: () => void
   leaveQueue: () => void
@@ -25,24 +36,51 @@ interface UseLiveCallReturn {
 }
 
 export const useLiveCall = (): UseLiveCallReturn => {
-  const { socket, isConnected } = useSocket()
+  const { user } = useUser()
+  const { socket, isConnected, isUserBusy } = useSocket()
   const [status, setStatus] = useState<LiveCallStatus>('idle')
   const [matchData, setMatchData] = useState<LiveMatchData | null>(null)
+  const [partnerContact, setPartnerContact] = useState<ContactInfoDisplay | null>(null)
+  const [exchangeExpiresAt, setExchangeExpiresAt] = useState<string | null>(null)
+  const [icebreaker, setIcebreaker] = useState<IcebreakerPayload | null>(null)
   const [error, setError] = useState<string | null>(null)
+  
+  // Track mounting state to prevent updates after unmount
+  const isMounted = useRef(true)
+  useEffect(() => {
+    isMounted.current = true
+    return () => { isMounted.current = false }
+  }, [])
 
   useEffect(() => {
     if (!socket) return
+
+    const handleConnect = () => {
+      // Re-join queue if we were queueing before disconnect
+      if (status === 'queueing') {
+        socket.emit('live-call-join')
+      }
+    }
 
     const handleQueued = () => {
       setStatus('queueing')
     }
 
     const handleMatchFound = (data: LiveMatchData) => {
+      // Auto-reject if already busy in another call process (global check)
+      const isMeBusy = user?.id ? isUserBusy(user.id) : false
+      if ((status !== 'idle' && status !== 'error') || isMeBusy) {
+        socket.emit('staged-call-decline', { matchId: data.matchId })
+        return
+      }
+
       setMatchData(data)
       setStatus('connecting')
       // Small delay to simulate connecting or allow UI to transition
       setTimeout(() => {
-        setStatus('in-call')
+        if (isMounted.current && status !== 'idle') {
+           setStatus('in-call')
+        }
       }, 1500)
     }
 
@@ -59,18 +97,43 @@ export const useLiveCall = (): UseLiveCallReturn => {
       console.warn('Match promoted successfully:', data.matchId)
     }
 
+    const handleContactExchange = (data: { partnerContact: ContactInfoDisplay, expiresAt: string }) => {
+      setPartnerContact(data.partnerContact)
+      setExchangeExpiresAt(data.expiresAt)
+    }
+
+    const handlePromptResult = (data: { bothAccepted: boolean, nextStage: number | null }) => {
+      if (!data.bothAccepted && status === 'in-call') {
+        // If someone declined the transition to Stage 2 or 3
+        setStatus('idle')
+        setMatchData(null)
+      }
+    }
+
+    const handleIcebreaker = (data: IcebreakerPayload) => {
+      setIcebreaker(data)
+    }
+
+    socket.on('connect', handleConnect)
     socket.on('live-call-queued', handleQueued)
     socket.on('live-match-found', handleMatchFound)
     socket.on('live-call-error', handleError)
     socket.on('live-call-left', handleLeft)
     socket.on('live-call-match-promoted', handlePromoted)
+    socket.on('contact-exchange', handleContactExchange)
+    socket.on('stage-prompt-result', handlePromptResult)
+    socket.on('staged-call-icebreaker', handleIcebreaker)
 
     return () => {
+      socket.off('connect', handleConnect)
       socket.off('live-call-queued', handleQueued)
       socket.off('live-match-found', handleMatchFound)
       socket.off('live-call-error', handleError)
       socket.off('live-call-left', handleLeft)
       socket.off('live-call-match-promoted', handlePromoted)
+      socket.off('contact-exchange', handleContactExchange)
+      socket.off('stage-prompt-result', handlePromptResult)
+      socket.off('staged-call-icebreaker', handleIcebreaker)
     }
   }, [socket])
 
@@ -96,12 +159,18 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const reset = useCallback(() => {
     setStatus('idle')
     setMatchData(null)
+    setPartnerContact(null)
+    setExchangeExpiresAt(null)
+    setIcebreaker(null)
     setError(null)
   }, [])
 
   return {
     status,
     matchData,
+    partnerContact,
+    exchangeExpiresAt,
+    icebreaker,
     error,
     joinQueue,
     leaveQueue,

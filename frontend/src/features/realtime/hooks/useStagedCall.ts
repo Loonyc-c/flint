@@ -2,6 +2,7 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { useSocket } from '../context/SocketContext'
+import { useUser } from '@/features/auth/context/UserContext'
 import type {
   StagedCallRingingPayload,
   StagedCallAcceptedPayload,
@@ -27,6 +28,12 @@ export interface IncomingStagedCall {
   callType: 'audio' | 'video'
 }
 
+export interface IcebreakerPayload {
+  matchId: string
+  questions: string[]
+  timestamp: string
+}
+
 interface UseStagedCallOptions {
   onIncomingCall?: (call: IncomingStagedCall) => void
   onCallAccepted?: (data: StagedCallAcceptedPayload) => void
@@ -35,6 +42,7 @@ interface UseStagedCallOptions {
   onStagePrompt?: (data: StagePromptPayload) => void
   onPromptResult?: (data: StagePromptResult) => void
   onContactExchange?: (data: ContactExchangePayload) => void
+  onIcebreaker?: (data: IcebreakerPayload) => void
 }
 
 interface UseStagedCallReturn {
@@ -44,6 +52,7 @@ interface UseStagedCallReturn {
   remainingTime: number
   stagePrompt: StagePromptPayload | null
   partnerContact: ContactInfoDisplay | null
+  icebreaker: IcebreakerPayload | null
   initiateCall: (matchId: string, calleeId: string, stage: 1 | 2) => void
   acceptCall: (matchId: string) => void
   declineCall: (matchId: string) => void
@@ -56,13 +65,15 @@ interface UseStagedCallReturn {
 // =============================================================================
 
 export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCallReturn => {
-  const { socket, isConnected } = useSocket()
+  const { user } = useUser()
+  const { socket, isConnected, isUserBusy } = useSocket()
   const [callStatus, setCallStatus] = useState<StagedCallStatus>('idle')
   const [currentCall, setCurrentCall] = useState<UseStagedCallReturn['currentCall']>(null)
   const [incomingCall, setIncomingCall] = useState<IncomingStagedCall | null>(null)
   const [remainingTime, setRemainingTime] = useState(0)
   const [stagePrompt, setStagePrompt] = useState<StagePromptPayload | null>(null)
   const [partnerContact, setPartnerContact] = useState<ContactInfoDisplay | null>(null)
+  const [icebreaker, setIcebreaker] = useState<IcebreakerPayload | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
   
   // Use ref to track callStatus immediately (avoids stale closure issues)
@@ -91,6 +102,13 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     if (!socket) return
 
     const handleRinging = (data: StagedCallRingingPayload) => {
+      // Auto-reject if already busy in another call process (global check)
+      const isMeBusy = user?.id ? isUserBusy(user.id) : false
+      if (callStatusRef.current !== 'idle' || isMeBusy) {
+        socket.emit('staged-call-decline', { matchId: data.matchId })
+        return
+      }
+      
       setIncomingCall(data)
       setCallStatus('ringing')
       callStatusRef.current = 'ringing'
@@ -126,6 +144,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       callStatusRef.current = 'idle'
       setCurrentCall(null)
       setIncomingCall(null)
+      setIcebreaker(null)
       setRemainingTime(0)
       options.onCallDeclined?.(data)
     }
@@ -137,6 +156,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       callStatusRef.current = newStatus
       setCurrentCall(null)
       setIncomingCall(null)
+      setIcebreaker(null)
       setRemainingTime(0)
       options.onCallEnded?.(data)
     }
@@ -145,6 +165,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       setStagePrompt(data)
       setCallStatus('prompt')
       callStatusRef.current = 'prompt'
+      setIcebreaker(null) // Clear icebreaker during prompt
       options.onStagePrompt?.(data)
     }
 
@@ -153,17 +174,24 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       setCallStatus('idle')
       // Update ref immediately so initiateCall can use the new value
       callStatusRef.current = 'idle'
+      setIcebreaker(null)
       options.onPromptResult?.(data)
     }
 
     const handleContactExchange = (data: ContactExchangePayload) => {
       setPartnerContact(data.partnerContact)
+      setIcebreaker(null)
       options.onContactExchange?.(data)
     }
 
-    const handleTimeout = () => { setCallStatus('idle'); callStatusRef.current = 'idle'; setCurrentCall(null) }
-    const handleMissed = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle' }
-    const handleCancelled = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle' }
+    const handleIcebreaker = (data: IcebreakerPayload) => {
+      setIcebreaker(data)
+      options.onIcebreaker?.(data)
+    }
+
+    const handleTimeout = () => { setCallStatus('idle'); callStatusRef.current = 'idle'; setCurrentCall(null); setIcebreaker(null) }
+    const handleMissed = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle'; setIcebreaker(null) }
+    const handleCancelled = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle'; setIcebreaker(null) }
 
     socket.on('staged-call-ringing', handleRinging)
     socket.on('staged-call-waiting', handleWaiting)
@@ -177,6 +205,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     socket.on('stage-prompt', handlePrompt)
     socket.on('stage-prompt-result', handlePromptResult)
     socket.on('contact-exchange', handleContactExchange)
+    socket.on('staged-call-icebreaker', handleIcebreaker)
 
     return () => {
       socket.off('staged-call-ringing', handleRinging)
@@ -191,6 +220,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       socket.off('stage-prompt', handlePrompt)
       socket.off('stage-prompt-result', handlePromptResult)
       socket.off('contact-exchange', handleContactExchange)
+      socket.off('staged-call-icebreaker', handleIcebreaker)
       if (timerRef.current) clearInterval(timerRef.current)
     }
   }, [socket, options, startTimer])
@@ -240,6 +270,6 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
 
   return {
     callStatus, currentCall, incomingCall, remainingTime,
-    stagePrompt, partnerContact, initiateCall, acceptCall, declineCall, endCall, respondToPrompt,
+    stagePrompt, partnerContact, icebreaker, initiateCall, acceptCall, declineCall, endCall, respondToPrompt,
   }
 }

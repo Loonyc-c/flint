@@ -11,15 +11,15 @@ import React, {
 import { io, type Socket } from "socket.io-client";
 import { useUser } from "@/features/auth/context/UserContext";
 
-// =============================================================================
-// Types
-// =============================================================================
-// aa
+export type UserBusyStatus = 'available' | 'queueing' | 'connecting' | 'in-call'
+
 interface SocketContextValue {
   socket: Socket | null;
   isConnected: boolean;
   joinMatch: (matchId: string) => void;
   leaveMatch: (matchId: string) => void;
+  busyStates: Record<string, UserBusyStatus>;
+  isUserBusy: (userId: string) => boolean;
 }
 
 // =============================================================================
@@ -52,6 +52,7 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
   const { user, token } = useUser();
   const [socket, setSocket] = useState<Socket | null>(null);
   const [isConnected, setIsConnected] = useState(false);
+  const [busyStates, setBusyStates] = useState<Record<string, UserBusyStatus>>({});
   const joinedMatches = useRef<Set<string>>(new Set());
 
   // Initialize socket connection
@@ -99,6 +100,18 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
       console.error("[Socket] Error:", error);
     });
 
+    // Busy state events
+    newSocket.on("busy-states-sync", (states: Record<string, UserBusyStatus>) => {
+      setBusyStates(states);
+    });
+
+    newSocket.on("user-busy-state-changed", ({ userId, status }: { userId: string, status: UserBusyStatus }) => {
+      setBusyStates(prev => ({
+        ...prev,
+        [userId]: status
+      }));
+    });
+
     setSocket(newSocket);
 
     // Cleanup on unmount
@@ -132,11 +145,17 @@ export const SocketProvider = ({ children }: { children: React.ReactNode }) => {
     [socket, isConnected]
   );
 
+  const isUserBusy = useCallback((userId: string) => {
+    return !!busyStates[userId] && busyStates[userId] !== 'available';
+  }, [busyStates]);
+
   const value: SocketContextValue = {
     socket,
     isConnected,
     joinMatch,
     leaveMatch,
+    busyStates,
+    isUserBusy,
   };
 
   return (

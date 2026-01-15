@@ -1,11 +1,12 @@
 'use client'
 
 import Image from 'next/image'
-import { LogOut, User } from 'lucide-react'
+import { LogOut } from 'lucide-react'
 import { useRouter, Link } from '@/i18n/routing'
 import { useUser } from '@/features/auth/context/UserContext'
 import MainLogo from './ui/logo'
 import { useTranslations } from 'next-intl'
+import { UserAvatar } from './ui/UserAvatar'
 
 /**
  * Main header component displayed on authenticated pages.
@@ -23,7 +24,7 @@ const MainHeader = () => {
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/90 backdrop-blur border-b border-border px-5 py-4 flex items-center justify-between pt-[env(safe-area-inset-top)]">
-      <Link className="flex items-center gap-4" href="/">
+      <Link className="flex items-center gap-4" href="/home">
         <MainLogo />
         <Image
           src="/text-logo.svg"
@@ -41,19 +42,12 @@ const MainHeader = () => {
               href="/profile"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
             >
-              {user?.profile?.photo ? (
-                <Image
-                  src={user.profile.photo}
-                  alt={user.name || t('userProfile')}
-                  width={40}
-                  height={40}
-                  className="h-10 w-10 rounded-full object-cover border-2 border-brand hover:border-brand/70 transition-colors"
-                />
-              ) : (
-                <div className="h-10 w-10 rounded-full bg-brand/10 flex items-center justify-center hover:bg-brand/20 transition-colors">
-                  <User className="h-6 w-6 text-brand" />
-                </div>
-              )}
+              <UserAvatar 
+                src={user?.profile?.photo} 
+                name={user?.name || user?.firstName} 
+                size="md"
+                border
+              />
             </Link>
           </li>
 

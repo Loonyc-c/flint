@@ -5,6 +5,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { type ChatConversation, type MatchStage } from '@shared/types'
 import { useTranslations } from 'next-intl'
+import { useSocket } from '@/features/realtime/context/SocketContext'
 
 interface ChatHeaderProps {
   conversation: ChatConversation
@@ -32,6 +33,11 @@ export const ChatHeader = ({
   isConnected,
 }: ChatHeaderProps) => {
   const t = useTranslations('chat')
+  const { isUserBusy } = useSocket()
+  
+  const partnerId = conversation.otherUser.id
+  const isPartnerBusy = isUserBusy(partnerId)
+
   const stage = matchStage || conversation.stage || 'fresh'
   const canMakeVideoCalls = stage === 'unlocked'
   const canMakeAudioCalls = stage === 'fresh' || stage === 'unlocked'
@@ -65,7 +71,7 @@ export const ChatHeader = ({
           <div
             className={cn(
               'absolute bottom-0 right-0 w-3 h-3 rounded-full border-2 border-white dark:border-neutral-900 transition-colors',
-              isPartnerOnline ? 'bg-green-500' : 'bg-neutral-400'
+              isPartnerOnline ? (isPartnerBusy ? 'bg-amber-500' : 'bg-green-500') : 'bg-neutral-400'
             )}
           />
         </div>
@@ -77,6 +83,8 @@ export const ChatHeader = ({
           <p className="text-xs font-medium text-neutral-500 flex items-center gap-2">
             {isPartnerTyping ? (
               <span className="text-brand animate-pulse">{t('typing')}</span>
+            ) : isPartnerBusy ? (
+              <span className="text-amber-500">{t('userBusy')}</span>
             ) : isPartnerOnline ? (
               <span className="text-green-500">{t('online')}</span>
             ) : isMyTurn ? (
@@ -94,8 +102,14 @@ export const ChatHeader = ({
         {canMakeAudioCalls && (
           <button
             onClick={stage === 'unlocked' ? onVideoCall : handleStagedAudioCall}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
-            title={stage === 'fresh' ? t('audioCallTitle') : t('audioCall')}
+            disabled={isPartnerBusy}
+            className={cn(
+              "p-2 rounded-full transition-colors",
+              isPartnerBusy 
+                ? "text-neutral-300 cursor-not-allowed" 
+                : "hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-brand"
+            )}
+            title={isPartnerBusy ? t('userBusy') : (stage === 'fresh' ? t('audioCallTitle') : t('audioCall'))}
           >
             <Phone className="w-5 h-5" />
           </button>
@@ -104,8 +118,14 @@ export const ChatHeader = ({
         {canMakeVideoCalls && (
           <button
             onClick={onVideoCall}
-            className="p-2 hover:bg-neutral-100 dark:hover:bg-neutral-800 rounded-full transition-colors text-neutral-500 hover:text-brand"
-            title={t('videoCall')}
+            disabled={isPartnerBusy}
+            className={cn(
+              "p-2 rounded-full transition-colors",
+              isPartnerBusy 
+                ? "text-neutral-300 cursor-not-allowed" 
+                : "hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-brand"
+            )}
+            title={isPartnerBusy ? t('userBusy') : t('videoCall')}
           >
             <Video className="w-5 h-5" />
           </button>
@@ -114,10 +134,11 @@ export const ChatHeader = ({
         {!canMakeVideoCalls && stage !== 'fresh' && (
           <button
             onClick={stage === 'stage1_complete' ? handleStagedVideoCall : undefined}
+            disabled={isPartnerBusy && stage === 'stage1_complete'}
             className={cn(
               'px-3 py-1 rounded-full text-xs font-bold transition-all shadow-sm',
               stage === 'stage1_complete'
-                ? 'bg-brand text-white hover:bg-brand-300 cursor-pointer'
+                ? (isPartnerBusy ? 'bg-neutral-200 text-neutral-400 cursor-not-allowed' : 'bg-brand text-white hover:bg-brand-300 cursor-pointer')
                 : 'bg-brand/10 text-brand cursor-default'
             )}
           >
@@ -131,3 +152,4 @@ export const ChatHeader = ({
     </div>
   )
 }
+

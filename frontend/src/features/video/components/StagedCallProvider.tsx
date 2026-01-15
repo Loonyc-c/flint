@@ -6,6 +6,7 @@ import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal, IncomingS
 import { VideoCallModal } from './VideoCallModal'
 import { toast } from 'react-toastify'
 import { type ChatConversation, type StagedCallAcceptedPayload, type StagePromptResult } from '@shared/types'
+import { IcebreakerOverlay } from '@/features/home/components/IcebreakerOverlay'
 
 // =============================================================================
 // Context
@@ -94,6 +95,7 @@ export const StagedCallProvider = ({
     remainingTime,
     stagePrompt,
     partnerContact,
+    icebreaker,
     initiateCall,
     acceptCall,
     declineCall,
@@ -217,6 +219,11 @@ export const StagedCallProvider = ({
           expiresAt={new Date(Date.now() + 30000).toISOString()}
           onClose={() => setShowContactModal(false)}
         />
+      )}
+
+      {/* AI Wingman Icebreakers */}
+      {(callStatus === 'active' || callStatus === 'calling') && icebreaker && (
+        <IcebreakerOverlay questions={icebreaker.questions} />
       )}
     </StagedCallContext.Provider>
   )

@@ -14,6 +14,8 @@ import { QuestionsSection } from "./questions/QuestionsSection";
 
 import { VoiceIntroWidget } from "./voice/VoiceIntroWidget";
 
+import { InstagramVerification } from "./contact/InstagramVerification";
+
 import { useProfilePhoto } from "../hooks/useProfilePhoto";
 
 import { useProfileForm } from "../hooks/useProfileForm";
@@ -187,6 +189,8 @@ export const ProfilePage = () => {
           {/* Main Content (Forms) */}
 
           <div className="lg:col-span-8 space-y-6 mt-6 lg:mt-0">
+            <InstagramVerification />
+
             <BasicInfoSection register={register} errors={errors} />
 
             <BioSection register={register} errors={errors} />
