@@ -11,6 +11,13 @@ export const startInstagramAuth = async (req: Request, res: Response) => {
   const clientId = process.env.INSTAGRAM_CLIENT_ID
   const redirectUri = process.env.INSTAGRAM_REDIRECT_URI
 
+  // #region agent debug
+  console.log('[Instagram] Starting Auth:', { 
+    clientId: clientId ? `${clientId.substring(0, 4)}...` : 'MISSING', 
+    redirectUri 
+  })
+  // #endregion
+
   if (!clientId || !redirectUri) {
     console.error('[Instagram] Missing credentials in environment variables')
     return res.status(500).json({ error: 'Instagram integration not configured' })

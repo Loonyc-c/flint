@@ -35,7 +35,7 @@ export const InstagramVerification = () => {
 
   const handleVerify = () => {
     if (!user?.id) return
-    window.location.href = getInstagramConnectUrl(user.id, locale)
+    window.open(getInstagramConnectUrl(user.id, locale), '_blank')
   }
 
   if (isLoading) {

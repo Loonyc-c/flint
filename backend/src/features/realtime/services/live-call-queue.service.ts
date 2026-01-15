@@ -40,6 +40,8 @@ class LiveCallQueueService {
 
   /**
    * Check if two users match each other's preferences
+   * TODO: PERFORMANCE - This loop is O(N). For 1000+ users, consider 
+   * indexing by gender/preference or using a dedicated matchmaking service.
    */
   private isMatch(a: QueueEntry, b: QueueEntry): boolean {
     // Check gender preferences

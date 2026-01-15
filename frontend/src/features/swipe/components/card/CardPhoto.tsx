@@ -31,7 +31,7 @@ export const CardPhoto = ({
   const t = useTranslations('swipe.card')
 
   return (
-    <div className="relative h-[50%] min-h-[200px] bg-neutral-900 shrink-0 overflow-hidden">
+    <div className="relative w-full h-full bg-neutral-900 overflow-hidden">
       {photos.length > 0 ? (
         <AnimatePresence mode="wait">
           <motion.div
@@ -75,7 +75,7 @@ export const CardPhoto = ({
           {/* Navigation areas */}
           <button
             onClick={prevPhoto}
-            className="absolute inset-y-0 left-0 z-10 w-1/3 flex items-center justify-start pl-2 opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute inset-y-0 left-0 z-30 w-1/3 flex items-center justify-start pl-2 opacity-0 hover:opacity-100 transition-opacity"
             aria-label={t('prevPhoto')}
           >
             <div className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
@@ -84,7 +84,7 @@ export const CardPhoto = ({
           </button>
           <button
             onClick={nextPhoto}
-            className="absolute inset-y-0 right-0 z-10 w-1/3 flex items-center justify-end pr-2 opacity-0 hover:opacity-100 transition-opacity"
+            className="absolute inset-y-0 right-0 z-30 w-1/3 flex items-center justify-end pr-2 opacity-0 hover:opacity-100 transition-opacity"
             aria-label={t('nextPhoto')}
           >
             <div className="w-8 h-8 rounded-full bg-black/30 backdrop-blur-sm flex items-center justify-center">
@@ -93,57 +93,6 @@ export const CardPhoto = ({
           </button>
         </>
       )}
-
-      {/* Gradient Overlay */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 pointer-events-none bg-gradient-to-t from-black/90 via-black/50 to-transparent" />
-
-      {/* Name overlay on photo */}
-      <div className="absolute bottom-0 left-0 right-0 z-10 p-4">
-        <div className="flex items-end justify-between">
-          <div>
-            <h2 className="text-2xl sm:text-3xl font-bold text-white drop-shadow-lg flex items-baseline gap-2">
-              {candidate.profile?.nickName || candidate.firstName}
-              {candidate.profile?.age && (
-                <span className="text-xl sm:text-2xl font-normal text-white/80">
-                  {candidate.profile.age}
-                </span>
-              )}
-            </h2>
-            <div className="flex items-center gap-1.5 text-white/70 mt-1">
-              <MapPin className="w-3.5 h-3.5" />
-              <span className="text-sm">{t('nearby')}</span>
-            </div>
-          </div>
-
-          {/* Voice intro quick button */}
-          {candidate.profile?.voiceIntro && (
-            <motion.button
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              onClick={(e) => {
-                e.stopPropagation()
-                handleToggleVoice()
-              }}
-              className={`
-                    w-12 h-12 rounded-full flex items-center justify-center
-                    ${
-                      isPlayingVoice
-                        ? 'bg-brand shadow-lg shadow-brand/40'
-                        : 'bg-white/20 backdrop-blur-md hover:bg-white/30'
-                    }
-                    transition-all duration-300
-                  `}
-              aria-label={isPlayingVoice ? t('pauseVoice') : t('playVoice')}
-            >
-              {isPlayingVoice ? (
-                <Pause className="w-5 h-5 text-white fill-white" />
-              ) : (
-                <Volume2 className="w-5 h-5 text-white" />
-              )}
-            </motion.button>
-          )}
-        </div>
-      </div>
     </div>
   )
 }

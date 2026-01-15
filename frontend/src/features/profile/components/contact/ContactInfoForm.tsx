@@ -56,7 +56,7 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
   const verifiedPlatforms = watch('verifiedPlatforms') || []
 
   const handleConnectInstagram = () => {
-    if (user?.id) window.location.href = getInstagramConnectUrl(user.id)
+    if (user?.id) window.open(getInstagramConnectUrl(user.id), '_blank')
   }
 
   const contactFields = [

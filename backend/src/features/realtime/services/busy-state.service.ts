@@ -22,9 +22,10 @@ class BusyStateService {
     
     console.log(`[BusyState] User ${userId} status changed: ${currentStatus} -> ${status}`)
     
-    if (this.io) {
-      this.io.emit('user-busy-state-changed', { userId, status })
-    }
+    // REMOVED: Global broadcast is a performance bottleneck for 1000+ users
+    // if (this.io) {
+    //   this.io.emit('user-busy-state-changed', { userId, status })
+    // }
   }
 
   public getUserStatus(userId: string): UserBusyStatus {

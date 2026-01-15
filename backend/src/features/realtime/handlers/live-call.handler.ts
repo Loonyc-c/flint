@@ -13,6 +13,7 @@ import { circuitBreaker } from '@/utils/circuit-breaker'
 
 const MAX_QUEUE_SIZE = 1000
 const promotionLocks = new Set<string>()
+const joiningLocks = new Set<string>()
 
 /**
  * Register live call socket event handlers
@@ -24,7 +25,10 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    * Join the live call queue
    */
   socket.on('live-call-join', async () => {
+    if (joiningLocks.has(userId)) return
+    
     try {
+      joiningLocks.add(userId)
       if (circuitBreaker.isOpen()) {
         socket.emit('live-call-error', { message: 'System is under high load. Please try again later.' })
         return
@@ -104,16 +108,15 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
           partnerId: match.userId,
           partnerName: partnerUser?.auth.firstName || 'Partner',
         })
-
-        console.log(`🔥 [LiveCall] Match found: ${userId} <-> ${match.userId}`)
       } else {
         busyStateService.setUserStatus(userId, 'queueing')
         socket.emit('live-call-queued')
-        console.log(`⏳ [LiveCall] User joined queue: ${userId}`)
       }
     } catch (error) {
       console.error('Error joining live call queue:', error)
       socket.emit('live-call-error', { message: 'Internal server error' })
+    } finally {
+      joiningLocks.delete(userId)
     }
   })
 
@@ -125,7 +128,6 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
       liveCallQueueService.leaveQueue(userId)
       busyStateService.clearUserStatus(userId)
       socket.emit('live-call-left')
-      console.log(`🚶 [LiveCall] User left queue: ${userId}`)
     } catch (error) {
       console.error('Error leaving live call queue:', error)
     }
