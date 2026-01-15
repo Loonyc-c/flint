@@ -37,7 +37,7 @@ interface UseLiveCallReturn {
 
 export const useLiveCall = (): UseLiveCallReturn => {
   const { user } = useUser()
-  const { socket, isConnected, isUserBusy } = useSocket()
+  const { socket, isConnected, busyStates } = useSocket()
   const [status, setStatus] = useState<LiveCallStatus>('idle')
   const [matchData, setMatchData] = useState<LiveMatchData | null>(null)
   const [partnerContact, setPartnerContact] = useState<ContactInfoDisplay | null>(null)
@@ -67,9 +67,14 @@ export const useLiveCall = (): UseLiveCallReturn => {
     }
 
     const handleMatchFound = (data: LiveMatchData) => {
-      // Auto-reject if already busy in another call process (global check)
-      const isMeBusy = user?.id ? isUserBusy(user.id) : false
-      if ((status !== 'idle' && status !== 'error') || isMeBusy) {
+      // Auto-reject only if we are already in an active call session.
+      // We allow the match if we are idle or queueing.
+      const isAlreadyInCall = status === 'in-call' || status === 'connecting'
+      
+      // Check global busy state (from other matches, not this one)
+      const isUserGloballyBusy = user?.id ? (busyStates[user.id] === 'in-call') : false
+
+      if (isAlreadyInCall || isUserGloballyBusy) {
         socket.emit('staged-call-decline', { matchId: data.matchId })
         return
       }

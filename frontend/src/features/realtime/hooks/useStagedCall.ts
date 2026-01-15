@@ -66,7 +66,7 @@ interface UseStagedCallReturn {
 
 export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCallReturn => {
   const { user } = useUser()
-  const { socket, isConnected, isUserBusy } = useSocket()
+  const { socket, isConnected, busyStates } = useSocket()
   const [callStatus, setCallStatus] = useState<StagedCallStatus>('idle')
   const [currentCall, setCurrentCall] = useState<UseStagedCallReturn['currentCall']>(null)
   const [incomingCall, setIncomingCall] = useState<IncomingStagedCall | null>(null)
@@ -102,9 +102,10 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     if (!socket) return
 
     const handleRinging = (data: StagedCallRingingPayload) => {
-      // Auto-reject if already busy in another call process (global check)
-      const isMeBusy = user?.id ? isUserBusy(user.id) : false
-      if (callStatusRef.current !== 'idle' || isMeBusy) {
+      // Auto-reject only if already in an active call
+      const isActuallyBusy = user?.id ? (busyStates[user.id] === 'in-call') : false
+      
+      if (callStatusRef.current === 'active' || isActuallyBusy) {
         socket.emit('staged-call-decline', { matchId: data.matchId })
         return
       }

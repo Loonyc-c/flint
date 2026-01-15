@@ -61,8 +61,13 @@ export const getContactInfo = async (
  * Gets the URL to initiate Instagram connection.
  * 
  * @param userId - The user's ID
+ * @param locale - The user's current locale (optional)
  */
-export const getInstagramConnectUrl = (userId: string): string => {
+export const getInstagramConnectUrl = (userId: string, locale?: string): string => {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9999/v1'
-  return `${baseUrl}/profile/${userId}/instagram/connect`
+  const url = new URL(`${baseUrl}/profile/${userId}/instagram/connect`)
+  if (locale) {
+    url.searchParams.set('locale', locale)
+  }
+  return url.toString()
 }

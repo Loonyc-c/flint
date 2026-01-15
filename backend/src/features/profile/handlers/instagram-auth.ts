@@ -6,40 +6,90 @@ import { profileService } from '../services/profile.service'
  */
 export const startInstagramAuth = async (req: Request, res: Response) => {
   const { id: userId } = req.params
+  const { locale = 'en' } = req.query
   
-  // In a real implementation, we would redirect to Instagram's OAuth URL
-  // const instagramAuthUrl = `https://api.instagram.com/oauth/authorize?client_id=${process.env.INSTAGRAM_CLIENT_ID}&redirect_uri=${process.env.INSTAGRAM_REDIRECT_URI}&scope=user_profile&response_type=code&state=${userId}`;
-  // res.redirect(instagramAuthUrl);
+  const clientId = process.env.INSTAGRAM_CLIENT_ID
+  const redirectUri = process.env.INSTAGRAM_REDIRECT_URI
 
-  // Mock flow: redirecting directly to our callback
-  const mockCode = 'mock_auth_code'
-  res.redirect(`/api/profile/${userId}/instagram/callback?code=${mockCode}`)
+  if (!clientId || !redirectUri) {
+    console.error('[Instagram] Missing credentials in environment variables')
+    return res.status(500).json({ error: 'Instagram integration not configured' })
+  }
+
+  // Use 'state' to pass both userId and locale through the OAuth flow
+  const state = Buffer.from(JSON.stringify({ userId, locale })).toString('base64')
+  
+  const instagramAuthUrl = new URL('https://api.instagram.com/oauth/authorize')
+  instagramAuthUrl.searchParams.set('client_id', clientId)
+  instagramAuthUrl.searchParams.set('redirect_uri', redirectUri)
+  instagramAuthUrl.searchParams.set('scope', 'user_profile')
+  instagramAuthUrl.searchParams.set('response_type', 'code')
+  instagramAuthUrl.searchParams.set('state', state)
+
+  res.redirect(instagramAuthUrl.toString())
 }
 
 /**
  * Handles Instagram OAuth callback
  */
 export const instagramCallback = async (req: Request, res: Response) => {
-  const { id: userId } = req.params
-  const { code } = req.query
+  const { code, state } = req.query
+
+  const derivedClientUrl = (process.env.CLIENT_URL || '')
+    .split(',')
+    .map((o) => o.trim().replace(/\/$/, ''))
+    .filter(Boolean)[0]
+  const frontendUrl = (process.env.FRONTEND_URL || derivedClientUrl || 'http://localhost:3000').replace(/\/$/, '')
+
+  if (!state || typeof state !== 'string') {
+    return res.redirect(`${frontendUrl}/en/profile?error=invalid_state`)
+  }
+
+  // Decode state to get userId and locale
+  const { userId, locale } = JSON.parse(Buffer.from(state, 'base64').toString('utf8'))
 
   if (!code) {
-    res.status(400).json({ success: false, error: 'Authorization code missing' })
-    return
+    return res.redirect(`${frontendUrl}/${locale}/profile?error=verification_failed`)
   }
 
   try {
-    // Simulating fetching username from Instagram API
-    const mockInstagramHandle = 'verified_user_ig'
+    // 1. Exchange short-lived code for access token
+    const tokenResponse = await fetch('https://api.instagram.com/oauth/access_token', {
+      method: 'POST',
+      body: new URLSearchParams({
+        client_id: process.env.INSTAGRAM_CLIENT_ID!,
+        client_secret: process.env.INSTAGRAM_CLIENT_SECRET!,
+        grant_type: 'authorization_code',
+        redirect_uri: process.env.INSTAGRAM_REDIRECT_URI!,
+        code: code as string,
+      }),
+    })
 
-    await profileService.verifyPlatform(userId, 'instagram', mockInstagramHandle)
+    const tokenData = await tokenResponse.json() as { access_token: string; user_id: number; error_message?: string }
+
+    if (!tokenResponse.ok || !tokenData.access_token) {
+      console.error('[Instagram] Token exchange failed:', tokenData)
+      throw new Error(tokenData.error_message || 'Token exchange failed')
+    }
+
+    // 2. Fetch actual username from Instagram Graph API
+    const profileResponse = await fetch(
+      `https://graph.instagram.com/me?fields=id,username&access_token=${tokenData.access_token}`
+    )
+    const profileData = await profileResponse.json() as { id: string; username: string }
+
+    if (!profileResponse.ok || !profileData.username) {
+      throw new Error('Failed to fetch Instagram profile')
+    }
+
+    const fetchedUsername = `@${profileData.username}`
+
+    // 3. Save the verified username
+    await profileService.verifyPlatform(userId, 'instagram', fetchedUsername)
     
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
-    // Redirect back to frontend with success flag
-    res.redirect(`${frontendUrl}/profile/contact?verified=instagram`)
+    res.redirect(`${frontendUrl}/${locale}/profile?verified=instagram`)
   } catch (error) {
-    console.error('Instagram verification failed:', error)
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:3000'
-    res.redirect(`${frontendUrl}/profile/contact?error=verification_failed`)
+    console.error('[Instagram] Verification error:', error)
+    res.redirect(`${frontendUrl}/${locale}/profile?error=verification_failed`)
   }
 }

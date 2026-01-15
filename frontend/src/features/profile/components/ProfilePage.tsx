@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { useAuthenticatedUser } from "@/features/auth/context/UserContext";
 
@@ -23,6 +23,10 @@ import { useProfileForm } from "../hooks/useProfileForm";
 import { type INTERESTS } from "@shared/types/enums";
 
 import { useTranslations } from "next-intl";
+
+import { useSearchParams, useRouter } from "next/navigation";
+
+import { toast } from "react-toastify";
 
 // =============================================================================
 
@@ -95,8 +99,30 @@ const DesktopSaveButton = ({
 
 export const ProfilePage = () => {
   const { user } = useAuthenticatedUser();
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const t = useTranslations("profile.verification");
 
   const [showInterestsModal, setShowInterestsModal] = useState(false);
+
+  // Handle verification feedback from URL
+  useEffect(() => {
+    const verified = searchParams.get("verified");
+    const error = searchParams.get("error");
+
+    if (verified === "instagram") {
+      toast.success(t("instagramSuccess"));
+      // Clean up URL
+      router.replace("/profile");
+    } else if (error) {
+      const message = error === "instagram_handle_missing" 
+        ? t("instagramHandleMissing")
+        : t("verificationFailed");
+      toast.error(message);
+      // Clean up URL
+      router.replace("/profile");
+    }
+  }, [searchParams, t, router]);
 
   const {
     fileInputRef,

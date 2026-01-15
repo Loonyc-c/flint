@@ -80,9 +80,6 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
       // Check token expiration
       if (decoded.exp * 1000 < Date.now()) {
-        // #region agent log
-        fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'UserContext.tsx:86',message:'Token expired while decoding',data:{hasStoredToken:!!storedToken,expMs:decoded.exp*1000,nowMs:Date.now()},timestamp:Date.now()})}).catch(()=>{});
-        // #endregion
         localStorage.removeItem(STORAGE_KEY)
         setUser(null)
         setToken(null)
@@ -98,13 +95,7 @@ export const UserProvider = ({ children }: UserProviderProps) => {
         name: `${decoded.data.lastName} ${decoded.data.firstName}`
       }
       setUser(newUser)
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'UserContext.tsx:105',message:'Decoded token and set user',data:{userId:newUser.id,hasToken:true},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     } catch {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'UserContext.tsx:108',message:'Failed to decode stored token',data:{hasStoredToken:!!storedToken},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       localStorage.removeItem(STORAGE_KEY)
       setUser(null)
       setToken(null)
@@ -124,35 +115,22 @@ export const UserProvider = ({ children }: UserProviderProps) => {
             .join('=') ?? null
         : null
 
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'UserContext.tsx:118',message:'UserProvider mount init',data:{hasStoredToken:!!storedToken,hasCookie:typeof document!=='undefined'?document.cookie.includes(`${STORAGE_KEY}=`):null,currentPath:typeof window!=='undefined'?window.location.pathname:null},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
-
     // Keep client (localStorage/UserContext) and middleware (cookie) in sync.
     // We treat localStorage as the "logout" signal:
     // - If localStorage is missing but cookie exists (e.g. user cleared localStorage), clear the cookie too so middleware doesn't keep user "logged in".
     // - If localStorage exists but cookie is missing, restore cookie so middleware aligns with client.
     if (!storedToken && cookieToken) {
       document.cookie = `${STORAGE_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'post-fix',hypothesisId:'H2',location:'UserContext.tsx:150',message:'Cleared cookie because localStorage token missing',data:{hadStoredToken:false,hadCookieToken:true},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
 
     if (storedToken && !cookieToken) {
       document.cookie = `${STORAGE_KEY}=${storedToken}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'post-fix',hypothesisId:'H2',location:'UserContext.tsx:158',message:'Restored cookie because localStorage token exists',data:{hadStoredToken:true,hadCookieToken:false},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
     }
 
     if (storedToken) {
       decodeAndSetUser(storedToken)
     }
     setIsLoading(false)
-    // #region agent log
-    fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H3',location:'UserContext.tsx:124',message:'UserProvider init complete (isLoading false)',data:{hasStoredToken:!!storedToken},timestamp:Date.now()})}).catch(()=>{});
-    // #endregion
   }, [decodeAndSetUser])
 
   // Fetch full profile once authenticated
@@ -167,15 +145,9 @@ export const UserProvider = ({ children }: UserProviderProps) => {
    */
   const login = useCallback(
     (token: string) => {
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'UserContext.tsx:138',message:'login() called',data:{hasTokenArg:!!token,tokenLength:typeof token==='string'?token.length:null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       localStorage.setItem(STORAGE_KEY, token)
       // Set cookie for middleware access
       document.cookie = `${STORAGE_KEY}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
-      // #region agent log
-      fetch('http://127.0.0.1:7242/ingest/b19804b6-4386-4870-8813-100e008e11a3',{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({sessionId:'debug-session',runId:'pre-fix',hypothesisId:'H2',location:'UserContext.tsx:143',message:'login() stored token and set cookie',data:{hasLocalStorageToken:!!localStorage.getItem(STORAGE_KEY),hasCookie:typeof document!=='undefined'?document.cookie.includes(`${STORAGE_KEY}=`):null},timestamp:Date.now()})}).catch(()=>{});
-      // #endregion
       decodeAndSetUser(token)
     },
     [decodeAndSetUser]

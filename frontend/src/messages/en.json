@@ -348,6 +348,11 @@
       "modal": {
         "title": "Voice Intro"
       }
+    },
+    "verification": {
+      "instagramSuccess": "Your Instagram has been successfully verified!",
+      "instagramHandleMissing": "Please enter and save your Instagram handle before verifying.",
+      "verificationFailed": "Instagram verification failed. Please try again."
     }
   },
   "video": {

@@ -5,6 +5,6 @@ const router = Router()
 
 // Instagram OAuth - these must be public because they are browser redirects
 router.get('/profile/:id/instagram/connect', startInstagramAuth)
-router.get('/profile/:id/instagram/callback', instagramCallback)
+router.get('/profile/instagram/callback', instagramCallback)
 
 export default router
