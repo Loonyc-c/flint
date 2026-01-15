@@ -1,14 +1,7 @@
-import { Server } from 'socket.io'
-
 export type UserBusyStatus = 'available' | 'queueing' | 'connecting' | 'in-call'
 
 class BusyStateService {
   private busyUsers = new Map<string, UserBusyStatus>()
-  private io: Server | null = null
-
-  public setIO(io: Server) {
-    this.io = io
-  }
 
   public setUserStatus(userId: string, status: UserBusyStatus) {
     const currentStatus = this.getUserStatus(userId)

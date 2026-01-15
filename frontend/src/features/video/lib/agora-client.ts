@@ -398,7 +398,7 @@ export class AgoraClient {
       }
 
       // 2. Fallback: Stop all tracks via mediaDevices enumerate
-      const devices = await navigator.mediaDevices.enumerateDevices()
+      await navigator.mediaDevices.enumerateDevices()
       // Note: We can't stop devices directly, but we can ensure future 
       // getUserMedia calls are blocked or cleared if we held references.
       

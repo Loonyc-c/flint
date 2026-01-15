@@ -33,8 +33,6 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
     pingInterval: 25000,
   })
 
-  busyStateService.setIO(io)
-
   // Apply authentication middleware
   io.use(socketAuthMiddleware)
 
@@ -55,7 +53,7 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
     registerLiveCallHandlers(io!, authSocket)
 
     // Handle disconnection
-    socket.on('disconnect', (reason) => {
+    socket.on('disconnect', (_reason) => {
       // Disconnect cleanup logic
     })
 

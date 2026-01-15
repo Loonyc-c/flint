@@ -1,7 +1,7 @@
 'use client'
 
 import { motion, AnimatePresence } from 'framer-motion'
-import { MapPin, Volume2, Pause, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ChevronLeft, ChevronRight } from 'lucide-react'
 import Image from 'next/image'
 import { type User } from '@shared/types'
 import { CarouselDots } from './CarouselDots'
@@ -14,8 +14,6 @@ interface CardPhotoProps {
   setCurrentPhotoIndex: (index: number) => void
   nextPhoto: () => void
   prevPhoto: () => void
-  isPlayingVoice: boolean
-  handleToggleVoice: () => void
 }
 
 export const CardPhoto = ({
@@ -25,8 +23,6 @@ export const CardPhoto = ({
   setCurrentPhotoIndex,
   nextPhoto,
   prevPhoto,
-  isPlayingVoice,
-  handleToggleVoice,
 }: CardPhotoProps) => {
   const t = useTranslations('swipe.card')
 
