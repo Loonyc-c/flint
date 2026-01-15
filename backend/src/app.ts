@@ -64,7 +64,9 @@ const generalLimiter = rateLimit({
 
 
 
-const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000,http://127.0.0.1:7242')
+// Comma-separated list of allowed origins, e.g.:
+// CLIENT_URL="http://localhost:3000,https://flint-phi.vercel.app"
+const rawOrigins = (process.env.CLIENT_URL || 'http://localhost:3000,https://flint-phi.vercel.app')
   .split(',')
   .map((o) => o.trim().replace(/\/$/, ''))
   .filter(Boolean)
