@@ -203,8 +203,9 @@ export const authService: AuthService = {
       },
     )
 
-    const CLIENT_URL = process.env.CLIENT_URL || 'http://localhost:3000'
-    const resetLink = `${CLIENT_URL}/auth/reset-password?token=${resetToken}`
+    const rawClientUrl = process.env.CLIENT_URL || 'http://localhost:3000'
+    const [CLIENT_URL] = rawClientUrl.split(',')
+    const resetLink = `${CLIENT_URL?.trim()}/auth/reset-password?token=${resetToken}`
 
     const emailText = `Hello ${user.auth.firstName},\n\nYou requested a password reset. Please click on the following link to reset your password:\n\n${resetLink}\n\nThis link will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.\n\nBest regards,\nFlint Team`
 

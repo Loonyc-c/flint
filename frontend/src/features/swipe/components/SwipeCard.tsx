@@ -59,7 +59,7 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
         onDragEnd={handleDragEnd}
         animate={controls}
         style={{ x, y, rotate, opacity: cardOpacity }}
-        className="absolute inset-0 flex flex-col w-full h-full overflow-hidden bg-white shadow-2xl cursor-grab active:cursor-grabbing select-none dark:bg-neutral-800 rounded-3xl"
+        className="absolute inset-0 w-full h-full overflow-hidden bg-neutral-100 shadow-2xl cursor-grab active:cursor-grabbing select-none dark:bg-neutral-800 rounded-[2rem] border border-white/10"
       >
         {isDragging && (
           <>
@@ -71,22 +71,31 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
 
         <StampOverlay showStamp={showStamp} stampType={stampType} />
 
-        <CardPhoto
-          candidate={candidate}
-          photos={photos}
-          currentPhotoIndex={currentPhotoIndex}
-          setCurrentPhotoIndex={setCurrentPhotoIndex}
-          nextPhoto={nextPhoto}
-          prevPhoto={prevPhoto}
-          isPlayingVoice={isPlayingVoice}
-          handleToggleVoice={handleToggleVoice}
-        />
+        {/* Full-height photo background */}
+        <div className="absolute inset-0 w-full h-full">
+          <CardPhoto
+            candidate={candidate}
+            photos={photos}
+            currentPhotoIndex={currentPhotoIndex}
+            setCurrentPhotoIndex={setCurrentPhotoIndex}
+            nextPhoto={nextPhoto}
+            prevPhoto={prevPhoto}
+            isPlayingVoice={isPlayingVoice}
+            handleToggleVoice={handleToggleVoice}
+          />
+        </div>
 
-        <CardInfo
-          candidate={candidate}
-          isPlayingVoice={isPlayingVoice}
-          handleToggleVoice={handleToggleVoice}
-        />
+        {/* Gradient overlay for readability */}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none z-10" />
+
+        {/* Info overlay positioned at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 max-h-[45%] overflow-y-auto custom-scrollbar">
+          <CardInfo
+            candidate={candidate}
+            isPlayingVoice={isPlayingVoice}
+            handleToggleVoice={handleToggleVoice}
+          />
+        </div>
       </motion.div>
     );
   }

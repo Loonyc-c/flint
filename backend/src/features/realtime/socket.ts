@@ -20,7 +20,6 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
   const allowedOrigins = CLIENT_URL.split(',').map(o => o.trim().replace(/\/$/, '')).filter(Boolean)
   // Always include localhost for development
   const allOrigins = [...new Set([...allowedOrigins, 'http://localhost:3000', 'http://localhost:3001'])]
-  console.log('[DEBUG-B] Socket.io CORS config:', { CLIENT_URL_raw: CLIENT_URL, parsedOrigins: allowedOrigins, finalOrigins: allOrigins })
   // #endregion
 
   io = new Server(httpServer, {
@@ -42,11 +41,7 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
   // Handle new connections
   io.on('connection', (socket: Socket) => {
     const authSocket = socket as AuthenticatedSocket
-    // #region agent log
-    console.log('[DEBUG-C] User connected:', { userId: authSocket.userId, socketId: socket.id, transport: socket.conn.transport.name, origin: socket.handshake.headers.origin })
-    // #endregion
-    console.log(`🔌 [Socket.io] User connected: ${authSocket.userId} (socket: ${socket.id})`)
-
+    
     // Join user's personal room for direct messages
     socket.join(`user:${authSocket.userId}`)
 
@@ -61,18 +56,14 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
 
     // Handle disconnection
     socket.on('disconnect', (reason) => {
-      // #region agent log
-      console.log('[DEBUG-D] User disconnected:', { userId: authSocket.userId, socketId: socket.id, reason })
-      // #endregion
-      console.log(`👋 [Socket.io] User disconnected: ${authSocket.userId} (reason: ${reason})`)
+      // Disconnect cleanup logic
     })
 
     // Handle errors
     socket.on('error', (error) => {
-      // #region agent log
-      console.log('[DEBUG-D] Socket error:', { userId: authSocket.userId, error: String(error) })
-      // #endregion
-      console.error(`❌ [Socket.io] Socket error for user ${authSocket.userId}:`, error)
+      if (process.env.NODE_ENV !== 'production') {
+        console.error(`❌ [Socket.io] Socket error for user ${authSocket.userId}:`, error)
+      }
     })
   })
 

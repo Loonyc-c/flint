@@ -39,6 +39,13 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const { user } = useUser()
   const { socket, isConnected, busyStates } = useSocket()
   const [status, setStatus] = useState<LiveCallStatus>('idle')
+  const statusRef = useRef(status)
+
+  // Sync ref with state
+  useEffect(() => {
+    statusRef.current = status
+  }, [status])
+
   const [matchData, setMatchData] = useState<LiveMatchData | null>(null)
   const [partnerContact, setPartnerContact] = useState<ContactInfoDisplay | null>(null)
   const [exchangeExpiresAt, setExchangeExpiresAt] = useState<string | null>(null)
@@ -57,7 +64,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
 
     const handleConnect = () => {
       // Re-join queue if we were queueing before disconnect
-      if (status === 'queueing') {
+      if (statusRef.current === 'queueing') {
         socket.emit('live-call-join')
       }
     }
@@ -69,7 +76,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
     const handleMatchFound = (data: LiveMatchData) => {
       // Auto-reject only if we are already in an active call session.
       // We allow the match if we are idle or queueing.
-      const isAlreadyInCall = status === 'in-call' || status === 'connecting'
+      const isAlreadyInCall = statusRef.current === 'in-call' || statusRef.current === 'connecting'
       
       // Check global busy state (from other matches, not this one)
       const isUserGloballyBusy = user?.id ? (busyStates[user.id] === 'in-call') : false
@@ -83,7 +90,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
       setStatus('connecting')
       // Small delay to simulate connecting or allow UI to transition
       setTimeout(() => {
-        if (isMounted.current && status !== 'idle') {
+        if (isMounted.current && statusRef.current !== 'idle') {
            setStatus('in-call')
         }
       }, 1500)
@@ -99,7 +106,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
     }
 
     const handlePromoted = (data: { matchId: string }) => {
-      console.warn('Match promoted successfully:', data.matchId)
+      // Success logged internally if needed
     }
 
     const handleContactExchange = (data: { partnerContact: ContactInfoDisplay, expiresAt: string }) => {
@@ -108,7 +115,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
     }
 
     const handlePromptResult = (data: { bothAccepted: boolean, nextStage: number | null }) => {
-      if (!data.bothAccepted && status === 'in-call') {
+      if (!data.bothAccepted && statusRef.current === 'in-call') {
         // If someone declined the transition to Stage 2 or 3
         setStatus('idle')
         setMatchData(null)

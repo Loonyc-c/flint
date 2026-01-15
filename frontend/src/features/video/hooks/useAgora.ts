@@ -63,16 +63,22 @@ export const useAgora = ({
   const [isCameraEnabled, setIsCameraEnabled] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
+  const isMounted = useRef(true)
+
   // Initialize client on mount
   useEffect(() => {
+    isMounted.current = true
     clientRef.current = new AgoraClient()
 
     return () => {
+      isMounted.current = false
       const client = clientRef.current
       if (client) {
-        // Ensure tracks are stopped immediately on unmount
+        // Stop hardware immediately and leave
         client.leave().catch(err => console.error('[useAgora] Cleanup error:', err))
         client.destroy()
+        // Final safety net: Force stop all hardware tracks
+        AgoraClient.forceStopHardware()
       }
       clientRef.current = null
     }
@@ -163,8 +169,16 @@ export const useAgora = ({
         body: JSON.stringify({ channelName }),
       })
 
+      if (!isMounted.current) return false
+
       // Initialize and join
       await clientRef.current.init()
+      
+      if (!isMounted.current) {
+        await clientRef.current.leave()
+        return false
+      }
+
       const result = await clientRef.current.join({
         appId: tokenData.appId,
         channel: tokenData.channelName,
@@ -172,6 +186,11 @@ export const useAgora = ({
         uid: tokenData.uid,
         enableVideo,
       })
+
+      if (!isMounted.current) {
+        await clientRef.current.leave()
+        return false
+      }
 
       if (result.success) {
         setIsConnected(true)
