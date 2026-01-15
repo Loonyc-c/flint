@@ -27,7 +27,6 @@ export const profileUpdateSchema = z.object({
   interests: z.array(InterestEnum).min(3, "Select at least three interest"),
   photo: z.string(),
   voiceIntro: z.string(),
-  voiceIntroFile: z.union([z.instanceof(Blob), z.string()]).optional(),
   questions: z
     .array(questionAnswerSchema)
     .length(3, "Please answer exactly 3 questions"),
