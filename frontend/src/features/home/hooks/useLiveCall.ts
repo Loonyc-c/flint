@@ -147,7 +147,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
       socket.off('stage-prompt-result', handlePromptResult)
       socket.off('staged-call-icebreaker', handleIcebreaker)
     }
-  }, [socket])
+  }, [socket, busyStates, user?.id])
 
   const joinQueue = useCallback(() => {
     if (socket && isConnected) {

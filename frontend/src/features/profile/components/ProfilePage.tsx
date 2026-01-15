@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 
 import { useAuthenticatedUser } from "@/features/auth/context/UserContext";
 
@@ -22,10 +22,6 @@ import { useProfileForm } from "../hooks/useProfileForm";
 import { type INTERESTS } from "@shared/types/enums";
 
 import { useTranslations } from "next-intl";
-
-import { useSearchParams, useRouter } from "next/navigation";
-
-import { toast } from "react-toastify";
 
 // =============================================================================
 
@@ -98,8 +94,6 @@ const DesktopSaveButton = ({
 
 export const ProfilePage = () => {
   const { user } = useAuthenticatedUser();
-  const searchParams = useSearchParams();
-  const router = useRouter();
   const [showInterestsModal, setShowInterestsModal] = useState(false);
 
   const {
@@ -161,6 +155,7 @@ export const ProfilePage = () => {
               <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
                 <ProfileAvatar
                   photo={photoPreviewUrl || formData.photo || ""}
+                  completeness={completeness}
                   onEdit={triggerFileInput}
                   isUploading={isSaving && !!pendingPhotoFile}
                 />

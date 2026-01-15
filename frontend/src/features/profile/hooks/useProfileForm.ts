@@ -6,7 +6,7 @@ import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-toastify'
 import { getProfile, updateProfile, getContactInfo, updateContactInfo } from '@/features/profile/api/profile';
 import { calculateProfileCompleteness } from '@shared/lib';
-import { uploadImageToCloudinary, uploadAudioToCloudinary } from '@/lib/cloudinary'
+import { uploadImageToCloudinary } from '@/lib/cloudinary'
 import { profileUpdateSchema, type ProfileCreationFormData, contactInfoSchema } from '@/shared-types/validations'
 import { z } from 'zod'
 
@@ -138,7 +138,7 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
         setValue('photo', finalPhotoUrl, { shouldValidate: true })
       }
 
-      let finalVoiceIntroUrl = data.voiceIntro;
+      const finalVoiceIntroUrl = data.voiceIntro;
 
       const questionsToSave = data.questions.map(qa => ({
         questionId: qa.questionId,
