@@ -13,7 +13,7 @@ import { HttpStatus } from '@/data/constants'
 import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 import { ListCandidatesRequest } from '@shared/validations/match.validation'
 
-const MIN_PROFILE_COMPLETION = 80
+
 
 export const matchService = {
   getCandidates: async (userId: string, filters: ListCandidatesRequest): Promise<User[]> => {
@@ -22,7 +22,7 @@ export const matchService = {
     const userCollection = await getUserCollection()
 
     const currentUser = await userCollection.findOne({ _id: userObjectId })
-    if (!currentUser?.profileCompletion || currentUser.profileCompletion < MIN_PROFILE_COMPLETION) {
+    if (!currentUser) {
       return []
     }
 
@@ -35,7 +35,6 @@ export const matchService = {
       {
         $match: {
           _id: { $ne: userObjectId },
-          profileCompletion: { $gte: MIN_PROFILE_COMPLETION },
           'profile.gender': lookingFor === LOOKING_FOR.ALL ? { $exists: true } : lookingFor,
           'profile.age': {
             $gte: 18,
@@ -105,9 +104,9 @@ export const matchService = {
       const matchCollection = await getMatchCollection()
 
       const actor = await userCollection.findOne({ _id: actorObjectId }, { session })
-      if (!actor?.profileCompletion || actor.profileCompletion < MIN_PROFILE_COMPLETION) {
+      if (!actor) {
         throw new ApiException(HttpStatus.FORBIDDEN, ApiErrorCode.FORBIDDEN, {
-          message: `Complete at least ${MIN_PROFILE_COMPLETION}% of your profile to start swiping`,
+          message: `User not found`,
         })
       }
 

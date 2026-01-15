@@ -11,10 +11,9 @@ import { BasicInfoSection, BioSection } from "./info/BasicInfoSections";
 import { InterestsSection, InterestsModal } from "./interests/InterestsSection";
 
 import { QuestionsSection } from "./questions/QuestionsSection";
+import { ContactInputSection } from "./contact/ContactInputSection";
 
 import { VoiceIntroWidget } from "./voice/VoiceIntroWidget";
-
-import { InstagramVerification } from "./contact/InstagramVerification";
 
 import { useProfilePhoto } from "../hooks/useProfilePhoto";
 
@@ -101,28 +100,7 @@ export const ProfilePage = () => {
   const { user } = useAuthenticatedUser();
   const searchParams = useSearchParams();
   const router = useRouter();
-  const t = useTranslations("profile.verification");
-
   const [showInterestsModal, setShowInterestsModal] = useState(false);
-
-  // Handle verification feedback from URL
-  useEffect(() => {
-    const verified = searchParams.get("verified");
-    const error = searchParams.get("error");
-
-    if (verified === "instagram") {
-      toast.success(t("instagramSuccess"));
-      // Clean up URL
-      router.replace("/profile");
-    } else if (error) {
-      const message = error === "instagram_handle_missing" 
-        ? t("instagramHandleMissing")
-        : t("verificationFailed");
-      toast.error(message);
-      // Clean up URL
-      router.replace("/profile");
-    }
-  }, [searchParams, t, router]);
 
   const {
     fileInputRef,
@@ -183,7 +161,6 @@ export const ProfilePage = () => {
               <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
                 <ProfileAvatar
                   photo={photoPreviewUrl || formData.photo || ""}
-                  completeness={completeness}
                   onEdit={triggerFileInput}
                   isUploading={isSaving && !!pendingPhotoFile}
                 />
@@ -193,9 +170,9 @@ export const ProfilePage = () => {
 
               <div className="hidden lg:block">
                 <VoiceIntroWidget
-                  initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
-                  onVoiceChange={(audio) =>
-                    setValue("voiceIntroFile", audio, { shouldValidate: true })
+                  initialVoiceIntro={formData.voiceIntro}
+                  onVoiceChange={(audioUrl) =>
+                    setValue("voiceIntro", audioUrl, { shouldValidate: true })
                   }
                 />
               </div>
@@ -215,11 +192,11 @@ export const ProfilePage = () => {
           {/* Main Content (Forms) */}
 
           <div className="lg:col-span-8 space-y-6 mt-6 lg:mt-0">
-            <InstagramVerification />
-
             <BasicInfoSection register={register} errors={errors} />
 
             <BioSection register={register} errors={errors} />
+
+            <ContactInputSection register={register} errors={errors} />
 
             <InterestsSection
               selectedInterests={formData.interests || []}
@@ -241,9 +218,9 @@ export const ProfilePage = () => {
 
             <div className="lg:hidden">
               <VoiceIntroWidget
-                initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
-                onVoiceChange={(audio) =>
-                  setValue("voiceIntroFile", audio, { shouldValidate: true })
+                initialVoiceIntro={formData.voiceIntro}
+                onVoiceChange={(audioUrl) =>
+                  setValue("voiceIntro", audioUrl, { shouldValidate: true })
                 }
               />
             </div>

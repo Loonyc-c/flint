@@ -4,17 +4,26 @@ import { useState, useEffect } from 'react'
 import { useForm, type SubmitHandler } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { toast } from 'react-toastify'
-import { getProfile, updateProfile } from '@/features/profile/api/profile'
-import { calculateProfileCompleteness } from '@shared/lib'
+import { getProfile, updateProfile, getContactInfo, updateContactInfo } from '@/features/profile/api/profile';
+import { calculateProfileCompleteness } from '@shared/lib';
 import { uploadImageToCloudinary, uploadAudioToCloudinary } from '@/lib/cloudinary'
-import { profileUpdateSchema, type ProfileCreationFormData } from '@/shared-types/validations'
+import { profileUpdateSchema, type ProfileCreationFormData, contactInfoSchema } from '@/shared-types/validations'
+import { z } from 'zod'
+
+// Combine schemas for the form
+const formSchema = profileUpdateSchema.extend({
+  instagram: contactInfoSchema.shape.instagram.optional(),
+  phone: contactInfoSchema.shape.phone.optional(),
+});
+type ProfileAndContactFormData = z.infer<typeof formSchema>;
+
 
 export const useProfileForm = (userId: string, pendingPhotoFile: File | null, clearPendingPhoto: () => void) => {
-  const [completeness, setCompleteness] = useState(0)
+  const [completeness, setCompleteness] = useState(0);
   const [isSaving, setIsSaving] = useState(false)
 
-  const form = useForm<ProfileCreationFormData>({
-    resolver: zodResolver(profileUpdateSchema),
+  const form = useForm<ProfileAndContactFormData>({
+    resolver: zodResolver(formSchema),
     defaultValues: {
       nickName: '',
       age: 18,
@@ -27,20 +36,28 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
         audioUrl: '',
         uploadId: '',
         audioFile: undefined
-      }))
+      })),
+      instagram: '',
+      phone: '',
     }
   })
 
   const { reset, watch, setValue, handleSubmit } = form
   const formData = watch()
 
-  // Fetch profile on mount
+  // Fetch profile and contact info on mount
   useEffect(() => {
-    const fetchProfile = async () => {
+    const fetchAllData = async () => {
       try {
-        const data = await getProfile(userId)
-        if (data.isComplete && data.profile) {
-          const questionsWithDefaults = [...(data.profile.questions || [])]
+        const [profileRes, contactRes] = await Promise.all([
+          getProfile(userId),
+          getContactInfo(userId),
+        ])
+        
+        let combinedData: Partial<ProfileAndContactFormData> = {}
+
+        if (profileRes.isComplete && profileRes.profile) {
+          const questionsWithDefaults = [...(profileRes.profile.questions || [])]
           while (questionsWithDefaults.length < 3) {
             questionsWithDefaults.push({ 
               questionId: '', 
@@ -52,38 +69,43 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
           if (questionsWithDefaults.length > 3) {
             questionsWithDefaults.splice(3)
           }
-          reset({ 
-            ...data.profile, 
-            photo: data.profile.photo || '',
-            voiceIntro: data.profile.voiceIntro || '',
-            questions: questionsWithDefaults 
-          })
-        } else {
-          reset({
-            ...formData,
-            photo: '',
-            voiceIntro: '',
-            questions: Array(3).fill({ 
-              questionId: '', 
-              audioUrl: '', 
-              uploadId: '',
-              audioFile: undefined 
-            })
-          })
+
+          combinedData = {
+            ...profileRes.profile,
+            photo: profileRes.profile.photo || '',
+            voiceIntro: profileRes.profile.voiceIntro || '',
+            questions: questionsWithDefaults
+          }
         }
+        
+        if (contactRes.contactInfo) {
+          combinedData.instagram = contactRes.contactInfo.instagram || '';
+          combinedData.phone = contactRes.contactInfo.phone || '';
+        }
+
+        reset(combinedData)
+
       } catch {
+        // Reset to default empty state on error
         reset({
-          ...formData,
+          nickName: '',
+          age: 18,
+          bio: '',
+          interests: [],
+          photo: '',
+          voiceIntro: '',
           questions: Array(3).fill({ 
             questionId: '', 
             audioUrl: '', 
             uploadId: '',
             audioFile: undefined 
-            })
+          }),
+          instagram: '',
+          phone: '',
         })
       }
     }
-    fetchProfile()
+    fetchAllData()
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [reset, userId])
 
@@ -92,15 +114,15 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
     const timer = setTimeout(() => {
       const dataForCalculation = pendingPhotoFile
         ? { ...formData, photo: 'pending' }
-        : formData
-      const { score } = calculateProfileCompleteness(dataForCalculation)
-      setCompleteness(score)
-    }, 500)
+        : formData;
+      const { score } = calculateProfileCompleteness(dataForCalculation);
+      setCompleteness(score);
+    }, 500);
 
-    return () => clearTimeout(timer)
-  }, [formData, pendingPhotoFile])
+    return () => clearTimeout(timer);
+  }, [formData, pendingPhotoFile]);
 
-  const onManualSave: SubmitHandler<ProfileCreationFormData> = async (data) => {
+  const onManualSave: SubmitHandler<ProfileAndContactFormData> = async (data) => {
     setIsSaving(true)
     try {
       let finalPhotoUrl = data.photo
@@ -116,51 +138,28 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
         setValue('photo', finalPhotoUrl, { shouldValidate: true })
       }
 
-      let finalVoiceIntroUrl = data.voiceIntro
-      if (data.voiceIntroFile instanceof Blob) {
-        try {
-          const result = await uploadAudioToCloudinary(data.voiceIntroFile, {
-            folder: 'flint/voice-intros'
-          })
-          finalVoiceIntroUrl = result.url
-        } catch (error) {
-          console.error('Failed to upload voice intro:', error)
-          throw new Error('Failed to upload voice intro')
-        }
-      }
+      let finalVoiceIntroUrl = data.voiceIntro;
 
-      const questionsToSave = await Promise.all(
-        data.questions.map(async qa => {
-          const audioFile = qa.audioFile
-          if (audioFile && audioFile instanceof Blob) {
-            try {
-              const result = await uploadAudioToCloudinary(audioFile, {
-                folder: 'flint/profile-questions'
-              })
-              return { 
-                questionId: qa.questionId, 
-                audioUrl: result.url,
-                uploadId: result.publicId
-              }
-            } catch (error) {
-              console.error('Failed to upload audio for question:', qa.questionId, error)
-              throw new Error(`Failed to upload audio for question: ${qa.questionId}`)
-            }
-          }
-          return { 
-            questionId: qa.questionId, 
-            audioUrl: qa.audioUrl || '',
-            uploadId: qa.uploadId || ''
-          }
-        })
-      )
+      const questionsToSave = data.questions.map(qa => ({
+        questionId: qa.questionId,
+        audioUrl: qa.audioUrl || '',
+        uploadId: qa.uploadId || '',
+      }));
 
-      await updateProfile(userId, {
-        ...data,
+      const { instagram, phone, ...profilePayload } = data;
+      
+      const profileToUpdate: ProfileCreationFormData = {
+        ...profilePayload,
         photo: finalPhotoUrl,
         questions: questionsToSave,
-        voiceIntro: finalVoiceIntroUrl
-      })
+        voiceIntro: finalVoiceIntroUrl,
+      } as ProfileCreationFormData;
+      
+      await Promise.all([
+        updateProfile(userId, profileToUpdate),
+        updateContactInfo(userId, { instagram: instagram || "", phone: phone || "" })
+      ])
+      
       toast.success('Profile updated!')
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : 'Save failed'

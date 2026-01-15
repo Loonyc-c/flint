@@ -30,6 +30,7 @@ export const profileUpdateSchema = z.object({
   questions: z
     .array(questionAnswerSchema)
     .length(3, "Please answer exactly 3 questions"),
+  contact: contactInfoSchema.optional(),
 });
 
 export type ProfileCreationFormData = z.infer<typeof profileUpdateSchema>;

@@ -38,22 +38,8 @@ class LiveCallQueueService {
     this.queue.delete(userId)
   }
 
-  /**
-   * Check if two users match each other's preferences
-   * TODO: PERFORMANCE - This loop is O(N). For 1000+ users, consider 
-   * indexing by gender/preference or using a dedicated matchmaking service.
-   */
   private isMatch(a: QueueEntry, b: QueueEntry): boolean {
-    // Check gender preferences
-    if (!this.checkGenderPreference(a, b) || !this.checkGenderPreference(b, a)) {
-      return false
-    }
-
-    // Check age preferences
-    if (!this.checkAgePreference(a, b) || !this.checkAgePreference(b, a)) {
-      return false
-    }
-
+    // Remove preference checks to enable random matching
     return true
   }
 

@@ -58,15 +58,8 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
     const userCollection = await getUserCollection()
     const user = await userCollection.findOne({ _id: new ObjectId(userId) })
     
-    // Profile Readiness Gate (80%)
-    const completeness = user?.profileCompletion || 0
-    if (completeness < 80) {
-      socket.emit('staged-call-error', { 
-        matchId, 
-        error: 'Profile incomplete',
-        code: 'PROFILE_INCOMPLETE',
-        completeness
-      })
+    if (!user) {
+      socket.emit('staged-call-error', { matchId, error: 'User not found' })
       return
     }
 

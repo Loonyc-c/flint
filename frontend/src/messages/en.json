@@ -345,6 +345,9 @@
       "title": "Voice Intro",
       "subtitle": "Let them hear your vibe",
       "record": "Record",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Voice intro uploaded!",
+      "uploadFailed": "Upload failed. Please try again.",
       "modal": {
         "title": "Voice Intro"
       }
