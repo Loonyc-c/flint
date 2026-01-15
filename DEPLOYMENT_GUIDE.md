@@ -1,28 +1,30 @@
 # Deployment Guide
 
-This project is a monorepo consisting of a Next.js frontend and an Express/Node.js backend.
+This project is a **monorepo** consisting of a Next.js frontend and an Express/Node.js backend.
+Because it uses npm workspaces and shared code, deployment requires specific configuration to ensure dependencies resolve correctly.
 
 ## 🏗 Architecture
 - **Frontend**: Next.js 15 (Deploy on **Vercel**)
 - **Backend**: Node.js + Socket.io + MongoDB (Deploy on **Render**)
-  - *Note: The Backend requires a persistent server for Socket.io and In-Memory Queues (Live Call feature), so it cannot be deployed as a standard Serverless function.*
+- **Shared**: Common types and validation logic (Located in `shared/`, copied to apps during build)
+
+> ⚠️ **Critical Requirement**: The Backend requires a persistent server for Socket.io connections. **Do not deploy as a Serverless Function.**
 
 ---
 
 ## 🚀 Backend Deployment (Render)
-The backend should be deployed *first* so you have the API URL for the frontend configuration.
+The backend must be deployed *first* to generate the API URL required for the frontend.
 
 1.  **Create a New Web Service** on [Render](https://dashboard.render.com/).
 2.  **Connect your GitHub repository**.
 3.  **Configuration**:
     - **Name**: `flint-backend`
-    - **Root Directory**: `.` (Keep as root, do NOT set to `backend` - Render needs root context for monorepo build)
+    - **Root Directory**: `.` (Leave default. **Crucial** for workspace resolution)
     - **Environment**: `Node`
-    - **Build Command**: `cd backend && npm install && npm run build`
+    - **Build Command**: `npm install && npm run build --workspace=backend`
     - **Start Command**: `cd backend && npm run start:prod`
-    - **Plan**: Free (or higher for production performance)
+    - **Plan**: **Starter** or higher (Free tier spins down, disconnecting active socket calls).
 4.  **Environment Variables**:
-    Add the following variables in the Render dashboard:
     
     | Variable | Description | Example |
     | :--- | :--- | :--- |
@@ -31,13 +33,16 @@ The backend should be deployed *first* so you have the API URL for the frontend 
     | `MONGO_URL` | MongoDB Connection String | `mongodb+srv://...` |
     | `MONGO_DB` | Database Name | `flint` |
     | `JWT_SECRET` | Secret for JWT Tokens | `your-secure-secret` |
-    | `CLIENT_URL` | Frontend URL (Add after frontend deploy) | `https://your-app.vercel.app` |
-    | `AGORA_APP_ID` | Agora App ID for Video/Audio | `...` |
+    | `CLIENT_URL` | Allowed Frontend Origin(s) (Comma separated) | `https://your-app.vercel.app` |
+    | `REDIS_URL` | **Required for Production** (Rate Limiting & Queues) | `redis://...` |
+    | `AGORA_APP_ID` | Agora App ID | `...` |
     | `AGORA_APP_CERTIFICATE` | Agora Certificate | `...` |
     | `GOOGLE_CLIENT_ID` | Google OAuth ID | `...` |
     | `EMAIL_USER` | Email for notifications | `user@gmail.com` |
     | `EMAIL_PASS` | Email App Password | `...` |
-    | `REDIS_URL` | (Optional) For Rate Limiting | `redis://...` |
+
+5.  **Health Check**:
+    - Render may ask for a health check path. Use: `/` (Returns status 200).
 
 ---
 
@@ -45,11 +50,13 @@ The backend should be deployed *first* so you have the API URL for the frontend 
 Once the backend is live, deploy the frontend.
 
 1.  **Import Project** on [Vercel](https://vercel.com/new).
-2.  **Select Directory**: Choose `frontend` as the root directory within the repo.
-3.  **Build Settings**:
+2.  **Project Configuration** (Critical for Monorepo):
+    - **Root Directory**: `.` (Do **NOT** change this to `frontend`. Vercel needs the root `package.json` to resolve workspaces).
     - **Framework Preset**: Next.js
-    - **Build Command**: `npm run copy:shared && npm run build` (This ensures shared types are copied before build)
-    - **Output Directory**: `.next`
+3.  **Build Settings** (Override Default):
+    - **Build Command**: `cd frontend && npm run build`
+        - *Note: The `postinstall` script in `frontend/package.json` will automatically copy shared types.*
+    - **Output Directory**: `frontend/.next`
 4.  **Environment Variables**:
     
     | Variable | Description | Example |
@@ -63,11 +70,19 @@ Once the backend is live, deploy the frontend.
 ---
 
 ## 🔄 Final Steps
-1.  **Update Backend**: After the frontend is deployed, go back to Render and update the `CLIENT_URL` environment variable with your new Vercel domain (e.g., `https://flint.vercel.app`).
-2.  **Verify**: Open the Vercel URL.
-    - Check the browser console for connection errors.
-    - Test the "Live Call" feature to ensure Socket.io connects to the Render backend.
+1.  **Update Backend CORS**: After the frontend is deployed, copy the assigned Vercel domain (e.g., `https://flint-app.vercel.app`).
+2.  **Configure Render**: Go to your Render Dashboard > Environment Variables and update `CLIENT_URL`:
+    ```
+    CLIENT_URL=https://flint-app.vercel.app
+    ```
+    *You can add multiple domains comma-separated for staging/preview URLs.*
+3.  **Verify**:
+    - Open the Vercel URL.
+    - Check the browser console. If you see `Socket connected`, the integration is successful.
+    - If you see `CORS` errors, ensure the protocol (`https://`) is included in `CLIENT_URL`.
 
 ## 🛠 Troubleshooting
-- **Shared Types Missing**: If the build fails saying it cannot find `@shared/types`, ensure the Build Command includes `npm run copy:shared`.
-- **Socket Connection Failed**: Check if `NEXT_PUBLIC_SOCKET_URL` is set correctly without a trailing slash (usually) and matches the Render URL. Ensure `CLIENT_URL` on backend includes your Vercel domain to allow CORS.
+- **Build Failures (Module not found)**: Ensure you are running `npm install` at the **Root** level in your build commands. The workspace relies on the root `node_modules` and `package-lock.json`.
+- **Socket Disconnects**: If using Render's Free tier, the server sleeps after inactivity. Upgrade to a paid plan for reliable real-time features.
+- **CORS Errors**: Ensure `CLIENT_URL` has no trailing slash (unless your code handles it) and matches the browser's origin exactly.
+
