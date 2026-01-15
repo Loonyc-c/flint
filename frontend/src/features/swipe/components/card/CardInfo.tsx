@@ -1,9 +1,8 @@
 'use client'
 
 import { motion } from 'framer-motion'
-import { Volume2, Play, Pause, Mic, MapPin } from 'lucide-react'
+import { Volume2, Pause, Mic, MapPin } from 'lucide-react'
 import { type User } from '@shared/types'
-import { CustomAudioPlayer } from '@/components/ui/custom-audio-player'
 import { useTranslations } from 'next-intl'
 
 interface CardInfoProps {

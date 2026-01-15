@@ -80,8 +80,6 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
             setCurrentPhotoIndex={setCurrentPhotoIndex}
             nextPhoto={nextPhoto}
             prevPhoto={prevPhoto}
-            isPlayingVoice={isPlayingVoice}
-            handleToggleVoice={handleToggleVoice}
           />
         </div>
 

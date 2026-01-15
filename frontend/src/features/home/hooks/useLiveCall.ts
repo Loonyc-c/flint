@@ -105,7 +105,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
       setStatus('idle')
     }
 
-    const handlePromoted = (data: { matchId: string }) => {
+    const handlePromoted = (_data: { matchId: string }) => {
       // Success logged internally if needed
     }
 
