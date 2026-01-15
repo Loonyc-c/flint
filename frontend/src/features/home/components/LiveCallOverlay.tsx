@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -28,34 +28,39 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     reset 
   } = useLiveCall()
 
-  // For the actual call logic, we can use useStagedCall or just handle it here.
-  // Since we have an ephemeral match, useStagedCall might not work out of the box
-  // if it expects to emit events with a real matchId to the backend which expects a DB match.
-  // However, our live-call.handler.ts is separate.
-  
-  // Actually, let's keep it simple: 
-  // 1. Queueing UI
-  // 2. Connecting UI
-  // 3. In-Call UI (StagedAudioCallModal)
+  // Ref to track status for cleanup function without triggering re-renders
+  const statusRef = useRef(status)
+
+  // Sync ref with status
+  useEffect(() => {
+    statusRef.current = status
+  }, [status])
   
   const [remainingTime, setRemainingTime] = useState(90000)
   const [showPrompt, setShowPrompt] = useState(false)
 
+  // RCA: previously, 'status' was in the dependency array. 
+  // When status changed from 'connecting' to 'in-call', the cleanup function ran.
+  // The cleanup function checked 'connecting' (stale or current) and called leaveQueue(),
+  // which reset the state to 'idle', triggering a re-join and the infinite loop.
+  // FIX: Removed 'status' from dependencies. Use ref for cleanup logic.
   useEffect(() => {
+    // Only auto-join if we are opening fresh and idle
     if (isOpen && status === 'idle') {
       joinQueue()
     }
-  }, [isOpen, status, joinQueue])
-
-  // Cleanup on unmount
-  useEffect(() => {
+    
+    // Cleanup on unmount or when isOpen changes to false
     return () => {
-      // This cleanup only runs when the component unmounts.
-      // It prevents leaving a user in the queue if they navigate away.
-      leaveQueue()
+      // Use the ref to get the latest status during cleanup
+      // regardless of closure staleness
+      if (statusRef.current === 'queueing' || statusRef.current === 'connecting') {
+        leaveQueue()
+      }
     }
-  }, [leaveQueue])
+  }, [isOpen, joinQueue, leaveQueue]) // Removed 'status'
 
+  // Timer logic for the call
   useEffect(() => {
     let timer: NodeJS.Timeout
     if (status === 'in-call') {
@@ -75,7 +80,10 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
   }, [status])
 
   const handleClose = () => {
-    leaveQueue()
+    // Manual close should always leave queue if active
+    if (status === 'queueing' || status === 'connecting') {
+      leaveQueue()
+    }
     reset()
     onClose()
   }
