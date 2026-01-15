@@ -11,7 +11,10 @@ export const profileService = {
     const userCollection = await getUserCollection()
     const userObjectId = new ObjectId(userId)
 
-    const completionScore = calculateProfileCompleteness(data)
+    const user = await userCollection.findOne({ _id: userObjectId })
+    const contactInfo = user?.contactInfo
+
+    const { score } = calculateProfileCompleteness(data, contactInfo)
 
     const updates: Partial<DbUser> = {
       profile: {
@@ -24,7 +27,7 @@ export const profileService = {
         voiceIntro: data.voiceIntro,
         questions: data.questions,
       },
-      profileCompletion: completionScore,
+      profileCompletion: score,
       updatedAt: new Date(),
     }
 
@@ -48,7 +51,7 @@ export const profileService = {
     const userCollection = await getUserCollection()
     const user = await userCollection.findOne(
       { _id: new ObjectId(userId) },
-      { projection: { profile: 1, preferences: 1 } },
+      { projection: { profile: 1, preferences: 1, contactInfo: 1 } },
     )
 
     if (isNil(user)) {
@@ -82,9 +85,14 @@ export const profileService = {
     const userCollection = await getUserCollection()
     const userObjectId = new ObjectId(userId)
 
+    const user = await userCollection.findOne({ _id: userObjectId })
+    const profile = user?.profile
+
+    const { score } = calculateProfileCompleteness(profile || {}, data)
+
     const result = await userCollection.findOneAndUpdate(
       { _id: userObjectId },
-      { $set: { contactInfo: data, updatedAt: new Date() } },
+      { $set: { contactInfo: data, profileCompletion: score, updatedAt: new Date() } },
       { returnDocument: 'after' }
     )
 
@@ -117,9 +125,11 @@ export const profileService = {
       verifiedPlatforms,
     }
 
+    const { score } = calculateProfileCompleteness(user.profile || {}, updatedContactInfo)
+
     const result = await userCollection.findOneAndUpdate(
       { _id: userObjectId },
-      { $set: { contactInfo: updatedContactInfo, updatedAt: new Date() } },
+      { $set: { contactInfo: updatedContactInfo, profileCompletion: score, updatedAt: new Date() } },
       { returnDocument: 'after' }
     )
 

@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, PhoneOff, Mic, Video } from 'lucide-react'
 import { STAGED_CALL_CONSTANTS } from '@shared/types'
-import Image from 'next/image'
+import { UserAvatar } from '@/components/ui/UserAvatar'
 
 // =============================================================================
 // Types
@@ -174,17 +174,15 @@ export const IncomingStagedCallModal = ({
               <motion.div
                 animate={{ scale: [1, 1.05, 1] }}
                 transition={{ repeat: Infinity, duration: 2 }}
-                className="relative w-28 h-28 mx-auto mb-6"
+                className="relative mx-auto mb-6 w-28 h-28"
               >
-                <div className="w-full h-full rounded-full overflow-hidden border-4 border-brand/30 shadow-xl shadow-brand/20">
-                  {callerAvatar ? (
-                    <Image src={callerAvatar} alt={callerName} fill className="object-cover" />
-                  ) : (
-                    <div className="w-full h-full bg-gradient-to-br from-brand to-brand-300 flex items-center justify-center">
-                      <span className="text-4xl font-bold text-white">{callerName.charAt(0)}</span>
-                    </div>
-                  )}
-                </div>
+                <UserAvatar 
+                  src={callerAvatar} 
+                  name={callerName} 
+                  size="2xl" 
+                  border
+                  className="w-28 h-28"
+                />
 
                 {/* Ringing Indicator */}
                 <motion.div

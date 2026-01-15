@@ -9,6 +9,7 @@ import { createErrorhandler } from '@/shared/api/handler'
 import { apiErrorHandler } from '@/shared/api/error'
 import publicRouter from '@/routes/public'
 import protectedRouter from '@/routes/protected'
+import { circuitBreaker } from '@/utils/circuit-breaker'
 
 const app = express()
 
@@ -95,7 +96,8 @@ app.use('/v1', generalLimiter)
 // Health check and API info endpoint
 app.get('/', (_req, res) => {
   res.json({
-    status: 'ok',
+    status: circuitBreaker.isOpen() ? 'degraded' : 'ok',
+    system: circuitBreaker.getStats(),
     message: 'Flint Backend API',
     version: '1.0.0',
     endpoints: {

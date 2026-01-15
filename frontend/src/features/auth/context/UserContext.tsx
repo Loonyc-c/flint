@@ -2,7 +2,8 @@
 
 import { createContext, useContext, useState, useEffect, useCallback, type ReactNode } from 'react'
 import { jwtDecode } from 'jwt-decode'
-import { type User, type AuthTokenPayload } from '@shared/types'
+import { type User, type AuthTokenPayload, type ProfileResponse } from '@shared/types'
+import { apiRequest } from '@/lib/api-client'
 
 // =============================================================================
 // Constants
@@ -21,6 +22,7 @@ interface UserContextType {
   login: (token: string) => void
   logout: () => void
   isAuthenticated: boolean
+  refreshProfile: () => Promise<void>
 }
 
 interface UserProviderProps {
@@ -47,6 +49,28 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const [isLoading, setIsLoading] = useState(true)
 
   /**
+   * Refreshes the user's profile data (e.g., photo).
+   */
+  const refreshProfile = useCallback(async () => {
+    if (!token || !user?.id) return
+
+    try {
+      const response = await apiRequest<ProfileResponse>(`/profile/${user.id}`, {
+        method: 'GET'
+      })
+      
+      if (response.profile) {
+        setUser(prev => prev ? {
+          ...prev,
+          profile: response.profile
+        } : null)
+      }
+    } catch (error) {
+      console.error('[UserContext] Failed to refresh profile:', error)
+    }
+  }, [token, user?.id])
+
+  /**
    * Decodes a JWT token and updates user state.
    * Clears token if expired or invalid.
    */
@@ -63,13 +87,14 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       }
 
       setToken(storedToken)
-      setUser({
+      const newUser = {
         id: decoded.data.userId,
         firstName: decoded.data.firstName,
         lastName: decoded.data.lastName,
         email: decoded.data.email,
         name: `${decoded.data.lastName} ${decoded.data.firstName}`
-      })
+      }
+      setUser(newUser)
     } catch {
       localStorage.removeItem(STORAGE_KEY)
       setUser(null)
@@ -79,12 +104,19 @@ export const UserProvider = ({ children }: UserProviderProps) => {
 
   // Initialize auth state on mount
   useEffect(() => {
-    const token = localStorage.getItem(STORAGE_KEY)
-    if (token) {
-      decodeAndSetUser(token)
+    const storedToken = localStorage.getItem(STORAGE_KEY)
+    if (storedToken) {
+      decodeAndSetUser(storedToken)
     }
     setIsLoading(false)
   }, [decodeAndSetUser])
+
+  // Fetch full profile once authenticated
+  useEffect(() => {
+    if (user && !user.profile && token) {
+      refreshProfile()
+    }
+  }, [user, token, refreshProfile])
 
   /**
    * Stores the token and updates user state.
@@ -92,6 +124,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
   const login = useCallback(
     (token: string) => {
       localStorage.setItem(STORAGE_KEY, token)
+      // Set cookie for middleware access
+      document.cookie = `${STORAGE_KEY}=${token}; path=/; max-age=${60 * 60 * 24 * 7}; SameSite=Lax`
       decodeAndSetUser(token)
     },
     [decodeAndSetUser]
@@ -102,6 +136,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
    */
   const logout = useCallback(() => {
     localStorage.removeItem(STORAGE_KEY)
+    // Remove cookie
+    document.cookie = `${STORAGE_KEY}=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT`
     setUser(null)
     setToken(null)
   }, [])
@@ -112,7 +148,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     isLoading,
     login,
     logout,
-    isAuthenticated: !!user
+    isAuthenticated: !!user,
+    refreshProfile
   }
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>

@@ -5,6 +5,7 @@ import { registerChatHandlers } from './handlers/chat.handler'
 import { registerVideoHandlers } from './handlers/video.handler'
 import { registerStagedCallHandlers } from './handlers/staged-call.handler'
 import { registerLiveCallHandlers } from './handlers/live-call.handler'
+import { busyStateService } from './services/busy-state.service'
 
 let io: Server | null = null
 
@@ -33,6 +34,8 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
     pingInterval: 25000,
   })
 
+  busyStateService.setIO(io)
+
   // Apply authentication middleware
   io.use(socketAuthMiddleware)
 
@@ -46,6 +49,9 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
 
     // Join user's personal room for direct messages
     socket.join(`user:${authSocket.userId}`)
+
+    // Send current busy states to the newly connected user
+    socket.emit('busy-states-sync', busyStateService.getAllBusyUsers())
 
     // Register event handlers
     registerChatHandlers(io!, authSocket)
