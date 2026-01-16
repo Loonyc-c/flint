@@ -67,13 +67,13 @@ export const useVoiceRecorder = (initialAudio?: Blob | string) => {
       }
 
       recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks.current, { type: mimeType })
+        const audioBlob = new Blob(audioChunks.current, { type: recorder.mimeType || mimeType })
         setRecordedAudio(audioBlob)
         audioChunks.current = []
         stream.getTracks().forEach(track => track.stop())
       }
 
-      recorder.start()
+      recorder.start(100) // Request data every 100ms for even better reliability
       setIsRecording(true)
       setMediaRecorder(recorder)
       setRecordedAudio(undefined)

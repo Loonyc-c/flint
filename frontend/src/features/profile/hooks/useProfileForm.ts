@@ -12,8 +12,12 @@ import { useProfileSync } from './useProfileSync'
 
 // Combine schemas for the form
 const formSchema = profileUpdateSchema.extend({
+  voiceIntro: z.string().optional(), // Make optional in form because it might be in voiceIntroFile
   instagram: contactInfoSchema.shape.instagram,
   voiceIntroFile: z.union([z.instanceof(Blob), z.string()]).optional(),
+}).refine(data => data.voiceIntro || data.voiceIntroFile, {
+  message: "Please record a voice introduction",
+  path: ["voiceIntro"]
 });
 export type ProfileAndContactFormData = z.infer<typeof formSchema>;
 
@@ -140,9 +144,9 @@ export const useProfileForm = (userId: string, pendingPhotoFile: File | null, cl
       const { instagram, ...profilePayload } = data;
       const profileToUpdate: ProfileCreationFormData = {
         ...profilePayload,
-        photo: finalPhotoUrl,
+        photo: finalPhotoUrl || data.photo,
         questions: questionsToSave,
-        voiceIntro: finalVoiceIntroUrl,
+        voiceIntro: finalVoiceIntroUrl || data.voiceIntro || '',
       } as ProfileCreationFormData;
       
       await saveProfileData(profileToUpdate, instagram)

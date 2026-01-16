@@ -39,28 +39,10 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
     }
   }, [currentVoiceIntro])
 
-  const handleSave = async (audioFile: Blob | string | undefined) => {
-    if (audioFile instanceof Blob) {
-      setIsUploading(true);
-      try {
-        const result = await uploadAudioToCloudinary(audioFile, {
-          folder: 'flint/voice-intros',
-        });
-        setCurrentVoiceIntro(result.url);
-        onVoiceChange(result.url);
-        toast.success(t('uploadSuccess'));
-      } catch (error) {
-        console.error('Failed to upload voice intro:', error);
-        toast.error(t('uploadFailed'));
-        onVoiceChange(undefined); // Clear any old value
-      } finally {
-        setIsUploading(false);
-      }
-    } else {
-      // Handle case where it's already a URL or undefined
-      setCurrentVoiceIntro(audioFile);
-      onVoiceChange(audioFile);
-    }
+  const handleSave = (audioFile: Blob | string | undefined) => {
+    setCurrentVoiceIntro(audioFile);
+    onVoiceChange(audioFile);
+    toast.success(t('uploadSuccess')); // Note: It's saving locally until form submit
   };
 
   const handleDelete = () => {
@@ -113,7 +95,7 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
           <VoicePlaybackUI
             audioURL={audioURL}
-            mimeType="audio/webm"
+            mimeType={currentVoiceIntro instanceof Blob ? currentVoiceIntro.type : 'audio/webm'}
             audioRef={audioRef}
             isPlayback={isPlayback}
             togglePlayback={togglePlayback}
