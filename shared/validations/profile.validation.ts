@@ -11,9 +11,8 @@ export const questionAnswerSchema = z.object({
     (id) => QUESTION_POOL.some(q => q.id === id),
     { message: "Question ID not found in the QUESTION_POOL" }
   ),
-  audioUrl: z.string(),
-  uploadId: z.string(),
-  audioFile: z.union([z.instanceof(Blob), z.string()]).optional(),
+  audioUrl: z.string().url("Invalid audio URL"),
+  uploadId: z.string().min(1, "Upload ID is required"),
 });
 
 export const profileUpdateSchema = z.object({

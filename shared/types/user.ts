@@ -7,7 +7,6 @@ export type UserProfile = {
   bio: string
   interests: INTERESTS[]
   photo: string
-  photos?: string[]
   voiceIntro: string
   questions: QuestionAnswer[]
 }
@@ -42,7 +41,6 @@ export interface QuestionAnswer {
   questionId: string
   audioUrl: string
   uploadId: string
-  audioFile?: Blob | string
 }
 
 export interface ProfileUpdateRequest {

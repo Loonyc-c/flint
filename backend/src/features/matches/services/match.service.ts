@@ -226,7 +226,7 @@ export const matchService = {
 
     const otherUsers = await userCollection
       .find({ _id: { $in: otherUserObjectIds } })
-      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photos': 1 })
+      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photo': 1 })
       .toArray()
 
     const userMap = new Map(otherUsers.map((user) => [user._id.toHexString(), user]))
@@ -255,8 +255,8 @@ export const matchService = {
             }
           : undefined
 
-        // Get avatar from photos array (first photo)
-        const avatar = otherUser.profile?.photos?.[0] || undefined
+        // Get avatar from main photo
+        const avatar = otherUser.profile?.photo || undefined
 
         const result: MatchWithUser = {
           id: match._id.toHexString(),
@@ -326,7 +326,7 @@ export const matchService = {
     const pendingLikerIds = pendingLikes.map((like) => like.actorId)
     const likers = await userCollection
       .find({ _id: { $in: pendingLikerIds } })
-      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photos': 1 })
+      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photo': 1 })
       .toArray()
 
     const userMap = new Map(likers.map((user) => [user._id.toHexString(), user]))
@@ -336,13 +336,15 @@ export const matchService = {
         const liker = userMap.get(like.actorId.toHexString())
         if (!liker) return null
 
+        const avatar = liker.profile?.photo || undefined
+
         const result: LikePreview = {
           id: like._id.toHexString(),
           user: {
             id: liker._id.toHexString(),
             firstName: liker.auth.firstName as string,
             lastName: liker.auth.lastName as string,
-            avatar: liker.profile?.photos?.[0] || undefined,
+            avatar,
           },
           createdAt: like.createdAt.toISOString(),
         }
