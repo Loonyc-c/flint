@@ -182,7 +182,7 @@ export const useProfileForm = (
         })
       )
 
-      const { instagram, voiceIntroFile, ...profilePayload } = data
+      const { instagram, voiceIntroFile: _voiceIntroFile, ...profilePayload } = data
       const profileToUpdate: ProfileCreationFormData = {
         ...profilePayload,
         photo: finalPhotoUrl || data.photo,
@@ -202,8 +202,13 @@ export const useProfileForm = (
 
     if (errors && typeof errors === 'object') {
       const errorMessages = Object.entries(errors)
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .map(([field, err]: [string, any]) => `${field}: ${err?.message || 'Invalid'}`)
+        .map(([field, err]) => {
+          const errorMsg =
+            typeof err === 'object' && err !== null && 'message' in err
+              ? String(err.message)
+              : 'Invalid'
+          return `${field}: ${errorMsg}`
+        })
         .join(', ')
       toast.error(`Validation failed: ${errorMessages}`)
     } else {

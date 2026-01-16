@@ -36,10 +36,6 @@ export const VoicePlaybackUI = ({
 
     const handleLoadedMetadata = () => {
       setDuration(audio.duration)
-      console.log('[VoicePlaybackUI] Audio loaded:', {
-        duration: audio.duration,
-        src: audioURL
-      })
     }
 
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime)

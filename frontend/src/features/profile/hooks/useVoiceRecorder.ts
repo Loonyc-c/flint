@@ -115,12 +115,6 @@ export const useVoiceRecorder = (initialAudio?: Blob | string) => {
         }
 
         // Success - set the recorded audio
-        console.log('[useVoiceRecorder] Recording successful:', {
-          size: audioBlob.size,
-          type: audioBlob.type,
-          chunks: audioChunks.current.length
-        })
-
         setRecordedAudio(audioBlob)
         audioChunks.current = []
         stream.getTracks().forEach(track => track.stop())
@@ -139,8 +133,6 @@ export const useVoiceRecorder = (initialAudio?: Blob | string) => {
       setIsRecording(true)
       setMediaRecorder(recorder)
       setRecordedAudio(undefined)
-
-      console.log('[useVoiceRecorder] Recording started with MIME type:', detectedMimeType)
     } catch (err) {
       console.error('[useVoiceRecorder] Error accessing microphone:', err)
       alert('Could not access microphone. Please ensure permissions are granted.')
