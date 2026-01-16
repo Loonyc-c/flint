@@ -8,7 +8,6 @@ import { WaveformVisualizer } from './WaveformVisualizer'
 
 interface VoicePlaybackUIProps {
   audioURL: string
-  mimeType: string
   audioRef: React.RefObject<HTMLAudioElement | null>
   isPlayback: boolean
   togglePlayback: () => void
@@ -18,7 +17,6 @@ interface VoicePlaybackUIProps {
 
 export const VoicePlaybackUI = ({
   audioURL,
-  mimeType,
   audioRef,
   isPlayback,
   togglePlayback,
@@ -36,15 +34,33 @@ export const VoicePlaybackUI = ({
     audio.load()
     audio.currentTime = 0
 
-    const handleLoadedMetadata = () => setDuration(audio.duration)
+    const handleLoadedMetadata = () => {
+      setDuration(audio.duration)
+      console.log('[VoicePlaybackUI] Audio loaded:', {
+        duration: audio.duration,
+        src: audioURL
+      })
+    }
+
     const handleTimeUpdate = () => setCurrentTime(audio.currentTime)
+
+    const handleError = () => {
+      const error = audio.error
+      console.error('[VoicePlaybackUI] Audio loading error:', {
+        code: error?.code,
+        message: error?.message,
+        src: audioURL
+      })
+    }
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)
     audio.addEventListener('timeupdate', handleTimeUpdate)
+    audio.addEventListener('error', handleError)
 
     return () => {
       audio.removeEventListener('loadedmetadata', handleLoadedMetadata)
       audio.removeEventListener('timeupdate', handleTimeUpdate)
+      audio.removeEventListener('error', handleError)
     }
   }, [audioRef, audioURL])
 
@@ -56,17 +72,15 @@ export const VoicePlaybackUI = ({
 
   return (
     <div className="space-y-6">
-      <audio 
-        key={audioURL} 
-        ref={audioRef} 
-        onEnded={onEnded} 
-        onDurationChange={(e) => setDuration(e.currentTarget.duration)}
-        onError={(e) => console.error('Audio playback error:', e)}
+      <audio
+        key={audioURL}
+        ref={audioRef}
+        src={audioURL}
+        onEnded={onEnded}
+        onDurationChange={e => setDuration(e.currentTarget.duration)}
         preload="auto"
-      >
-        <source src={audioURL} type={mimeType} />
-      </audio>
-      
+      />
+
       <div className="p-6 border-2 shadow-sm bg-card rounded-3xl border-border">
         <div className="flex items-center gap-4">
           <motion.button
@@ -83,19 +97,24 @@ export const VoicePlaybackUI = ({
           </motion.button>
 
           <div className="flex-1 space-y-2">
-             <div className="px-4 bg-muted rounded-2xl">
-                <WaveformVisualizer 
-                  isActive={isPlayback} 
-                  color={isPlayback ? 'bg-brand' : 'bg-muted-foreground/30'} 
-                />
-             </div>
-             <div className="flex justify-between px-1 text-[10px] font-black tracking-widest text-muted-foreground uppercase">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration)}</span>
-             </div>
+            <div className="px-4 bg-muted rounded-2xl">
+              <WaveformVisualizer
+                isActive={isPlayback}
+                color={isPlayback ? 'bg-brand' : 'bg-muted-foreground/30'}
+              />
+            </div>
+            <div className="flex justify-between px-1 text-[10px] font-black tracking-widest text-muted-foreground uppercase">
+              <span>{formatTime(currentTime)}</span>
+              <span>{formatTime(duration)}</span>
+            </div>
           </div>
 
-          <Button onClick={handleDelete} variant="ghost" size="icon" className="text-destructive hover:bg-destructive/10 rounded-xl cursor-pointer">
+          <Button
+            onClick={handleDelete}
+            variant="ghost"
+            size="icon"
+            className="text-destructive hover:bg-destructive/10 rounded-xl cursor-pointer"
+          >
             <Trash2 className="w-6 h-6" />
           </Button>
         </div>
