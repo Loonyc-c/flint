@@ -18,8 +18,10 @@ const translationData: TranslationData = {
 
   // User erros
   'err.user.not_found': 'Хэрэглэгчийн мэдээлэл олдсонгүй.',
-  'err.user.already_exists': 'Энэ имэйл хаягаар бүртгэл үүссэн байна.'
-  
+  'err.user.already_exists': 'Энэ имэйл хаягаар бүртгэл үүссэн байна.',
+
+  // Profile errors
+  'err.profile.incomplete_for_swipe': 'Шудрахын тулд профайлаа дор хаяж 80 хувь хүртэл бөглөнө үү.'
 }
 
 export default translationData

@@ -158,7 +158,7 @@ export const interactionService = {
     const userMap = new Map(likers.map((user) => [user._id.toHexString(), user]))
 
     return pendingLikes
-      .map((like) => {
+      .map((like): LikePreview | null => {
         const liker = userMap.get(like.actorId.toHexString())
         if (!liker) return null
         const avatar = liker.profile?.photo || undefined

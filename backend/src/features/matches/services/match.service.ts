@@ -41,7 +41,7 @@ export const matchService = {
     const userMap = new Map(otherUsers.map((user) => [user._id.toHexString(), user]))
 
     return matches
-      .map((match) => {
+      .map((match): MatchWithUser | null => {
         const otherUserId = match.users.find((id) => id !== userIdString)
         if (!otherUserId) return null
 

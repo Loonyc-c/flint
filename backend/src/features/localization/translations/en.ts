@@ -18,7 +18,10 @@ const translationData: Partial<TranslationData> = {
 
   // User errors
   'err.user.not_found': 'We couldn\'t find an account with those details.',
-  'err.user.already_exists': 'An account with this email already exists.'
+  'err.user.already_exists': 'An account with this email already exists.',
+
+  // Profile errors
+  'err.profile.incomplete_for_swipe': 'Please complete at least 80% of your profile to start swiping.'
 }
 
 export default translationData
