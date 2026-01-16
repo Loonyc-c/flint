@@ -4,7 +4,6 @@ import { useState, useRef, useEffect } from 'react'
 import { Mic } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { toast } from 'react-toastify'
-import { uploadAudioToCloudinary } from '@/lib/cloudinary'
 import { VoiceIntroModal } from './VoiceIntroModal'
 import { VoicePlaybackUI } from '../questions/VoicePlaybackUI'
 
@@ -19,8 +18,10 @@ interface VoiceIntroWidgetProps {
 export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntroWidgetProps) => {
   const t = useTranslations('profile.voice')
   const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [currentVoiceIntro, setCurrentVoiceIntro] = useState<Blob | string | undefined>(initialVoiceIntro)
+  const [isUploading, _setIsUploading] = useState(false)
+  const [currentVoiceIntro, setCurrentVoiceIntro] = useState<Blob | string | undefined>(
+    initialVoiceIntro
+  )
   const [audioURL, setAudioURL] = useState<string | undefined>(
     typeof initialVoiceIntro === 'string' ? initialVoiceIntro : undefined
   )
@@ -40,10 +41,10 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
   }, [currentVoiceIntro])
 
   const handleSave = (audioFile: Blob | string | undefined) => {
-    setCurrentVoiceIntro(audioFile);
-    onVoiceChange(audioFile);
-    toast.success(t('uploadSuccess')); // Note: It's saving locally until form submit
-  };
+    setCurrentVoiceIntro(audioFile)
+    onVoiceChange(audioFile)
+    toast.success(t('uploadSuccess')) // Note: It's saving locally until form submit
+  }
 
   const handleDelete = () => {
     setCurrentVoiceIntro(undefined)
@@ -75,7 +76,9 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
             <Mic className="w-6 h-6" />
           </div>
           <div>
-            <h3 className="text-sm font-black tracking-wide uppercase text-foreground">{t('title')}</h3>
+            <h3 className="text-sm font-black tracking-wide uppercase text-foreground">
+              {t('title')}
+            </h3>
             <p className="text-xs text-muted-foreground">{t('subtitle')}</p>
           </div>
         </div>
