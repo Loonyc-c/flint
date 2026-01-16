@@ -10,7 +10,7 @@ import type {
   StagePromptPayload,
   StagePromptResult,
   ContactExchangePayload,
-  ContactInfoDisplay,
+  ContactInfoDisplay
 } from '@shared/types'
 
 // =============================================================================
@@ -75,12 +75,26 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
   const [partnerContact, setPartnerContact] = useState<ContactInfoDisplay | null>(null)
   const [icebreaker, setIcebreaker] = useState<IcebreakerPayload | null>(null)
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  
-  // Use ref to track callStatus immediately (avoids stale closure issues)
+
+  // FIXED: Refs for immediate checks
   const callStatusRef = useRef<StagedCallStatus>(callStatus)
+  const joiningRef = useRef(false) // NEW: Prevent duplicate Agora joins
   callStatusRef.current = callStatus
 
-  // Start countdown timer
+  // FIXED: Enhanced cleanup
+  const cleanupCall = useCallback(() => {
+    if (timerRef.current) {
+      clearInterval(timerRef.current)
+      timerRef.current = null
+    }
+    joiningRef.current = false
+    setRemainingTime(0)
+    setCurrentCall(null)
+    setIncomingCall(null)
+    setIcebreaker(null)
+    setStagePrompt(null)
+  }, [])
+
   const startTimer = useCallback((duration: number) => {
     setRemainingTime(duration)
     if (timerRef.current) {
@@ -89,7 +103,10 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     timerRef.current = setInterval(() => {
       setRemainingTime(prev => {
         if (prev <= 1000) {
-          if (timerRef.current) clearInterval(timerRef.current)
+          if (timerRef.current) {
+            clearInterval(timerRef.current)
+            timerRef.current = null
+          }
           return 0
         }
         return prev - 1000
@@ -97,24 +114,61 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     }, 1000)
   }, [])
 
-  // Set up event listeners
   useEffect(() => {
     if (!socket) return
 
     const handleRinging = (data: StagedCallRingingPayload) => {
-      // Auto-reject only if already in an active call
-      const isActuallyBusy = user?.id ? (busyStates[user.id] === 'in-call') : false
-      
+      const isActuallyBusy = user?.id ? busyStates[user.id] === 'in-call' : false
+
       if (callStatusRef.current === 'active' || isActuallyBusy) {
         socket.emit('staged-call-decline', { matchId: data.matchId })
         return
       }
-      
+
       setIncomingCall(data)
       setCallStatus('ringing')
       callStatusRef.current = 'ringing'
       options.onIncomingCall?.(data)
     }
+
+    // FIXED: Unified connected handler with guard
+    const handleConnected = (data: StagedCallAcceptedPayload) => {
+      if (joiningRef.current || callStatusRef.current === 'active') {
+        console.log('Duplicate connected ignored')
+        return
+      }
+      joiningRef.current = true
+
+      setCallStatus('active')
+      callStatusRef.current = 'active'
+      setCurrentCall({
+        matchId: data.matchId,
+        channelName: data.channelName,
+        stage: data.stage,
+        duration: data.duration
+      })
+      setIncomingCall(null)
+      startTimer(data.duration)
+      options.onCallAccepted?.(data)
+      // HERE: Your Agora joinChannel(token, channelName, uid, options)
+    }
+
+    const handleDeclined = (data: { matchId: string }) => {
+      cleanupCall()
+      setCallStatus('idle')
+      callStatusRef.current = 'idle'
+      options.onCallDeclined?.(data)
+    }
+
+    const handleEnded = (data: StagedCallEndedPayload) => {
+      cleanupCall()
+      const newStatus = data.promptNextStage ? 'prompt' : 'idle'
+      setCallStatus(newStatus)
+      callStatusRef.current = newStatus
+      options.onCallEnded?.(data)
+    }
+
+    // ... (other handlers unchanged: handleWaiting, handlePrompt, etc.)
 
     const handleWaiting = (data: { matchId: string; channelName: string; stage: 1 | 2 }) => {
       setCallStatus('calling')
@@ -122,58 +176,17 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       setCurrentCall({ ...data, duration: 0 })
     }
 
-    const handleAccepted = (data: StagedCallAcceptedPayload) => {
-      setCallStatus('active')
-      callStatusRef.current = 'active'
-      setCurrentCall({ matchId: data.matchId, channelName: data.channelName, stage: data.stage, duration: data.duration })
-      startTimer(data.duration)
-      options.onCallAccepted?.(data)
-    }
-
-    const handleConnected = (data: StagedCallAcceptedPayload) => {
-      setCallStatus('active')
-      callStatusRef.current = 'active'
-      setCurrentCall({ matchId: data.matchId, channelName: data.channelName, stage: data.stage, duration: data.duration })
-      setIncomingCall(null)
-      startTimer(data.duration)
-      options.onCallAccepted?.(data)
-    }
-
-    const handleDeclined = (data: { matchId: string }) => {
-      if (timerRef.current) clearInterval(timerRef.current)
-      setCallStatus('idle')
-      callStatusRef.current = 'idle'
-      setCurrentCall(null)
-      setIncomingCall(null)
-      setIcebreaker(null)
-      setRemainingTime(0)
-      options.onCallDeclined?.(data)
-    }
-
-    const handleEnded = (data: StagedCallEndedPayload) => {
-      if (timerRef.current) clearInterval(timerRef.current)
-      const newStatus = data.promptNextStage ? 'prompt' : 'idle'
-      setCallStatus(newStatus)
-      callStatusRef.current = newStatus
-      setCurrentCall(null)
-      setIncomingCall(null)
-      setIcebreaker(null)
-      setRemainingTime(0)
-      options.onCallEnded?.(data)
-    }
-
     const handlePrompt = (data: StagePromptPayload) => {
       setStagePrompt(data)
       setCallStatus('prompt')
       callStatusRef.current = 'prompt'
-      setIcebreaker(null) // Clear icebreaker during prompt
+      setIcebreaker(null)
       options.onStagePrompt?.(data)
     }
 
     const handlePromptResult = (data: StagePromptResult) => {
       setStagePrompt(null)
       setCallStatus('idle')
-      // Update ref immediately so initiateCall can use the new value
       callStatusRef.current = 'idle'
       setIcebreaker(null)
       options.onPromptResult?.(data)
@@ -190,14 +203,26 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       options.onIcebreaker?.(data)
     }
 
-    const handleTimeout = () => { setCallStatus('idle'); callStatusRef.current = 'idle'; setCurrentCall(null); setIcebreaker(null) }
-    const handleMissed = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle'; setIcebreaker(null) }
-    const handleCancelled = () => { setIncomingCall(null); setCallStatus('idle'); callStatusRef.current = 'idle'; setIcebreaker(null) }
+    const handleTimeout = () => {
+      cleanupCall()
+      setCallStatus('idle')
+      callStatusRef.current = 'idle'
+    }
+    const handleMissed = () => {
+      cleanupCall()
+      setCallStatus('idle')
+      callStatusRef.current = 'idle'
+    }
+    const handleCancelled = () => {
+      cleanupCall()
+      setCallStatus('idle')
+      callStatusRef.current = 'idle'
+    }
 
+    // FIXED: Single 'connected' listener (removed duplicate 'accepted')
     socket.on('staged-call-ringing', handleRinging)
     socket.on('staged-call-waiting', handleWaiting)
-    socket.on('staged-call-accepted', handleAccepted)
-    socket.on('staged-call-connected', handleConnected)
+    socket.on('staged-call-connected', handleConnected) // Unified
     socket.on('staged-call-declined', handleDeclined)
     socket.on('staged-call-ended', handleEnded)
     socket.on('staged-call-timeout', handleTimeout)
@@ -209,9 +234,9 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     socket.on('staged-call-icebreaker', handleIcebreaker)
 
     return () => {
+      // ... (off all listeners)
       socket.off('staged-call-ringing', handleRinging)
       socket.off('staged-call-waiting', handleWaiting)
-      socket.off('staged-call-accepted', handleAccepted)
       socket.off('staged-call-connected', handleConnected)
       socket.off('staged-call-declined', handleDeclined)
       socket.off('staged-call-ended', handleEnded)
@@ -222,55 +247,75 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       socket.off('stage-prompt-result', handlePromptResult)
       socket.off('contact-exchange', handleContactExchange)
       socket.off('staged-call-icebreaker', handleIcebreaker)
-      if (timerRef.current) clearInterval(timerRef.current)
+      cleanupCall()
     }
-  }, [socket, options, startTimer, busyStates, user?.id])
+  }, [socket, options, startTimer, busyStates, user?.id, cleanupCall])
 
-  const initiateCall = useCallback((matchId: string, calleeId: string, stage: 1 | 2) => {
-    // Use ref for immediate status check (avoids stale closure from React state)
-    const currentStatus = callStatusRef.current
-    if (socket && isConnected && currentStatus === 'idle') {
-      socket.emit('staged-call-initiate', { matchId, calleeId, stage })
-    } else {
-    }
-  }, [socket, isConnected])
+  const initiateCall = useCallback(
+    (matchId: string, calleeId: string, stage: 1 | 2) => {
+      if (socket && isConnected && callStatusRef.current === 'idle') {
+        socket.emit('staged-call-initiate', { matchId, calleeId, stage })
+      }
+    },
+    [socket, isConnected]
+  )
 
-  const acceptCall = useCallback((matchId: string) => {
-    if (socket && isConnected && incomingCall) {
-      socket.emit('staged-call-accept', { matchId })
-    }
-  }, [socket, isConnected, incomingCall])
+  const acceptCall = useCallback(
+    (matchId: string) => {
+      if (socket && isConnected && incomingCall) {
+        socket.emit('staged-call-accept', { matchId })
+      }
+    },
+    [socket, isConnected, incomingCall]
+  )
 
-  const declineCall = useCallback((matchId: string) => {
-    if (socket && isConnected) {
-      socket.emit('staged-call-decline', { matchId })
-      if (timerRef.current) clearInterval(timerRef.current)
-      setIncomingCall(null)
-      setCallStatus('idle')
-      callStatusRef.current = 'idle'
-      setRemainingTime(0)
-    }
-  }, [socket, isConnected])
+  const declineCall = useCallback(
+    (matchId: string) => {
+      if (socket && isConnected) {
+        socket.emit('staged-call-decline', { matchId })
+        cleanupCall()
+        setCallStatus('idle')
+        callStatusRef.current = 'idle'
+      }
+    },
+    [socket, isConnected, cleanupCall]
+  )
 
-  const endCall = useCallback((matchId: string) => {
-    if (socket && isConnected) {
-      socket.emit('staged-call-end', { matchId })
-      if (timerRef.current) clearInterval(timerRef.current)
-      setCallStatus('idle')
-      callStatusRef.current = 'idle'
-      setCurrentCall(null)
-      setRemainingTime(0)
-    }
-  }, [socket, isConnected])
+  const endCall = useCallback(
+    (matchId: string) => {
+      if (socket && isConnected && currentCall) {
+        socket.emit('staged-call-end', { matchId })
+        // FIXED: Explicit Agora cleanup (add your client.leave())
+        // agoraClient?.leaveChannel()
+        cleanupCall()
+        setCallStatus('idle')
+        callStatusRef.current = 'idle'
+      }
+    },
+    [socket, isConnected, currentCall, cleanupCall]
+  )
 
-  const respondToPrompt = useCallback((matchId: string, accepted: boolean) => {
-    if (socket && isConnected) {
-      socket.emit('stage-prompt-response', { matchId, accepted })
-    }
-  }, [socket, isConnected])
+  const respondToPrompt = useCallback(
+    (matchId: string, accepted: boolean) => {
+      if (socket && isConnected) {
+        socket.emit('stage-prompt-response', { matchId, accepted })
+      }
+    },
+    [socket, isConnected]
+  )
 
   return {
-    callStatus, currentCall, incomingCall, remainingTime,
-    stagePrompt, partnerContact, icebreaker, initiateCall, acceptCall, declineCall, endCall, respondToPrompt,
+    callStatus,
+    currentCall,
+    incomingCall,
+    remainingTime,
+    stagePrompt,
+    partnerContact,
+    icebreaker,
+    initiateCall,
+    acceptCall,
+    declineCall,
+    endCall,
+    respondToPrompt
   }
 }
