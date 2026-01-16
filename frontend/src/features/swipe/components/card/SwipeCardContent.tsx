@@ -28,20 +28,18 @@ export const SwipeCardContent = ({ candidate }: SwipeCardContentProps) => {
     questionId: q.questionId,
     audioUrl: q.audioUrl,
     uploadId: q.uploadId,
-    audioFile: q.audioUrl,
+    audioFile: q.audioUrl
   }))
 
   return (
     <div
       className="relative flex-1 w-full z-20 overflow-y-auto custom-scrollbar overscroll-contain touch-pan-y-only bg-linear-to-t from-background via-background to-background/95"
-      onPointerDown={(e) => e.stopPropagation()}
-      onTouchStart={(e) => e.stopPropagation()}
+      onPointerDown={e => e.stopPropagation()}
+      onTouchStart={e => e.stopPropagation()}
     >
       <div className="p-4 sm:p-6 space-y-6 pb-24">
         {/* Voice Intro Section */}
-        {profile?.voiceIntro && (
-          <VoiceIntroDisplay voiceIntroUrl={profile.voiceIntro} />
-        )}
+        {profile?.voiceIntro && <VoiceIntroDisplay voiceIntroUrl={profile.voiceIntro} />}
 
         {/* Bio Section */}
         {profile?.bio && (
@@ -62,15 +60,12 @@ export const SwipeCardContent = ({ candidate }: SwipeCardContentProps) => {
 
         {/* Interests Section */}
         {profile?.interests && profile.interests.length > 0 && (
-          <InterestsSection
-            selectedInterests={profile.interests}
-            mode="display"
-          />
+          <InterestsSection selectedInterests={profile.interests} mode="display" />
         )}
 
         {/* Questions Section */}
         {questions.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-3 mb-28">
             <div className="flex items-center gap-2">
               <MessageSquare className="w-4 h-4 text-brand" />
               <h3 className="text-sm font-bold text-foreground uppercase tracking-wide">
@@ -86,14 +81,16 @@ export const SwipeCardContent = ({ candidate }: SwipeCardContentProps) => {
         )}
 
         {/* Empty State */}
-        {!profile?.voiceIntro && !profile?.bio && (!profile?.interests || profile.interests.length === 0) && questions.length === 0 && (
-          <div className="py-12 text-center">
-            <UserIcon className="w-12 h-12 mx-auto mb-3 text-muted" />
-            <p className="text-muted-foreground">{t('noProfileInfo')}</p>
-          </div>
-        )}
+        {!profile?.voiceIntro &&
+          !profile?.bio &&
+          (!profile?.interests || profile.interests.length === 0) &&
+          questions.length === 0 && (
+            <div className="py-12 text-center">
+              <UserIcon className="w-12 h-12 mx-auto mb-3 text-muted" />
+              <p className="text-muted-foreground">{t('noProfileInfo')}</p>
+            </div>
+          )}
       </div>
     </div>
   )
 }
-

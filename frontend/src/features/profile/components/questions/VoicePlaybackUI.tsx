@@ -30,9 +30,11 @@ export const VoicePlaybackUI = ({
     const audio = audioRef.current
     if (!audio) return
 
-    // Force reload when URL changes
-    audio.load()
-    audio.currentTime = 0
+    // Only load if src changed and is different from current
+    if (audio.src !== audioURL) {
+      audio.load()
+      audio.currentTime = 0
+    }
 
     const handleLoadedMetadata = () => {
       setDuration(audio.duration)
@@ -42,11 +44,12 @@ export const VoicePlaybackUI = ({
 
     const handleError = () => {
       const error = audio.error
-      console.error('[VoicePlaybackUI] Audio loading error:', {
-        code: error?.code,
-        message: error?.message,
-        src: audioURL
-      })
+      if (!error) {
+        console.warn(
+          '[VoicePlaybackUI] Audio error event fired but no error details available. This might be a temporary network issue or an aborted request.'
+        )
+        return
+      }
     }
 
     audio.addEventListener('loadedmetadata', handleLoadedMetadata)

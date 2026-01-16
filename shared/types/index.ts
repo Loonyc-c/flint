@@ -33,3 +33,6 @@ export { SUPPORTED_LOCALES, DEFAULT_LOCALE, isValidLocale, parseLocale } from '.
 
 // Staged calling types
 export * from './staged-call'
+
+// Live call types
+export * from './live-call'

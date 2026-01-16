@@ -81,7 +81,11 @@
         "cancel": "Cancel",
         "error": "Error",
         "matchCreated": "Match created! Check your conversations.",
-        "callEnded": "Call ended"
+        "callEnded": "Call ended",
+        "connected": "Connected",
+        "talkingTo": "Talking to {name}",
+        "matchPending": "If they like you back, it's a match!",
+        "backToHome": "Back to Home"
       },
       "swipe": {
         "title": "Swipe",
@@ -154,6 +158,7 @@
       "pass": "Pass",
       "super": "Super",
       "smash": "Smash",
+      "like": "Like",
       "undoAria": "Undo last swipe (Z)",
       "passAria": "Pass (←)",
       "superAria": "Super (↑)",
