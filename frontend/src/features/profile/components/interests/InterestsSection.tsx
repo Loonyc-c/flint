@@ -12,8 +12,9 @@ import { useTranslations } from 'next-intl'
 
 interface InterestsSectionProps {
   selectedInterests: INTERESTS[]
-  onEdit: () => void
+  onEdit?: () => void
   error?: string
+  mode?: 'edit' | 'display'
 }
 
 interface InterestsModalProps {
@@ -30,23 +31,25 @@ interface InterestsModalProps {
 /**
  * Section displaying selected interests with an edit button.
  */
-export const InterestsSection = ({ selectedInterests, onEdit, error }: InterestsSectionProps) => {
+export const InterestsSection = ({ selectedInterests, onEdit, error, mode = 'edit' }: InterestsSectionProps) => {
   const t = useTranslations('profile.interests')
 
   return (
-    <section className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
+    <section className="bg-card rounded-3xl p-6 shadow-sm border border-border">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-2">
           <Heart className="w-4 h-4 text-brand" />
-          <h2 className="font-bold text-sm uppercase tracking-widest text-neutral-500">{t('title')}</h2>
+          <h2 className="font-bold text-sm uppercase tracking-widest text-muted-foreground">{t('title')}</h2>
         </div>
-        <button
-          type="button"
-          onClick={onEdit}
-          className="px-4 py-1.5 bg-brand text-white text-xs font-black rounded-full shadow-lg shadow-brand/20 active:scale-95 transition-transform cursor-pointer"
-        >
-          {t('edit')}
-        </button>
+        {mode === 'edit' && onEdit && (
+          <button
+            type="button"
+            onClick={onEdit}
+            className="px-4 py-1.5 bg-brand text-brand-foreground text-xs font-black rounded-full shadow-lg shadow-brand/20 active:scale-95 transition-transform cursor-pointer"
+          >
+            {t('edit')}
+          </button>
+        )}
       </div>
 
       <div className="flex flex-wrap gap-2">
@@ -57,14 +60,13 @@ export const InterestsSection = ({ selectedInterests, onEdit, error }: Interests
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 20 }}
-                          className="px-4 py-2 bg-neutral-50 dark:bg-black border border-neutral-100 dark:border-neutral-800 text-neutral-700 dark:text-neutral-300 text-xs rounded-full font-bold"
-                        >
-                          {t(`items.${interest}`)}
-                        </motion.span>
-                      ))
-              
+              className="px-4 py-2 bg-muted border border-border text-foreground text-xs rounded-full font-bold"
+            >
+              {t(`items.${interest}`)}
+            </motion.span>
+          ))
         ) : (
-          <p className="text-sm text-neutral-400 italic py-2">
+          <p className="text-sm text-muted-foreground italic py-2">
             {t('empty')}
           </p>
         )}
