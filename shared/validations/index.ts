@@ -57,3 +57,10 @@ export {
   type StagePromptResponseInput,
   type GetMatchStageInput
 } from './staged-call.validation'
+
+export {
+  liveCallPreferencesSchema,
+  liveCallActionSchema,
+  type LiveCallPreferencesInput,
+  type LiveCallActionInput
+} from './live-call.validation'

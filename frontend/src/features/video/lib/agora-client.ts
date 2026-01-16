@@ -46,6 +46,25 @@ export class AgoraClient {
   private isJoining = false
   private joinPromise: Promise<AgoraJoinResult> | null = null
   private eventHandlers: AgoraEventHandlers = {}
+  
+  // Track disposal state management
+  private isDisposingTracks = false
+  private lastTrackDisposalTime = 0
+  private readonly MIN_TRACK_RECREATION_DELAY = 500
+
+  /**
+   * Diagnostic logging for track state
+   */
+  private logTrackState = (context: string): void => {
+    console.warn(`[Agora:${context}]`, {
+      hasClient: !!this.client,
+      isJoined: this.isJoined,
+      hasAudioTrack: !!this.localAudioTrack,
+      hasVideoTrack: !!this.localVideoTrack,
+      isDisposing: this.isDisposingTracks,
+      timeSinceDisposal: Date.now() - this.lastTrackDisposalTime,
+    })
+  }
 
   /**
    * Initialize the Agora client
@@ -155,29 +174,48 @@ export class AgoraClient {
     enableVideo: boolean
   ): Promise<AgoraJoinResult> {
     try {
-      // Leave existing connection
+      // 1. Ensure tracks are fully disposed before creating new ones
+      if (this.isDisposingTracks) {
+        console.warn('[Agora] Waiting for track disposal to complete...')
+        await new Promise(resolve => setTimeout(resolve, 500))
+      }
+
+      // 2. Enforce minimum delay since last disposal
+      const timeSinceDisposal = Date.now() - this.lastTrackDisposalTime
+      if (this.lastTrackDisposalTime > 0 && timeSinceDisposal < this.MIN_TRACK_RECREATION_DELAY) {
+        const remainingDelay = this.MIN_TRACK_RECREATION_DELAY - timeSinceDisposal
+        console.warn(`[Agora] Waiting ${remainingDelay}ms before creating tracks...`)
+        await new Promise(resolve => setTimeout(resolve, remainingDelay))
+      }
+
+      // 3. Leave existing connection if any
       if (this.isJoined || this.client?.connectionState === 'CONNECTED') {
         await this.leave()
         await new Promise((resolve) => setTimeout(resolve, 300))
       }
 
-      // Initialize if needed
+      // 4. Initialize client if needed (but don't recreate if exists)
       if (!this.client) {
         await this.init()
       }
 
-      // Join channel
+      // 5. Join channel
       await this.client!.join(appId, channel, token, uid)
       this.isJoined = true
 
-      // Create and publish audio track
-      this.localAudioTrack = await AgoraRTC.createMicrophoneAudioTrack()
-      await this.client!.publish([this.localAudioTrack])
+      // 6. Create and publish audio track with retry
+      try {
+        this.localAudioTrack = await this.createAudioTrackWithRetry()
+        await this.client!.publish([this.localAudioTrack])
+      } catch (audioError) {
+        console.error('[Agora] Failed to create audio track after retries:', audioError)
+        throw new Error('Microphone access failed. Please check permissions.')
+      }
 
-      // Create and publish video track if enabled
+      // 7. Create and publish video track if enabled
       if (enableVideo) {
         try {
-          this.localVideoTrack = await AgoraRTC.createCameraVideoTrack()
+          this.localVideoTrack = await this.createVideoTrackWithRetry()
           await this.client!.publish([this.localVideoTrack])
         } catch (videoError) {
           console.warn('[Agora] Could not create video track:', videoError)
@@ -185,7 +223,7 @@ export class AgoraClient {
         }
       }
 
-      // Check for existing remote users
+      // 8. Check for existing remote users
       const remoteUsers = this.client!.remoteUsers
 
       for (const user of remoteUsers) {
@@ -206,6 +244,8 @@ export class AgoraClient {
       }
     } catch (error) {
       console.error('[Agora] Error joining channel:', error)
+      // Cleanup on error
+      await this.leave()
       throw error
     }
   }
@@ -231,42 +271,122 @@ export class AgoraClient {
   }
 
   /**
+   * Create audio track with retry logic
+   */
+  private createAudioTrackWithRetry = async (maxRetries = 3): Promise<IMicrophoneAudioTrack> => {
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.warn(`[Agora] Creating audio track (attempt ${attempt}/${maxRetries})...`)
+        const track = await AgoraRTC.createMicrophoneAudioTrack()
+        console.warn('[Agora] ✅ Audio track created successfully')
+        return track
+      } catch (error) {
+        lastError = error as Error
+        console.warn(`[Agora] Audio track creation failed (attempt ${attempt}):`, error)
+        
+        if (attempt < maxRetries) {
+          const delay = attempt * 500
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    
+    throw lastError || new Error('Failed to create audio track')
+  }
+
+  /**
+   * Create video track with retry logic
+   */
+  private createVideoTrackWithRetry = async (maxRetries = 2): Promise<ICameraVideoTrack> => {
+    let lastError: Error | null = null
+    
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.warn(`[Agora] Creating video track (attempt ${attempt}/${maxRetries})...`)
+        const track = await AgoraRTC.createCameraVideoTrack()
+        console.warn('[Agora] ✅ Video track created successfully')
+        return track
+      } catch (error) {
+        lastError = error as Error
+        console.warn(`[Agora] Video track creation failed (attempt ${attempt}):`, error)
+        
+        if (attempt < maxRetries) {
+          const delay = attempt * 500
+          await new Promise(resolve => setTimeout(resolve, delay))
+        }
+      }
+    }
+    
+    throw lastError || new Error('Failed to create video track')
+  }
+
+  /**
    * Leave the channel and clean up
    */
   async leave(): Promise<void> {
+    if (this.isDisposingTracks) {
+      console.warn('[Agora] Already disposing tracks, skipping duplicate leave call')
+      return
+    }
+
+    this.isDisposingTracks = true
+
     try {
-      // Stop and close local audio
+      // 1. Unpublish local tracks from channel FIRST
+      const tracksToUnpublish: (IMicrophoneAudioTrack | ICameraVideoTrack)[] = []
+      if (this.localAudioTrack) tracksToUnpublish.push(this.localAudioTrack)
+      if (this.localVideoTrack) tracksToUnpublish.push(this.localVideoTrack)
+
+      if (tracksToUnpublish.length > 0 && this.client && this.isJoined) {
+        try {
+          await this.client.unpublish(tracksToUnpublish)
+        } catch (err) {
+          console.warn('[Agora] Error unpublishing tracks:', err)
+        }
+      }
+
+      // 2. Stop and close local audio
       if (this.localAudioTrack) {
         this.localAudioTrack.stop()
         this.localAudioTrack.close()
         this.localAudioTrack = null
       }
 
-      // Stop and close local video
+      // 3. Stop and close local video
       if (this.localVideoTrack) {
         this.localVideoTrack.stop()
         this.localVideoTrack.close()
         this.localVideoTrack = null
       }
 
-      // Stop remote tracks
+      // 4. Stop remote tracks
       this.remoteUsers.forEach((user) => {
         user.audioTrack?.stop()
         user.videoTrack?.stop()
       })
 
-      // Leave channel
+      // 5. Leave channel (but keep client instance alive)
       if (this.client && this.isJoined) {
         await this.client.leave()
         this.isJoined = false
       }
 
       this.remoteUsers.clear()
-      this.client = null
+      
+      // 6. Record disposal time and wait for hardware release
+      this.lastTrackDisposalTime = Date.now()
+      await new Promise(resolve => setTimeout(resolve, 300))
+
     } catch (error) {
       console.error('[Agora] Error during cleanup:', error)
       this.isJoined = false
+    } finally {
+      this.isDisposingTracks = false
     }
+    
+    // NOTE: Do NOT set this.client = null here! Client is reused for subsequent calls
   }
 
   /**
@@ -454,11 +574,14 @@ export class AgoraClient {
   }
 
   /**
-   * Destroy client
+   * Destroy client - called only on component unmount
    */
   destroy(): void {
-    this.leave()
+    this.leave().catch(err => console.error('[Agora] Error in destroy:', err))
     this.eventHandlers = {}
+    // NOW we can null the client
+    this.client = null
+    this.lastTrackDisposalTime = 0
   }
 }
 

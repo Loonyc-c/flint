@@ -6,7 +6,7 @@ import { type User, type SwipeAction } from '@shared/types'
 import { useSwipeCard } from '../hooks/useSwipeCard'
 import { SwipeCardHero } from './card/SwipeCardHero'
 import { SwipeCardContent } from './card/SwipeCardContent'
-import { SwipeCardActions } from './card/SwipeCardActions'
+
 import { StampOverlay } from './card/StampOverlay'
 import { SwipeIndicator } from './card/SwipeIndicator'
 
@@ -39,20 +39,11 @@ export const SwipeCardContainer = forwardRef<SwipeCardRef, SwipeCardContainerPro
       setIsDragging,
       handleDragEnd,
       triggerSwipe,
-      motionValues: {
-        x,
-        y,
-        rotate,
-        likeOpacity,
-        passOpacity,
-        superOpacity,
-        cardOpacity,
-        controls,
-      },
+      motionValues: { x, y, rotate, likeOpacity, passOpacity, superOpacity, cardOpacity, controls }
     } = useSwipeCard({ candidate, onSwipe })
 
     useImperativeHandle(ref, () => ({
-      triggerSwipe,
+      triggerSwipe
     }))
 
     return (
@@ -95,15 +86,14 @@ export const SwipeCardContainer = forwardRef<SwipeCardRef, SwipeCardContainerPro
         <SwipeCardContent candidate={candidate} />
 
         {/* Fixed Action Buttons */}
-        <SwipeCardActions
+        {/* <SwipeCardActions
           onPass={() => triggerSwipe('pass')}
           onLike={() => triggerSwipe('smash')}
           disabled={false}
-        />
+        /> */}
       </motion.div>
     )
   }
 )
 
 SwipeCardContainer.displayName = 'SwipeCardContainer'
-

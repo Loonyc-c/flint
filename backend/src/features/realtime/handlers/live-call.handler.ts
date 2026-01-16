@@ -1,19 +1,11 @@
 import { Server } from 'socket.io'
 import { AuthenticatedSocket } from '../middleware/auth.middleware'
-import { liveCallQueueService } from '../services/live-call-queue.service'
-import { getUserCollection, getMatchCollection } from '@/data/db/collection'
-import { ObjectId } from 'mongodb'
-import { LOOKING_FOR, USER_GENDER, UserPreferences } from '@shared/types'
-import { DbMatch } from '@/data/db/types/match'
-import { randomUUID } from 'crypto'
-import { triggerContactExchange } from './staged-call.handler'
+import { liveCallService } from '@/features/live-call/services/live-call.service'
 import { busyStateService } from '../services/busy-state.service'
-
-import { circuitBreaker } from '@/utils/circuit-breaker'
-
-const MAX_QUEUE_SIZE = 1000
-const promotionLocks = new Set<string>()
-const joiningLocks = new Set<string>()
+import { LIVE_CALL_EVENTS, LiveCallPreferences } from '@shared/types'
+import { liveCallPreferencesSchema, liveCallActionSchema } from '@shared/validations'
+import { getUserCollection } from '@/data/db/collection'
+import { ObjectId } from 'mongodb'
 
 /**
  * Register live call socket event handlers
@@ -24,187 +16,103 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
   /**
    * Join the live call queue
    */
-  socket.on('live-call-join', async () => {
-    if (joiningLocks.has(userId)) return
-    
+  socket.on(LIVE_CALL_EVENTS.JOIN_QUEUE, async (data: unknown) => {
     try {
-      joiningLocks.add(userId)
-      if (circuitBreaker.isOpen()) {
-        socket.emit('live-call-error', { message: 'System is under high load. Please try again later.' })
-        return
-      }
-
       if (busyStateService.isUserBusy(userId)) {
-        socket.emit('live-call-error', { message: 'You are already in a call or queue' })
+        socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.live_call.already_busy' })
         return
       }
 
+      // 1. Get user profile and preferences if not provided
       const userCollection = await getUserCollection()
       const user = await userCollection.findOne({ _id: new ObjectId(userId) })
 
-      if (!user) {
-        socket.emit('live-call-error', { message: 'User not found' })
+      if (!user || !user.profile) {
+        socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.profile.not_found' })
         return
       }
 
-      const gender = (user.profile?.gender as USER_GENDER | undefined) ?? USER_GENDER.OTHER
-      const age = user.profile?.age ?? 18
-      const preferences = (user.preferences as UserPreferences | undefined) ?? {
-        lookingFor: LOOKING_FOR.ALL,
-        ageRange: 200,
-      }
+      // Use provided preferences or user defaults
+      const validation = liveCallPreferencesSchema.safeParse(data)
+      const preferences: LiveCallPreferences = validation.success
+        ? validation.data
+        : {
+            age: user.profile.age,
+            gender: user.profile.gender,
+            lookingFor: user.preferences?.lookingFor || 'all',
+            minAge: 18,
+            maxAge: 100,
+          }
 
-      if (liveCallQueueService.getQueueSize() >= MAX_QUEUE_SIZE) {
-        socket.emit('live-call-error', { message: 'Queue is full, please try again later' })
-        return
-      }
-
-      const match = liveCallQueueService.joinQueue({
-        userId,
-        gender,
-        age,
+      // 2. Add to queue
+      await liveCallService.addToQueue(userId, {
+        gender: user.profile.gender,
+        age: user.profile.age,
         preferences,
-        joinedAt: new Date(),
       })
 
+      busyStateService.setUserStatus(userId, 'queueing')
+
+      // 3. Try matching
+      const match = await liveCallService.findMatch(userId)
       if (match) {
-        // Match found!
-        busyStateService.setUserStatus(userId, 'connecting')
-        busyStateService.setUserStatus(match.userId, 'connecting')
-        
-        const ephemeralMatchId = `live_${randomUUID()}`
-        const channelName = `live_call_${ephemeralMatchId}`
+        const { payload1, payload2 } = match
+        const partnerId = payload1.partner.id
+
+        busyStateService.setUserStatus(userId, 'in-call')
+        busyStateService.setUserStatus(partnerId, 'in-call')
 
         // Notify both users
-        const matchData = {
-          matchId: ephemeralMatchId,
-          partnerId: match.userId,
-          partnerName: user.auth.firstName, // This is current user's name for the partner
-          channelName,
-          stage: 1,
-          callType: 'audio',
-        }
+        io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, payload1)
+        io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, payload2)
 
-        // Notify partner
-        io.to(`user:${match.userId}`).emit('live-match-found', {
-          ...matchData,
-          partnerId: userId,
-          partnerName: user.auth.firstName,
-        })
-
-        // Notify current user
-        const partnerUser = await userCollection.findOne({ _id: new ObjectId(match.userId) })
-        socket.emit('live-match-found', {
-          ...matchData,
-          partnerId: match.userId,
-          partnerName: partnerUser?.auth.firstName || 'Partner',
-        })
-      } else {
-        busyStateService.setUserStatus(userId, 'queueing')
-        socket.emit('live-call-queued')
+        console.log(`🔥 [LiveCall] Match found: ${userId} <-> ${partnerId}`)
       }
     } catch (error) {
-      console.error('Error joining live call queue:', error)
-      socket.emit('live-call-error', { message: 'Internal server error' })
-    } finally {
-      joiningLocks.delete(userId)
+      console.error('❌ [LiveCall] Join queue error:', error)
+      socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.internal_server_error' })
     }
   })
 
   /**
    * Leave the live call queue
    */
-  socket.on('live-call-leave', () => {
-    try {
-      liveCallQueueService.leaveQueue(userId)
-      busyStateService.clearUserStatus(userId)
-      socket.emit('live-call-left')
-    } catch (error) {
-      console.error('Error leaving live call queue:', error)
-    }
+  socket.on(LIVE_CALL_EVENTS.LEAVE_QUEUE, () => {
+    liveCallService.removeFromQueue(userId)
+    busyStateService.clearUserStatus(userId)
   })
 
   /**
-   * Cancel live call (explicit user cancellation)
+   * Handle Like/Pass action during or after call
    */
-  socket.on('live-call-cancel', (data: { status: string }) => {
+  socket.on(LIVE_CALL_EVENTS.CALL_ACTION, async (data: unknown) => {
     try {
-      const { status } = data
-      
-      // Get partner if user was connecting
-      const partnerId = liveCallQueueService.getPartner(userId)
-      
-      // Remove from queue and clear connecting state
-      liveCallQueueService.leaveQueue(userId)
-      liveCallQueueService.clearConnecting(userId)
-      busyStateService.clearUserStatus(userId)
-      
-      // If user was connecting, notify the partner
-      if (status === 'connecting' && partnerId) {
-        io.to(`user:${partnerId}`).emit('live-call-cancelled')
-        busyStateService.clearUserStatus(partnerId)
-        liveCallQueueService.clearConnecting(partnerId)
-      }
-      
-      socket.emit('live-call-left')
-      console.log(`🚫 [LiveCall] User ${userId} cancelled (status: ${status})`)
-    } catch (error) {
-      console.error('Error cancelling live call:', error)
-    }
-  })
-
-  /**
-   * Handle Stage 3 promotion (Create formal match)
-   * This is called when both users accept moving to Stage 3
-   */
-  socket.on('live-call-promote-match', async (data: { partnerId: string }) => {
-    const { partnerId } = data
-    const sortedUsers = [userId, partnerId].sort()
-    const lockKey = sortedUsers.join(':')
-
-    if (promotionLocks.has(lockKey)) return
-
-    try {
-      promotionLocks.add(lockKey)
-      const matchCollection = await getMatchCollection()
-
-      // Check if match already exists
-      const existingMatch = await matchCollection.findOne({
-        users: { $all: sortedUsers, $size: 2 }
-      })
-
-      if (existingMatch) {
-        socket.emit('live-call-match-promoted', { matchId: existingMatch._id.toHexString() })
+      const validation = liveCallActionSchema.safeParse(data)
+      if (!validation.success) {
+        socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.invalid_input' })
         return
       }
 
-      // Create new match
-      const newMatch: DbMatch = {
-        users: sortedUsers,
-        stage: 'unlocked', // Promoted matches start at unlocked (Stage 3)
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        isDeleted: false,
-        createdBy: userId,
-        updatedBy: userId,
+      const { matchId, action } = validation.data
+      const result = await liveCallService.handleAction(userId, matchId, action)
+
+      if (result && result.isComplete) {
+        const { isMatch, partnerId, newMatchId } = result
+
+        // Notify both users of the final result
+        const resultPayload = { matchId, isMatch, newMatchId }
+        io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.CALL_RESULT, resultPayload)
+        io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.CALL_RESULT, resultPayload)
+
+        // Reset busy states
+        busyStateService.clearUserStatus(userId)
+        busyStateService.clearUserStatus(partnerId)
+
+        console.log(`✨ [LiveCall] Result for ${matchId}: Match=${isMatch}`)
       }
-
-      const result = await matchCollection.insertOne(newMatch)
-      const matchId = result.insertedId.toHexString()
-
-      // Notify both users
-      io.to(`user:${userId}`).emit('live-call-match-promoted', { matchId })
-      io.to(`user:${partnerId}`).emit('live-call-match-promoted', { matchId })
-
-      // Trigger contact exchange reveal
-      await triggerContactExchange(io, matchId, sortedUsers)
-
-      console.log(`🤝 [LiveCall] Match promoted to formal: ${matchId}`)
     } catch (error) {
-      console.error('Error promoting live call match:', error)
-      socket.emit('live-call-error', { message: 'Failed to promote match' })
-    } finally {
-      promotionLocks.delete(lockKey)
+      console.error('❌ [LiveCall] Action error:', error)
+      socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.internal_server_error' })
     }
   })
 
@@ -212,22 +120,10 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    * Cleanup on disconnect
    */
   socket.on('disconnect', () => {
-    const userStatus = busyStateService.getUserStatus(userId)
-    
-    // If user was connecting, notify partner about disconnection
-    if (userStatus === 'connecting' || userStatus === 'queueing') {
-      const partnerId = liveCallQueueService.getPartner(userId)
-      
-      if (partnerId) {
-        io.to(`user:${partnerId}`).emit('live-call-cancelled')
-        busyStateService.clearUserStatus(partnerId)
-        liveCallQueueService.clearConnecting(partnerId)
-        console.log(`🔌 [LiveCall] User ${userId} disconnected, notified partner ${partnerId}`)
-      }
-    }
-    
-    liveCallQueueService.leaveQueue(userId)
-    liveCallQueueService.clearConnecting(userId)
-    busyStateService.clearUserStatus(userId)
+    liveCallService.removeFromQueue(userId)
+    // Note: If user was in a call, we might want to notify the partner.
+    // This is handled by Agora usually for the audio stream,
+    // but we should also clear the ongoing call in our service.
+    // For MVP, we'll keep it simple.
   })
 }
