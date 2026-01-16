@@ -74,8 +74,12 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         busyStateService.setUserStatus(userId, 'in-call')
         busyStateService.setUserStatus(partnerId, 'in-call')
 
-        // Create Agora channel for this call
-        const channelName = `live_${Date.now()}_${userId}_${partnerId}`
+        // Create Agora channel for this call (must be under 64 bytes)
+        // Use short timestamp + truncated user IDs
+        const timestamp = Date.now().toString(36) // Base36 = shorter
+        const shortUserId = userId.slice(-8) // Last 8 chars
+        const shortPartnerId = partnerId.slice(-8) // Last 8 chars
+        const channelName = `lv${timestamp}${shortUserId}${shortPartnerId}`
 
         // Generate Agora tokens for both users using your existing service
         const { agoraService } = await import('@/features/agora/services/agora.service')
