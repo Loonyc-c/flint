@@ -5,7 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { Phone, X, Heart, ThumbsDown, Loader2, ShieldCheck, Timer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useLiveCall, type LiveCallStatus as _LiveCallStatus } from '@/features/live-call/hooks/useLiveCall'
+import {
+  useLiveCall,
+  type LiveCallStatus as _LiveCallStatus
+} from '@/features/live-call/hooks/useLiveCall'
 import { useProfileReadiness } from '@/features/profile/hooks/useProfileReadiness'
 import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
 import { UserAvatar } from '@/components/ui/UserAvatar'
@@ -251,7 +254,7 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
                   <h3 className="text-2xl font-bold text-destructive mb-2">{t('error')}</h3>
                   <p className="text-muted-foreground mb-8 text-sm">
                     {error === 'err.live_call.connection_failed'
-                      ? 'Failed to connect to voice channel'
+                      ? 'Failed to connect to voice channel please check your microphone and network settings.'
                       : error || 'Something went wrong'}
                   </p>
                   <Button
