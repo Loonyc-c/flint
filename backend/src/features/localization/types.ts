@@ -18,7 +18,10 @@ const _translationKeys = [
 
   // User
   'err.user.not_found',
-  'err.user.already_exists'
+  'err.user.already_exists',
+
+  // Profile
+  'err.profile.incomplete_for_swipe'
 ] as const
 
 export type TranslationKey = (typeof _translationKeys)[number]
