@@ -1,4 +1,4 @@
-import { LOOKING_FOR, USER_GENDER, UserPreferences } from '@shared/types'
+import { USER_GENDER, UserPreferences } from '@shared/types'
 
 export interface QueueEntry {
   userId: string
@@ -38,38 +38,12 @@ class LiveCallQueueService {
     this.queue.delete(userId)
   }
 
-  /**
-   * Check if two users match each other's preferences
-   * TODO: PERFORMANCE - This loop is O(N). For 1000+ users, consider 
-   * indexing by gender/preference or using a dedicated matchmaking service.
-   */
-  private isMatch(a: QueueEntry, b: QueueEntry): boolean {
-    // Check gender preferences
-    if (!this.checkGenderPreference(a, b) || !this.checkGenderPreference(b, a)) {
-      return false
-    }
-
-    // Check age preferences
-    if (!this.checkAgePreference(a, b) || !this.checkAgePreference(b, a)) {
-      return false
-    }
-
+  private isMatch(_a: QueueEntry, _b: QueueEntry): boolean {
+    /**
+     * Requirement: Live call should not use preferences or age range.
+     * Random matching is used to maximize connectivity.
+     */
     return true
-  }
-
-  private checkGenderPreference(user: QueueEntry, target: QueueEntry): boolean {
-    const lookingFor = user.preferences.lookingFor
-    if (lookingFor === LOOKING_FOR.ALL) return true
-    
-    // LOOKING_FOR enum values match USER_GENDER string values
-    return lookingFor as unknown as USER_GENDER === target.gender
-  }
-
-  private checkAgePreference(user: QueueEntry, target: QueueEntry): boolean {
-    // As per match.service.ts, ageRange is treated as max age
-    // We also assume a minimum age of 18
-    const maxAge = user.preferences.ageRange
-    return target.age >= 18 && target.age <= maxAge
   }
 
   public getQueueSize(): number {

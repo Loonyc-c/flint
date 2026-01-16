@@ -3,6 +3,8 @@
 import { useState, useRef, useEffect } from 'react'
 import { Mic } from 'lucide-react'
 import { useTranslations } from 'next-intl'
+import { toast } from 'react-toastify'
+import { uploadAudioToCloudinary } from '@/lib/cloudinary'
 import { VoiceIntroModal } from './VoiceIntroModal'
 import { VoicePlaybackUI } from '../questions/VoicePlaybackUI'
 
@@ -17,6 +19,7 @@ interface VoiceIntroWidgetProps {
 export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntroWidgetProps) => {
   const t = useTranslations('profile.voice')
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const [currentVoiceIntro, setCurrentVoiceIntro] = useState<Blob | string | undefined>(initialVoiceIntro)
   const [audioURL, setAudioURL] = useState<string | undefined>(
     typeof initialVoiceIntro === 'string' ? initialVoiceIntro : undefined
@@ -36,10 +39,29 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
     }
   }, [currentVoiceIntro])
 
-  const handleSave = (audioFile: Blob | string | undefined) => {
-    setCurrentVoiceIntro(audioFile)
-    onVoiceChange(audioFile)
-  }
+  const handleSave = async (audioFile: Blob | string | undefined) => {
+    if (audioFile instanceof Blob) {
+      setIsUploading(true);
+      try {
+        const result = await uploadAudioToCloudinary(audioFile, {
+          folder: 'flint/voice-intros',
+        });
+        setCurrentVoiceIntro(result.url);
+        onVoiceChange(result.url);
+        toast.success(t('uploadSuccess'));
+      } catch (error) {
+        console.error('Failed to upload voice intro:', error);
+        toast.error(t('uploadFailed'));
+        onVoiceChange(undefined); // Clear any old value
+      } finally {
+        setIsUploading(false);
+      }
+    } else {
+      // Handle case where it's already a URL or undefined
+      setCurrentVoiceIntro(audioFile);
+      onVoiceChange(audioFile);
+    }
+  };
 
   const handleDelete = () => {
     setCurrentVoiceIntro(undefined)
@@ -79,9 +101,10 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
           <button
             type="button"
             onClick={() => setIsModalOpen(true)}
-            className="relative z-10 px-6 py-2 text-xs font-black transition-all rounded-full cursor-pointer bg-brand text-brand-foreground active:scale-95"
+            disabled={isUploading}
+            className="relative z-10 px-6 py-2 text-xs font-black transition-all rounded-full cursor-pointer bg-brand text-brand-foreground active:scale-95 disabled:opacity-50"
           >
-            {t('record')}
+            {isUploading ? t('uploading') : t('record')}
           </button>
         )}
       </div>

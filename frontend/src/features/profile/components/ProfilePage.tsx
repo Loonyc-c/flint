@@ -1,46 +1,26 @@
 "use client";
 
-import { useState, useEffect } from "react";
-
+import { useState } from "react";
 import { useAuthenticatedUser } from "@/features/auth/context/UserContext";
-
 import { ProfileAvatar } from "./avatar/ProfileAvatar";
-
 import { BasicInfoSection, BioSection } from "./info/BasicInfoSections";
-
 import { InterestsSection, InterestsModal } from "./interests/InterestsSection";
-
 import { QuestionsSection } from "./questions/QuestionsSection";
-
+import { ContactInputSection } from "./contact/ContactInputSection";
 import { VoiceIntroWidget } from "./voice/VoiceIntroWidget";
-
-import { InstagramVerification } from "./contact/InstagramVerification";
-
 import { useProfilePhoto } from "../hooks/useProfilePhoto";
-
 import { useProfileForm } from "../hooks/useProfileForm";
-
 import { type INTERESTS } from "@shared/types/enums";
-
 import { useTranslations } from "next-intl";
 
-import { useSearchParams, useRouter } from "next/navigation";
-
-import { toast } from "react-toastify";
-
 // =============================================================================
-
 // Sub-Components
-
 // =============================================================================
 
 interface SaveButtonProps {
   onClick: () => void;
-
   isSaving: boolean;
-
   hasPendingPhoto: boolean;
-
   className?: string;
 }
 
@@ -92,71 +72,36 @@ const DesktopSaveButton = ({
 };
 
 // =============================================================================
-
 // Main Component
-
 // =============================================================================
 
 export const ProfilePage = () => {
   const { user } = useAuthenticatedUser();
-  const searchParams = useSearchParams();
-  const router = useRouter();
-  const t = useTranslations("profile.verification");
-
   const [showInterestsModal, setShowInterestsModal] = useState(false);
-
-  // Handle verification feedback from URL
-  useEffect(() => {
-    const verified = searchParams.get("verified");
-    const error = searchParams.get("error");
-
-    if (verified === "instagram") {
-      toast.success(t("instagramSuccess"));
-      // Clean up URL
-      router.replace("/profile");
-    } else if (error) {
-      const message = error === "instagram_handle_missing" 
-        ? t("instagramHandleMissing")
-        : t("verificationFailed");
-      toast.error(message);
-      // Clean up URL
-      router.replace("/profile");
-    }
-  }, [searchParams, t, router]);
 
   const {
     fileInputRef,
-
     pendingPhotoFile,
-
     photoPreviewUrl,
-
     handlePhotoSelect,
-
     clearPendingPhoto,
-
     triggerFileInput,
   } = useProfilePhoto();
 
   const { form, formData, completeness, isSaving, onSave } = useProfileForm(
     user.id,
-
     pendingPhotoFile,
-
     clearPendingPhoto
   );
 
   const {
     register,
-
     setValue,
-
     formState: { errors },
   } = form;
 
   const toggleInterest = (interest: INTERESTS) => {
     const current = formData.interests || [];
-
     const updated = current.includes(interest)
       ? current.filter((i) => i !== interest)
       : [...current, interest];
@@ -177,7 +122,6 @@ export const ProfilePage = () => {
 
         <div className="lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
           {/* Sidebar (Avatar & Actions) */}
-
           <div className="lg:col-span-4 space-y-6">
             <div className="lg:sticky lg:top-8 space-y-8">
               <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
@@ -190,7 +134,6 @@ export const ProfilePage = () => {
               </div>
 
               {/* Desktop Voice Intro */}
-
               <div className="hidden lg:block">
                 <VoiceIntroWidget
                   initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
@@ -201,7 +144,6 @@ export const ProfilePage = () => {
               </div>
 
               {/* Desktop Save Button */}
-
               <div className="hidden lg:block">
                 <DesktopSaveButton
                   onClick={onSave}
@@ -213,13 +155,12 @@ export const ProfilePage = () => {
           </div>
 
           {/* Main Content (Forms) */}
-
           <div className="lg:col-span-8 space-y-6 mt-6 lg:mt-0">
-            <InstagramVerification />
-
             <BasicInfoSection register={register} errors={errors} />
 
             <BioSection register={register} errors={errors} />
+
+            <ContactInputSection register={register} errors={errors} />
 
             <InterestsSection
               selectedInterests={formData.interests || []}
@@ -238,7 +179,6 @@ export const ProfilePage = () => {
             />
 
             {/* Mobile Voice Intro */}
-
             <div className="lg:hidden">
               <VoiceIntroWidget
                 initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}

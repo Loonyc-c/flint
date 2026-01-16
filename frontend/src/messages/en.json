@@ -319,6 +319,8 @@
       "saveButton": "Save Contact Info",
       "saving": "Saving...",
       "footerNote": "Your contact info will only be shared with matches who complete Stage 3 with you",
+      "instagramDesc": "Connect your Instagram to show on your profile.",
+      "instagramNote": "Share your handle securely.",
       "labels": {
         "phone": "Phone Number",
         "instagram": "Instagram",
@@ -332,11 +334,11 @@
         "other": "Other"
       },
       "placeholders": {
-        "phone": "+1 234 567 8900",
+        "phone": "+976 1234 5678",
         "instagram": "@yourusername",
         "telegram": "@yourusername",
         "snapchat": "yourusername",
-        "whatsapp": "+1 234 567 8900",
+        "whatsapp": "+976 1234 5678",
         "wechat": "yourwechatid",
         "other": "Any other contact info"
       }
@@ -345,6 +347,9 @@
       "title": "Voice Intro",
       "subtitle": "Let them hear your vibe",
       "record": "Record",
+      "uploading": "Uploading...",
+      "uploadSuccess": "Voice intro uploaded!",
+      "uploadFailed": "Upload failed. Please try again.",
       "modal": {
         "title": "Voice Intro"
       }
@@ -394,6 +399,8 @@
         "timeRemaining": "Time remaining",
         "empty": "No contact info shared",
         "partnerContact": "{name}'s Contact",
+        "revealing": "Revealing contacts...",
+        "copied": "{label} copied!",
         "labels": {
           "phone": "Phone",
           "instagram": "Instagram",

@@ -6,7 +6,7 @@ This document outlines the strict architectural and coding standards for AI agen
 
 # System Instruction: Flint Monorepo Architect
 
- the **Flint** project (Next.js 15 Frontend, Express Backend, Shared Monorepo). Your primary directive is to enforce strict modularity and modern syntax standards.
+You are the Lead Architect for the **Flint** project (Next.js 15 Frontend, Express Backend, Shared Monorepo). Your primary directive is to enforce strict modularity and modern syntax standards.
 
 ## 🚨 Zero-Tolerance Constraints (The "Kill List")
 *If generated code violates these, it is considered a failure.*
@@ -28,6 +28,7 @@ This document outlines the strict architectural and coding standards for AI agen
     *   ❌ **Forbidden:** `bg-[#B33A2E]`, `text-white`, `border-gray-200`, `bg-neutral-100`.
     *   ✅ **Required:** `bg-brand`, `text-foreground`, `border-border`, `bg-muted`.
     *   All colors MUST be semantic and mapped in `src/app/globals.css`.
+    *   **Brand Assets:** Complex brand gradients or specific hex codes (e.g., Instagram) MUST be defined as utility classes in `globals.css` (e.g., `.bg-instagram-gradient`) or CSS variables, never inline.
 
 ---
 
@@ -107,6 +108,15 @@ To ensure stability across all devices and prevent scrollbar issues:
 
 ### Agora Integration
 *   **Numeric UIDs:** Agora requires numeric UIDs. ALWAYS use `agoraService.generateNumericUid(userId)` when interacting with RTC channels to maintain consistency between string-based MongoDB IDs and numeric RTC requirements.
+
+---
+
+## 6. 🛡️ Safety & Integrity Standards
+
+### Data Gating & Consistency
+*   **Gatekeeper Guards:** Features relying on specific user data (e.g., Live Call requires Photo) MUST implement a Guard Hook or Component that checks existence and redirects if missing. Never assume data exists.
+*   **Business Logic Isolation:** Critical logic (e.g., Profile Completeness Scoring, Match Compatibility) MUST be isolated in pure functions within `@shared/lib`.
+*   **Migration Integrity:** Migration scripts modifying core data structures MUST reference the *current* shared types/logic to ensure consistency, or explicitly document why they deviate.
 
 ---
 

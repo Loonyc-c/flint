@@ -4,23 +4,9 @@ import { useEffect, useCallback, useState, useRef } from 'react'
 import { useSocket } from '@/features/realtime/context/SocketContext'
 import { type ContactInfoDisplay } from '@shared/types'
 import { useUser } from '@/features/auth/context/UserContext'
+import { type LiveMatchData, type IcebreakerPayload } from '../types'
 
 export type LiveCallStatus = 'idle' | 'queueing' | 'connecting' | 'in-call' | 'error'
-
-interface LiveMatchData {
-  matchId: string
-  partnerId: string
-  partnerName: string
-  channelName: string
-  stage: number
-  callType: string
-}
-
-export interface IcebreakerPayload {
-  matchId: string
-  questions: string[]
-  timestamp: string
-}
 
 interface UseLiveCallReturn {
   status: LiveCallStatus
@@ -147,7 +133,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
       socket.off('stage-prompt-result', handlePromptResult)
       socket.off('staged-call-icebreaker', handleIcebreaker)
     }
-  }, [socket])
+  }, [socket, busyStates, user?.id])
 
   const joinQueue = useCallback(() => {
     if (socket && isConnected) {

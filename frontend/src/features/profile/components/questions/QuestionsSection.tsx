@@ -10,9 +10,14 @@ import { useTranslations } from "next-intl";
 import { AnsweredQuestionPlayer } from "./AnsweredQuestionPlayer";
 import { QuestionEditSection } from "./QuestionEditSection";
 
+// Extend the strict DTO type to include the file blob for the form state
+export interface QuestionAnswerFormState extends QuestionAnswer {
+  audioFile?: Blob | string;
+}
+
 export interface QuestionsSectionProps {
-  questions: QuestionAnswer[];
-  onUpdateQuestions: (questions: QuestionAnswer[]) => void;
+  questions: QuestionAnswerFormState[];
+  onUpdateQuestions: (questions: QuestionAnswerFormState[]) => void;
   error?: string;
 }
 
@@ -31,7 +36,7 @@ export const QuestionsSection = ({
     [questions]
   );
 
-  const normalizedQuestions: QuestionAnswer[] = [0, 1, 2].map(
+  const normalizedQuestions: QuestionAnswerFormState[] = [0, 1, 2].map(
     (i) =>
       questions[i] || {
         questionId: "",

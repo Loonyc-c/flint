@@ -1,5 +1,5 @@
 import { NormalizedEvent } from '@/shared/api/types'
-import { matchService } from '@/features/matches/services/match.service'
+import { discoveryService } from '@/features/matches/services/discovery.service'
 // Requirement 7: Standardized import to use @shared/validations for consistency
 import { objectIdSchema, listSchema } from '@shared/validations'
 import { ServiceException } from '@/features/error'
@@ -25,7 +25,7 @@ const handler = async (event: NormalizedEvent) => {
 
   const req = listSchema.parse(body)
   try {
-    const candidates = await matchService.getCandidates(_id, req)
+    const candidates = await discoveryService.getCandidates(_id, req)
 
     return candidates
   } catch (e: unknown) {

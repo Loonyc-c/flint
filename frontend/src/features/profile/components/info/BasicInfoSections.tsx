@@ -1,7 +1,7 @@
 'use client'
 
 import { type UseFormRegister, type FieldErrors } from 'react-hook-form'
-import { type ProfileCreationFormData } from '@shared/validations'
+import { type ProfileAndContactFormData } from '@/features/profile/hooks/useProfileForm'
 import { FormInput } from '@/components/ui/form-input'
 import { Label } from '@/components/ui/label'
 import { LabelInputContainer } from '@/utils'
@@ -12,8 +12,8 @@ import { useTranslations } from 'next-intl'
 // =============================================================================
 
 interface BasicInfoProps {
-  register: UseFormRegister<ProfileCreationFormData>
-  errors: FieldErrors<ProfileCreationFormData>
+  register: UseFormRegister<ProfileAndContactFormData>
+  errors: FieldErrors<ProfileAndContactFormData>
 }
 
 // =============================================================================

@@ -7,7 +7,6 @@ export type UserProfile = {
   bio: string
   interests: INTERESTS[]
   photo: string
-  photos?: string[]
   voiceIntro: string
   questions: QuestionAnswer[]
 }
@@ -25,16 +24,7 @@ export type UserPreferences = {
 }
 
 export type UserContactInfo = {
-  phone?: string
   instagram?: string
-  telegram?: string
-  snapchat?: string
-  whatsapp?: string
-  wechat?: string
-  facebook?: string
-  twitter?: string
-  linkedin?: string
-  other?: string
   verifiedPlatforms: string[]
 }
 
@@ -42,7 +32,6 @@ export interface QuestionAnswer {
   questionId: string
   audioUrl: string
   uploadId: string
-  audioFile?: Blob | string
 }
 
 export interface ProfileUpdateRequest {

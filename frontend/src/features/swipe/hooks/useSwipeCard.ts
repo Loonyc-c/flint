@@ -37,9 +37,8 @@ export const useSwipeCard = ({ candidate, onSwipe }: UseSwipeCardProps) => {
   const photos = useMemo(() => {
     const photoList = []
     if (candidate.profile?.photo) photoList.push(candidate.profile.photo)
-    if (candidate.profile?.photos) photoList.push(...candidate.profile.photos)
     return photoList.filter(Boolean) as string[]
-  }, [candidate.profile?.photo, candidate.profile?.photos])
+  }, [candidate.profile?.photo])
 
   const [isPlayingVoice, setIsPlayingVoice] = useState(false)
   const [voiceAudio, setVoiceAudio] = useState<HTMLAudioElement | null>(null)

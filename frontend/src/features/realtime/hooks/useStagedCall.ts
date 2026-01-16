@@ -224,7 +224,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
       socket.off('staged-call-icebreaker', handleIcebreaker)
       if (timerRef.current) clearInterval(timerRef.current)
     }
-  }, [socket, options, startTimer])
+  }, [socket, options, startTimer, busyStates, user?.id])
 
   const initiateCall = useCallback((matchId: string, calleeId: string, stage: 1 | 2) => {
     // Use ref for immediate status check (avoids stale closure from React state)

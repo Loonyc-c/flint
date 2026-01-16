@@ -4,11 +4,12 @@ import { motion } from "framer-motion";
 import { Check, Plus, X, Mic, Edit2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { QUESTION_POOL, type QuestionAnswer } from "@/shared-types/types";
+import { QUESTION_POOL } from "@/shared-types/types";
+import { type QuestionAnswerFormState } from "./QuestionsSection";
 
 interface QuestionSlotProps {
   index: number;
-  qa: QuestionAnswer;
+  qa: QuestionAnswerFormState;
   onSelect: () => void;
   onRecord: () => void;
 }

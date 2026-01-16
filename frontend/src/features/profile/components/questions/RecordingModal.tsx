@@ -3,12 +3,13 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { X } from "lucide-react";
 import QuestionVoiceRecorder from "./QuestionVoiceRecorder";
-import { QUESTION_POOL, type QuestionAnswer } from "@/shared-types/types";
+import { QUESTION_POOL } from "@/shared-types/types";
 import { useTranslations } from 'next-intl';
+import { type QuestionAnswerFormState } from './QuestionsSection';
 
 export interface RecordingModalProps {
   isOpen: boolean;
-  question: QuestionAnswer;
+  question: QuestionAnswerFormState;
   questionIndex: number;
   onClose: () => void;
   onSave: (audioFile: Blob | string | undefined) => void;

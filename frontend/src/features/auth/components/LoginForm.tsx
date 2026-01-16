@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter, Link } from '@/i18n/routing'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
@@ -42,6 +42,14 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
     resolver: zodResolver(loginSchema)
   })
 
+  // Watch for authentication state change to redirect safely
+  const { isAuthenticated } = useUser()
+  useEffect(() => {
+    if (isAuthenticated && !onSuccess) {
+      router.replace('/home')
+    }
+  }, [isAuthenticated, router, onSuccess])
+
   const onSubmit = async (data: LoginFormData) => {
     setIsLoading(true)
 
@@ -52,9 +60,8 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
       toast.success(t('success'))
       if (onSuccess) {
         onSuccess()
-      } else {
-        router.push('/home')
       }
+      // Redirection handled by useEffect above or AuthGuard
     } catch (err) {
       if (err instanceof ApiError) {
         toast.error(err.message)

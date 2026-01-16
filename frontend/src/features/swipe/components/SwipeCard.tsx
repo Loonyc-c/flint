@@ -87,7 +87,11 @@ export const SwipeCard = forwardRef<SwipeCardRef, SwipeCardProps>(
         <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent pointer-events-none z-10" />
 
         {/* Info overlay positioned at bottom */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 max-h-[45%] overflow-y-auto custom-scrollbar">
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20 max-h-[45%] overflow-y-auto custom-scrollbar overscroll-contain touch-pan-y pb-[max(1.5rem,env(safe-area-inset-bottom))]"
+          onPointerDown={(e) => e.stopPropagation()}
+          onTouchStart={(e) => e.stopPropagation()}
+        >
           <CardInfo
             candidate={candidate}
             isPlayingVoice={isPlayingVoice}

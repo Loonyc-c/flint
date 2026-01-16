@@ -13,15 +13,23 @@ export interface ProfileCompletenessResult {
 
 /**
  * Calculates the profile completeness score based on weighted fields.
+ * 
+ * Score Distribution (100% Total):
+ * - Basic Info (20%): Age (10%), Gender (10%)
+ * - Photo (15%): Main profile photo
+ * - Bio (15%): At least 10 characters
+ * - Interests (15%): At least 3 interests
+ * - Questions (15%): 5% per answered question (max 3)
+ * - Contact Info (20%): Instagram connected
  */
 export const calculateProfileCompleteness = (
   profile: Partial<ProfileUpdateRequest> = {},
-  contactInfo?: Partial<UserContactInfo>
+  contactInfo: Partial<UserContactInfo> = {}
 ): ProfileCompletenessResult => {
   let score = 0
   const missingFields: MissingField[] = []
 
-  // 1. Basic Info (20% total: 10% Age, 10% Gender)
+  // 1. Basic Info (20%)
   if (profile.age) {
     score += 10
   } else {
@@ -34,45 +42,45 @@ export const calculateProfileCompleteness = (
     missingFields.push({ key: 'gender', label: 'Gender', weight: 10 })
   }
 
-  // 2. Profile Image (15%)
+  // 2. Photo (15%)
   if (profile.photo) {
     score += 15
   } else {
     missingFields.push({ key: 'photo', label: 'Profile Photo', weight: 15 })
   }
 
-  // 3. Verified Instagram (20%)
-  const isInstagramVerified = contactInfo?.verifiedPlatforms?.includes('instagram')
-  if (isInstagramVerified) {
+  // 3. Contact Info (20%) - Instagram
+  // Check if instagram field is present
+  if (contactInfo.instagram) {
     score += 20
   } else {
-    missingFields.push({ key: 'instagram', label: 'Verify Instagram', weight: 20 })
+    missingFields.push({ key: 'instagram', label: 'Instagram', weight: 20 })
   }
 
-  // 4. Bio/Introduction (15%)
+  // 4. Bio (15%)
   if (profile.bio && profile.bio.trim().length >= 10) {
     score += 15
   } else {
     missingFields.push({ key: 'bio', label: 'Bio (min 10 chars)', weight: 15 })
   }
 
-  // 5. Interests (15% - at least 3)
-  const interestsCount = profile.interests?.length || 0
-  if (interestsCount >= 3) {
+  // 5. Interests (15%)
+  if (profile.interests && profile.interests.length >= 3) {
     score += 15
   } else {
-    missingFields.push({ key: 'interests', label: 'Add 3+ Interests', weight: 15 })
+    missingFields.push({ key: 'interests', label: 'Interests (min 3)', weight: 15 })
   }
 
-  // 6. Questions/Audio Answers (15% - 5% each)
-  const answeredQuestions = profile.questions?.filter(q => q.questionId && q.audioUrl).length || 0
-  score += Math.min(answeredQuestions, 3) * 5
+  // 6. Questions (15%)
+  const answeredCount = profile.questions?.filter(q => q.questionId && q.audioUrl).length || 0
+  const questionScore = Math.min(answeredCount, 3) * 5
+  score += questionScore
   
-  if (answeredQuestions < 3) {
+  if (answeredCount < 3) {
     missingFields.push({ 
       key: 'questions', 
-      label: `Voice Questions (${answeredQuestions}/3)`, 
-      weight: (3 - answeredQuestions) * 5 
+      label: `Voice Answers (${3 - answeredCount} more needed)`, 
+      weight: 15 - questionScore 
     })
   }
 

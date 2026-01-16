@@ -3,7 +3,7 @@ import { AuthenticatedSocket } from '../middleware/auth.middleware'
 import { liveCallQueueService } from '../services/live-call-queue.service'
 import { getUserCollection, getMatchCollection } from '@/data/db/collection'
 import { ObjectId } from 'mongodb'
-import { USER_GENDER, UserPreferences } from '@shared/types'
+import { LOOKING_FOR, USER_GENDER, UserPreferences } from '@shared/types'
 import { DbMatch } from '@/data/db/types/match'
 import { randomUUID } from 'crypto'
 import { triggerContactExchange } from './staged-call.handler'
@@ -47,20 +47,11 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         return
       }
 
-      // Profile Readiness Gate (80%)
-      const completeness = user.profileCompletion || 0
-      if (completeness < 80) {
-        socket.emit('live-call-error', { 
-          message: 'Profile incomplete', 
-          code: 'PROFILE_INCOMPLETE',
-          completeness 
-        })
-        return
-      }
-
-      if (!user.profile || !user.preferences) {
-        socket.emit('live-call-error', { message: 'Profile incomplete' })
-        return
+      const gender = (user.profile?.gender as USER_GENDER | undefined) ?? USER_GENDER.OTHER
+      const age = user.profile?.age ?? 18
+      const preferences = (user.preferences as UserPreferences | undefined) ?? {
+        lookingFor: LOOKING_FOR.ALL,
+        ageRange: 200,
       }
 
       if (liveCallQueueService.getQueueSize() >= MAX_QUEUE_SIZE) {
@@ -70,9 +61,9 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
 
       const match = liveCallQueueService.joinQueue({
         userId,
-        gender: user.profile.gender as USER_GENDER,
-        age: user.profile.age,
-        preferences: user.preferences as UserPreferences,
+        gender,
+        age,
+        preferences,
         joinedAt: new Date(),
       })
 
