@@ -1,4 +1,4 @@
-import { LOOKING_FOR, USER_GENDER, UserPreferences } from '@shared/types'
+import { USER_GENDER, UserPreferences } from '@shared/types'
 
 export interface QueueEntry {
   userId: string
@@ -38,24 +38,12 @@ class LiveCallQueueService {
     this.queue.delete(userId)
   }
 
-  private isMatch(a: QueueEntry, b: QueueEntry): boolean {
-    // Remove preference checks to enable random matching
+  private isMatch(_a: QueueEntry, _b: QueueEntry): boolean {
+    /**
+     * Requirement: Live call should not use preferences or age range.
+     * Random matching is used to maximize connectivity.
+     */
     return true
-  }
-
-  private checkGenderPreference(user: QueueEntry, target: QueueEntry): boolean {
-    const lookingFor = user.preferences.lookingFor
-    if (lookingFor === LOOKING_FOR.ALL) return true
-    
-    // LOOKING_FOR enum values match USER_GENDER string values
-    return lookingFor as unknown as USER_GENDER === target.gender
-  }
-
-  private checkAgePreference(user: QueueEntry, target: QueueEntry): boolean {
-    // As per match.service.ts, ageRange is treated as max age
-    // We also assume a minimum age of 18
-    const maxAge = user.preferences.ageRange
-    return target.age >= 18 && target.age <= maxAge
   }
 
   public getQueueSize(): number {

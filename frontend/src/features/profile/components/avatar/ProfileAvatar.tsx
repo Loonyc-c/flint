@@ -35,6 +35,7 @@ const CIRCUMFERENCE = NORMALIZED_RADIUS * 2 * Math.PI
  */
 export const ProfileAvatar = ({
   photo,
+  completeness,
   onEdit,
   isUploading = false
 }: ProfileAvatarProps) => {

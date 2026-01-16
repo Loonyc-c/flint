@@ -93,7 +93,6 @@ export const QuestionsSection = ({
 
         {isEditing ? (
           <QuestionEditSection
-            // @ts-expect-error - Sub-component might expect strict QuestionAnswer, passing extended state
             normalizedQuestions={normalizedQuestions}
             selectedCount={selectedCount}
             onSelectSlot={setSelectingSlotIndex}
@@ -108,7 +107,6 @@ export const QuestionsSection = ({
                 </p>
                 <div className="space-y-4">
                   {answeredQuestions.map((qa, index) => (
-                    // @ts-expect-error - Sub-component might expect strict QuestionAnswer
                     <AnsweredQuestionPlayer key={index} qa={qa} />
                   ))}
                 </div>
@@ -141,7 +139,6 @@ export const QuestionsSection = ({
       {recordingSlotIndex !== null && normalizedQuestions[recordingSlotIndex] && (
         <RecordingModal
           isOpen={true}
-          // @ts-expect-error - Sub-component might expect strict QuestionAnswer
           question={normalizedQuestions[recordingSlotIndex]}
           questionIndex={recordingSlotIndex}
           onClose={() => setRecordingSlotIndex(null)}

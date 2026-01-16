@@ -6,11 +6,12 @@ import { toast } from 'react-toastify'
 import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal } from '@/features/video/components/staged'
 import { IcebreakerOverlay } from './IcebreakerOverlay'
 import { type ContactInfoDisplay } from '@shared/types'
+import { type LiveMatchData, type IcebreakerPayload } from '../types'
 
 interface LiveCallSessionProps {
   status: string
-  matchData: any
-  icebreaker: any
+  matchData: LiveMatchData | null
+  icebreaker: IcebreakerPayload | null
   partnerContact: ContactInfoDisplay | null
   exchangeExpiresAt: string | null
   onPromote: (matchId: string, partnerId: string) => void

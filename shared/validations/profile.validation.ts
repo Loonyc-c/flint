@@ -6,6 +6,22 @@ import { QUESTION_POOL } from "../types/questions"; // Import QUESTION_POOL
 export const GenderEnum = z.nativeEnum(USER_GENDER);
 export const InterestEnum = z.nativeEnum(INTERESTS);
 
+export const contactInfoSchema = z.object({
+  phone: z.string().max(20, "Phone number too long").optional(),
+  instagram: z.string().max(50, "Instagram handle too long").optional(),
+  telegram: z.string().max(50, "Telegram handle too long").optional(),
+  snapchat: z.string().max(50, "Snapchat handle too long").optional(),
+  whatsapp: z.string().max(20, "WhatsApp number too long").optional(),
+  wechat: z.string().max(50, "WeChat ID too long").optional(),
+  facebook: z.string().max(100, "Facebook URL too long").optional(),
+  twitter: z.string().max(50, "Twitter handle too long").optional(),
+  linkedin: z.string().max(100, "LinkedIn URL too long").optional(),
+  other: z.string().max(200, "Other contact info too long").optional(),
+  verifiedPlatforms: z.array(z.string()).default([]),
+});
+
+export type ContactInfoFormData = z.infer<typeof contactInfoSchema>;
+
 export const questionAnswerSchema = z.object({
   questionId: z.string().min(1, "Question ID is required").refine(
     (id) => QUESTION_POOL.some(q => q.id === id),
@@ -33,19 +49,3 @@ export const profileUpdateSchema = z.object({
 });
 
 export type ProfileCreationFormData = z.infer<typeof profileUpdateSchema>;
-
-export const contactInfoSchema = z.object({
-  phone: z.string().max(20, "Phone number too long").optional(),
-  instagram: z.string().max(50, "Instagram handle too long").optional(),
-  telegram: z.string().max(50, "Telegram handle too long").optional(),
-  snapchat: z.string().max(50, "Snapchat handle too long").optional(),
-  whatsapp: z.string().max(20, "WhatsApp number too long").optional(),
-  wechat: z.string().max(50, "WeChat ID too long").optional(),
-  facebook: z.string().max(100, "Facebook URL too long").optional(),
-  twitter: z.string().max(50, "Twitter handle too long").optional(),
-  linkedin: z.string().max(100, "LinkedIn URL too long").optional(),
-  other: z.string().max(200, "Other contact info too long").optional(),
-  verifiedPlatforms: z.array(z.string()).default([]),
-});
-
-export type ContactInfoFormData = z.infer<typeof contactInfoSchema>;

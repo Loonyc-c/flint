@@ -1,11 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { type QuestionAnswer, QUESTION_POOL } from '@/shared-types/types'
+import { QUESTION_POOL } from '@/shared-types/types'
 import { CustomAudioPlayer } from '@/components/ui/custom-audio-player'
+import { type QuestionAnswerFormState } from './QuestionsSection'
 
 interface AnsweredQuestionPlayerProps {
-  qa: QuestionAnswer
+  qa: QuestionAnswerFormState
 }
 
 export const AnsweredQuestionPlayer = ({ qa }: AnsweredQuestionPlayerProps) => {

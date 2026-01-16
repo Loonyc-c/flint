@@ -1,41 +1,26 @@
 "use client";
 
 import { useState } from "react";
-
 import { useAuthenticatedUser } from "@/features/auth/context/UserContext";
-
 import { ProfileAvatar } from "./avatar/ProfileAvatar";
-
 import { BasicInfoSection, BioSection } from "./info/BasicInfoSections";
-
 import { InterestsSection, InterestsModal } from "./interests/InterestsSection";
-
 import { QuestionsSection } from "./questions/QuestionsSection";
 import { ContactInputSection } from "./contact/ContactInputSection";
-
 import { VoiceIntroWidget } from "./voice/VoiceIntroWidget";
-
 import { useProfilePhoto } from "../hooks/useProfilePhoto";
-
 import { useProfileForm } from "../hooks/useProfileForm";
-
 import { type INTERESTS } from "@shared/types/enums";
-
 import { useTranslations } from "next-intl";
 
 // =============================================================================
-
 // Sub-Components
-
 // =============================================================================
 
 interface SaveButtonProps {
   onClick: () => void;
-
   isSaving: boolean;
-
   hasPendingPhoto: boolean;
-
   className?: string;
 }
 
@@ -87,9 +72,7 @@ const DesktopSaveButton = ({
 };
 
 // =============================================================================
-
 // Main Component
-
 // =============================================================================
 
 export const ProfilePage = () => {
@@ -98,37 +81,27 @@ export const ProfilePage = () => {
 
   const {
     fileInputRef,
-
     pendingPhotoFile,
-
     photoPreviewUrl,
-
     handlePhotoSelect,
-
     clearPendingPhoto,
-
     triggerFileInput,
   } = useProfilePhoto();
 
   const { form, formData, completeness, isSaving, onSave } = useProfileForm(
     user.id,
-
     pendingPhotoFile,
-
     clearPendingPhoto
   );
 
   const {
     register,
-
     setValue,
-
     formState: { errors },
   } = form;
 
   const toggleInterest = (interest: INTERESTS) => {
     const current = formData.interests || [];
-
     const updated = current.includes(interest)
       ? current.filter((i) => i !== interest)
       : [...current, interest];
@@ -149,7 +122,6 @@ export const ProfilePage = () => {
 
         <div className="lg:grid lg:grid-cols-12 lg:gap-12 lg:items-start">
           {/* Sidebar (Avatar & Actions) */}
-
           <div className="lg:col-span-4 space-y-6">
             <div className="lg:sticky lg:top-8 space-y-8">
               <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
@@ -162,18 +134,16 @@ export const ProfilePage = () => {
               </div>
 
               {/* Desktop Voice Intro */}
-
               <div className="hidden lg:block">
                 <VoiceIntroWidget
-                  initialVoiceIntro={formData.voiceIntro}
-                  onVoiceChange={(audioUrl) =>
-                    setValue("voiceIntro", audioUrl, { shouldValidate: true })
+                  initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
+                  onVoiceChange={(audio) =>
+                    setValue("voiceIntroFile", audio, { shouldValidate: true })
                   }
                 />
               </div>
 
               {/* Desktop Save Button */}
-
               <div className="hidden lg:block">
                 <DesktopSaveButton
                   onClick={onSave}
@@ -185,7 +155,6 @@ export const ProfilePage = () => {
           </div>
 
           {/* Main Content (Forms) */}
-
           <div className="lg:col-span-8 space-y-6 mt-6 lg:mt-0">
             <BasicInfoSection register={register} errors={errors} />
 
@@ -210,12 +179,11 @@ export const ProfilePage = () => {
             />
 
             {/* Mobile Voice Intro */}
-
             <div className="lg:hidden">
               <VoiceIntroWidget
-                initialVoiceIntro={formData.voiceIntro}
-                onVoiceChange={(audioUrl) =>
-                  setValue("voiceIntro", audioUrl, { shouldValidate: true })
+                initialVoiceIntro={formData.voiceIntroFile || formData.voiceIntro}
+                onVoiceChange={(audio) =>
+                  setValue("voiceIntroFile", audio, { shouldValidate: true })
                 }
               />
             </div>
