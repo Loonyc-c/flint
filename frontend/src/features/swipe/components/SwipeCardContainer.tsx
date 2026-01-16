@@ -58,13 +58,14 @@ export const SwipeCardContainer = forwardRef<SwipeCardRef, SwipeCardContainerPro
     return (
       <motion.div
         drag="x"
-        dragConstraints={{ left: 0, right: 0, top: 0, bottom: 0 }}
-        dragElastic={0.9}
+        dragConstraints={{ left: 0, right: 0 }}
+        dragDirectionLock
+        dragElastic={{ left: 0.1, right: 0.1, top: 0, bottom: 0 }}
         onDragStart={() => setIsDragging(true)}
         onDragEnd={handleDragEnd}
         animate={controls}
         style={{ x, y, rotate, opacity: cardOpacity }}
-        className="absolute inset-0 w-full h-full overflow-hidden bg-background shadow-2xl cursor-grab active:cursor-grabbing select-none rounded-[2rem] border border-border"
+        className="relative w-full h-full flex flex-col overflow-hidden bg-background shadow-2xl cursor-grab active:cursor-grabbing select-none rounded-[2rem] border border-border"
       >
         {/* Swipe Indicators */}
         {isDragging && (

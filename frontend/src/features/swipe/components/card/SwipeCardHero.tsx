@@ -30,7 +30,7 @@ export const SwipeCardHero = ({
   const t = useTranslations('swipe.card')
 
   return (
-    <div className="relative w-full h-[50vh] sm:h-[55vh]">
+    <div className="relative w-full shrink-0" style={{ height: 'clamp(320px, 50dvh, 60dvh)' }}>
       {/* Photo Background */}
       <div className="absolute inset-0 w-full h-full">
         <CardPhoto
