@@ -33,7 +33,7 @@ export const SwipeCardContent = ({ candidate }: SwipeCardContentProps) => {
 
   return (
     <div
-      className="absolute bottom-0 left-0 right-0 z-20 h-[45vh] sm:h-[40vh] overflow-y-auto custom-scrollbar overscroll-contain touch-pan-y bg-linear-to-t from-background via-background to-background/95"
+      className="relative flex-1 w-full z-20 overflow-y-auto custom-scrollbar overscroll-contain touch-pan-y-only bg-linear-to-t from-background via-background to-background/95"
       onPointerDown={(e) => e.stopPropagation()}
       onTouchStart={(e) => e.stopPropagation()}
     >

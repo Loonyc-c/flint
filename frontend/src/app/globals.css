@@ -212,6 +212,10 @@
     border-radius: 10px;
   }
 
+  .touch-pan-y-only {
+    touch-action: pan-y;
+  }
+
   .bg-instagram-gradient {
     background-image: linear-gradient(to top right, #facc15, #ef4444, #9333ea);
   }

@@ -85,7 +85,7 @@ export const SwipeFeature = () => {
       <SwipeHeader candidateCount={candidates.length} />
 
       {/* Card Container - Flexible middle section */}
-      <div className="relative flex-1 w-full max-w-lg mx-auto px-4 py-2 sm:px-6 flex flex-col justify-center overflow-hidden">
+      <div className="relative flex-1 w-full max-w-screen-md mx-auto px-4 py-2 sm:px-6 flex flex-col justify-center overflow-hidden">
         <AnimatePresence mode="wait">
           {currentCandidate && (
             <motion.div
@@ -94,7 +94,7 @@ export const SwipeFeature = () => {
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.9 }}
               transition={{ duration: 0.3 }}
-              className="relative w-full h-full max-h-[750px]"
+              className="relative w-full h-full flex flex-col"
             >
               <SwipeCard 
                 ref={cardRef} 
