@@ -110,13 +110,13 @@ export const StagedAudioCallModal = ({
     onClose()
   }, [leave, onCallEnded, onClose])
 
-  // Cleanup on unmount
+  // Cleanup on unmount - always call leave regardless of connection state
   useEffect(() => {
     return () => {
-      // Explicit cleanup handled by useAgora, but double check
-      if (isConnected) leave()
+      // Always cleanup, regardless of connection state
+      leave().catch(err => console.error('[Modal] Cleanup error:', err))
     }
-  }, [isConnected, leave])
+  }, [leave])
 
   const progress = stage === 1 ? (90000 - remainingTime) / 90000 : (120000 - remainingTime) / 120000
 

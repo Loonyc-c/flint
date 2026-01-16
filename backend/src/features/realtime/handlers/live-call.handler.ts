@@ -125,6 +125,35 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
   })
 
   /**
+   * Cancel live call (explicit user cancellation)
+   */
+  socket.on('live-call-cancel', (data: { status: string }) => {
+    try {
+      const { status } = data
+      
+      // Get partner if user was connecting
+      const partnerId = liveCallQueueService.getPartner(userId)
+      
+      // Remove from queue and clear connecting state
+      liveCallQueueService.leaveQueue(userId)
+      liveCallQueueService.clearConnecting(userId)
+      busyStateService.clearUserStatus(userId)
+      
+      // If user was connecting, notify the partner
+      if (status === 'connecting' && partnerId) {
+        io.to(`user:${partnerId}`).emit('live-call-cancelled')
+        busyStateService.clearUserStatus(partnerId)
+        liveCallQueueService.clearConnecting(partnerId)
+      }
+      
+      socket.emit('live-call-left')
+      console.log(`🚫 [LiveCall] User ${userId} cancelled (status: ${status})`)
+    } catch (error) {
+      console.error('Error cancelling live call:', error)
+    }
+  })
+
+  /**
    * Handle Stage 3 promotion (Create formal match)
    * This is called when both users accept moving to Stage 3
    */
@@ -183,7 +212,22 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    * Cleanup on disconnect
    */
   socket.on('disconnect', () => {
+    const userStatus = busyStateService.getUserStatus(userId)
+    
+    // If user was connecting, notify partner about disconnection
+    if (userStatus === 'connecting' || userStatus === 'queueing') {
+      const partnerId = liveCallQueueService.getPartner(userId)
+      
+      if (partnerId) {
+        io.to(`user:${partnerId}`).emit('live-call-cancelled')
+        busyStateService.clearUserStatus(partnerId)
+        liveCallQueueService.clearConnecting(partnerId)
+        console.log(`🔌 [LiveCall] User ${userId} disconnected, notified partner ${partnerId}`)
+      }
+    }
+    
     liveCallQueueService.leaveQueue(userId)
+    liveCallQueueService.clearConnecting(userId)
     busyStateService.clearUserStatus(userId)
   })
 }
