@@ -154,15 +154,17 @@ export const useProfileForm = (
         setValue('voiceIntroFile', undefined)
       }
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const questionsToSave = await Promise.all(
-        data.questions.map(async (qa: any, index: number) => {
-          if (qa.audioFile instanceof Blob) {
-            const result = await uploadAudioToCloudinary(qa.audioFile, {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data.questions.map(async (qa, index: number) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const question = qa as any
+          if (question.audioFile instanceof Blob) {
+            const result = await uploadAudioToCloudinary(question.audioFile, {
               folder: 'flint/profile-questions'
             })
             const updated = {
-              questionId: qa.questionId,
+              questionId: question.questionId,
               audioUrl: result.url,
               uploadId: result.publicId
             }
@@ -175,9 +177,9 @@ export const useProfileForm = (
             return updated
           }
           return {
-            questionId: qa.questionId,
-            audioUrl: qa.audioUrl || '',
-            uploadId: qa.uploadId || ''
+            questionId: question.questionId,
+            audioUrl: question.audioUrl || '',
+            uploadId: question.uploadId || ''
           }
         })
       )
