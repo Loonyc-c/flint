@@ -139,6 +139,7 @@ export const useProfileForm = (
       const { instagram, ...profileData } = dataForCalculation
       // Pass form data with optional audioUrl/uploadId (local recordings)
       // Calculator accepts QuestionAnswerWithFile which includes audioFile
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const { score } = calculateProfileCompleteness(profileData as any, {
         instagram: instagram || undefined
       })
@@ -229,8 +230,11 @@ export const useProfileForm = (
       )
 
       // DEBUG LOGGING: Log the payload before submission
+      // eslint-disable-next-line no-console
       console.log('=== PROFILE SAVE DEBUG ===')
+      // eslint-disable-next-line no-console
       console.log('Questions to save:', JSON.stringify(questionsToSave, null, 2))
+      // eslint-disable-next-line no-console
       console.log(
         'Questions breakdown:',
         questionsToSave.map((q, idx) => ({
