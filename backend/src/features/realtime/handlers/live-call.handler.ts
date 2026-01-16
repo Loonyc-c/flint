@@ -74,11 +74,43 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         busyStateService.setUserStatus(userId, 'in-call')
         busyStateService.setUserStatus(partnerId, 'in-call')
 
-        // Notify both users
-        io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, payload1)
-        io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, payload2)
+        // Create Agora channel for this call
+        const channelName = `live_${Date.now()}_${userId}_${partnerId}`
 
-        console.log(`🔥 [LiveCall] Match found: ${userId} <-> ${partnerId}`)
+        // Generate Agora tokens for both users using your existing service
+        const { agoraService } = await import('@/features/agora/services/agora.service')
+        const uid1 = agoraService.generateNumericUid(userId)
+        const uid2 = agoraService.generateNumericUid(partnerId)
+
+        const tokenData1 = agoraService.generateToken({
+          channelName,
+          uid: uid1,
+          role: 'publisher',
+        })
+
+        const tokenData2 = agoraService.generateToken({
+          channelName,
+          uid: uid2,
+          role: 'publisher',
+        })
+
+        // Notify both users with Agora credentials
+        io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, {
+          ...payload1,
+          channelName,
+          agoraToken: tokenData1.token,
+          agoraUid: uid1,
+        })
+        io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, {
+          ...payload2,
+          channelName,
+          agoraToken: tokenData2.token,
+          agoraUid: uid2,
+        })
+
+        console.log(
+          `🔥 [LiveCall] Match found: ${userId} <-> ${partnerId}, channel: ${channelName}`,
+        )
       }
     } catch (error) {
       console.error('❌ [LiveCall] Join queue error:', error)
