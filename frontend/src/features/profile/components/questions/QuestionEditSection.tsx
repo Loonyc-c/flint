@@ -1,11 +1,11 @@
 'use client'
 
-import { type QuestionAnswer } from '@/shared-types/types'
 import { QuestionSlot } from './QuestionSlot'
 import { useTranslations } from 'next-intl'
+import { type QuestionAnswerFormState } from './QuestionsSection'
 
 interface QuestionEditSectionProps {
-  normalizedQuestions: QuestionAnswer[]
+  normalizedQuestions: QuestionAnswerFormState[]
   selectedCount: number
   onSelectSlot: (index: number) => void
   onRecordSlot: (index: number) => void

@@ -2,7 +2,6 @@
 
 import { useState, useMemo } from "react";
 import { MessageSquare } from "lucide-react";
-import { type QuestionAnswer } from "@/shared-types/types";
 import { QuestionsModal } from "./QuestionsModal";
 import { RecordingModal } from "./RecordingModal";
 import { Button } from "@/components/ui/button";
@@ -11,7 +10,11 @@ import { AnsweredQuestionPlayer } from "./AnsweredQuestionPlayer";
 import { QuestionEditSection } from "./QuestionEditSection";
 
 // Extend the strict DTO type to include the file blob for the form state
-export interface QuestionAnswerFormState extends QuestionAnswer {
+// audioUrl and uploadId are optional during form state (local recordings)
+export interface QuestionAnswerFormState {
+  questionId: string;
+  audioUrl?: string;
+  uploadId?: string;
   audioFile?: Blob | string;
 }
 
