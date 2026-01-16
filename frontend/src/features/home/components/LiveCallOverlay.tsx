@@ -1,11 +1,11 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { Phone, X, Heart, ThumbsDown, Loader2, ShieldCheck, Timer } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useLiveCall, LiveCallStatus } from '@/features/live-call/hooks/useLiveCall'
+import { useLiveCall, type LiveCallStatus as _LiveCallStatus } from '@/features/live-call/hooks/useLiveCall'
 import { useProfileReadiness } from '@/features/profile/hooks/useProfileReadiness'
 import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
 import { UserAvatar } from '@/components/ui/UserAvatar'

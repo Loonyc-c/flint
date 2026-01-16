@@ -23,7 +23,7 @@ interface UseLiveCallReturn {
 }
 
 export const useLiveCall = (): UseLiveCallReturn => {
-  const { user } = useUser();
+  const { user: _user } = useUser();
   const { socket, isConnected } = useSocket();
   const [status, setStatus] = useState<LiveCallStatus>('idle');
   const [matchData, setMatchData] = useState<LiveCallMatchPayload | null>(null);
@@ -85,7 +85,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
         startTimer();
         timerRef.current = setInterval(startTimer, 1000);
 
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error('❌ [LiveCall] Connection failed:', err);
         setError('err.live_call.connection_failed');
         setStatus('error');

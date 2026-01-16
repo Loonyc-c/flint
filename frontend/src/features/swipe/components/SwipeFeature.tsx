@@ -5,10 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { useSwipe } from '../hooks/useSwipe'
 import { useSwipeShortcuts } from '../hooks/useSwipeShortcuts'
 import { SwipeCard, type SwipeCardRef } from './SwipeCard'
-import { SwipeControls } from './controls/SwipeControls'
+// import { SwipeControls } from './controls/SwipeControls'
 import { MatchModal } from './modals/MatchModal'
 import { type User, type SwipeAction } from '@shared/types'
-import { SwipeHeader } from './controls/SwipeHeader'
+// import { SwipeHeader } from './controls/SwipeHeader'
 import { EmptyState } from './states/EmptyState'
 import { SwipeSkeleton } from './states/SwipeSkeleton'
 
@@ -19,7 +19,6 @@ export const SwipeFeature = () => {
     isLoading,
     handleSwipe,
     handleUndo,
-    canUndo,
     fetchCandidates,
     isSwiping,
     hasMore

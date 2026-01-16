@@ -34,22 +34,25 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
 
       // Use provided preferences or user defaults
       const validation = liveCallPreferencesSchema.safeParse(data)
-      const preferences: LiveCallPreferences = validation.success ? validation.data : {
-        gender: user.profile.gender,
-        lookingFor: user.preferences?.lookingFor || 'all',
-        minAge: 18,
-        maxAge: 100
-      }
+      const preferences: LiveCallPreferences = validation.success
+        ? validation.data
+        : {
+            age: user.profile.age,
+            gender: user.profile.gender,
+            lookingFor: user.preferences?.lookingFor || 'all',
+            minAge: 18,
+            maxAge: 100,
+          }
 
       // 2. Add to queue
       await liveCallService.addToQueue(userId, {
         gender: user.profile.gender,
         age: user.profile.age,
-        preferences
+        preferences,
       })
 
       busyStateService.setUserStatus(userId, 'queueing')
-      
+
       // 3. Try matching
       const match = await liveCallService.findMatch(userId)
       if (match) {
@@ -62,7 +65,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         // Notify both users
         io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, payload1)
         io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.MATCH_FOUND, payload2)
-        
+
         console.log(`🔥 [LiveCall] Match found: ${userId} <-> ${partnerId}`)
       }
     } catch (error) {
@@ -95,7 +98,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
 
       if (result && result.isComplete) {
         const { isMatch, partnerId, newMatchId } = result
-        
+
         // Notify both users of the final result
         const resultPayload = { matchId, isMatch, newMatchId }
         io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.CALL_RESULT, resultPayload)
@@ -104,7 +107,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         // Reset busy states
         busyStateService.clearUserStatus(userId)
         busyStateService.clearUserStatus(partnerId)
-        
+
         console.log(`✨ [LiveCall] Result for ${matchId}: Match=${isMatch}`)
       }
     } catch (error) {
@@ -119,7 +122,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
   socket.on('disconnect', () => {
     liveCallService.removeFromQueue(userId)
     // Note: If user was in a call, we might want to notify the partner.
-    // This is handled by Agora usually for the audio stream, 
+    // This is handled by Agora usually for the audio stream,
     // but we should also clear the ongoing call in our service.
     // For MVP, we'll keep it simple.
   })

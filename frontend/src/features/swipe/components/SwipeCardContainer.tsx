@@ -6,7 +6,7 @@ import { type User, type SwipeAction } from '@shared/types'
 import { useSwipeCard } from '../hooks/useSwipeCard'
 import { SwipeCardHero } from './card/SwipeCardHero'
 import { SwipeCardContent } from './card/SwipeCardContent'
-import { SwipeCardActions } from './card/SwipeCardActions'
+
 import { StampOverlay } from './card/StampOverlay'
 import { SwipeIndicator } from './card/SwipeIndicator'
 

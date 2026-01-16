@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
-import { type LiveCallStatus } from '../hooks/useLiveCall'
+import { type LiveCallStatus } from '@/features/live-call/hooks/useLiveCall'
 
 interface LiveCallQueueOverlayProps {
   status: LiveCallStatus

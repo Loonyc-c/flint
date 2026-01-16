@@ -1,6 +1,7 @@
 import type { USER_GENDER, LOOKING_FOR } from './enums'
 
 export interface LiveCallPreferences {
+  age: number
   gender: USER_GENDER
   lookingFor: LOOKING_FOR
   minAge: number

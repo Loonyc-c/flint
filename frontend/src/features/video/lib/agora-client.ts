@@ -56,7 +56,7 @@ export class AgoraClient {
    * Diagnostic logging for track state
    */
   private logTrackState = (context: string): void => {
-    console.log(`[Agora:${context}]`, {
+    console.warn(`[Agora:${context}]`, {
       hasClient: !!this.client,
       isJoined: this.isJoined,
       hasAudioTrack: !!this.localAudioTrack,
@@ -184,7 +184,7 @@ export class AgoraClient {
       const timeSinceDisposal = Date.now() - this.lastTrackDisposalTime
       if (this.lastTrackDisposalTime > 0 && timeSinceDisposal < this.MIN_TRACK_RECREATION_DELAY) {
         const remainingDelay = this.MIN_TRACK_RECREATION_DELAY - timeSinceDisposal
-        console.log(`[Agora] Waiting ${remainingDelay}ms before creating tracks...`)
+        console.warn(`[Agora] Waiting ${remainingDelay}ms before creating tracks...`)
         await new Promise(resolve => setTimeout(resolve, remainingDelay))
       }
 
@@ -278,9 +278,9 @@ export class AgoraClient {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[Agora] Creating audio track (attempt ${attempt}/${maxRetries})...`)
+        console.warn(`[Agora] Creating audio track (attempt ${attempt}/${maxRetries})...`)
         const track = await AgoraRTC.createMicrophoneAudioTrack()
-        console.log('[Agora] ✅ Audio track created successfully')
+        console.warn('[Agora] ✅ Audio track created successfully')
         return track
       } catch (error) {
         lastError = error as Error
@@ -304,9 +304,9 @@ export class AgoraClient {
     
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[Agora] Creating video track (attempt ${attempt}/${maxRetries})...`)
+        console.warn(`[Agora] Creating video track (attempt ${attempt}/${maxRetries})...`)
         const track = await AgoraRTC.createCameraVideoTrack()
-        console.log('[Agora] ✅ Video track created successfully')
+        console.warn('[Agora] ✅ Video track created successfully')
         return track
       } catch (error) {
         lastError = error as Error
