@@ -116,8 +116,11 @@
   --success-foreground: oklch(1 0 0);
   --accent-pink: #EE36A9;
   --accent-pink-foreground: #ffffff;
+  --color-instagram: #E1306C;
+  --color-instagram-foreground: #ffffff;
 
   /* Custom Brand Colors - Red palette based on #B33A2E */
+
   --brand: #b33a2e;
   --brand-foreground: #ffffff;
   --brand-100: #d9776d;
@@ -207,5 +210,9 @@
   .custom-scrollbar::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.2);
     border-radius: 10px;
+  }
+
+  .bg-instagram-gradient {
+    background-image: linear-gradient(to top right, #facc15, #ef4444, #9333ea);
   }
 }

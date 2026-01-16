@@ -1,5 +1,5 @@
 import { NormalizedEvent } from '@/shared/api/types'
-import { matchService } from '@/features/matches/services/match.service'
+import { interactionService } from '@/features/matches/services/interaction.service'
 import { objectIdSchema } from '@shared/validations'
 import { ServiceException } from '@/features/error'
 import { HttpStatus } from '@/data/constants'
@@ -19,7 +19,7 @@ const handler = async (event: NormalizedEvent) => {
   const _id = objectIdSchema.parse(id)
 
   try {
-    const likes = await matchService.getLikes(_id)
+    const likes = await interactionService.getLikes(_id)
     return likes
   } catch (e: unknown) {
     if (e instanceof ServiceException) {

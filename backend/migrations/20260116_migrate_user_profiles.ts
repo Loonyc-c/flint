@@ -86,7 +86,16 @@ export const up = async (db: Db) => {
             },
             $unset: {
               'profile.photos': "",
-              'contactInfo.manualContactInfo': ""
+              'contactInfo.manualContactInfo': "",
+              'contactInfo.phone': "",
+              'contactInfo.telegram': "",
+              'contactInfo.snapchat': "",
+              'contactInfo.whatsapp': "",
+              'contactInfo.wechat': "",
+              'contactInfo.facebook': "",
+              'contactInfo.twitter': "",
+              'contactInfo.linkedin': "",
+              'contactInfo.other': ""
             }
           }
         }

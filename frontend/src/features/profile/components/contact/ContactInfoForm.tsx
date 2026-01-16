@@ -2,28 +2,17 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Phone, Instagram, MessageCircle, Save, Loader2 } from 'lucide-react'
+import { Instagram, Save, Loader2, CheckCircle2 } from 'lucide-react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { cn } from '@/lib/utils'
 import { useTranslations } from 'next-intl'
-import { useUser } from '@/features/auth/context/UserContext'
-import { getInstagramConnectUrl } from '../../api/profile'
-import { ContactField } from './ContactField'
 
+// Minimal schema matching our new requirement
 const formSchema = z.object({
-  phone: z.string().max(20, "Phone number too long").optional(),
-  instagram: z.string().max(50, "Instagram handle too long").optional(),
-  telegram: z.string().max(50, "Telegram handle too long").optional(),
-  snapchat: z.string().max(50, "Snapchat handle too long").optional(),
-  whatsapp: z.string().max(20, "WhatsApp number too long").optional(),
-  wechat: z.string().max(50, "WeChat ID too long").optional(),
-  facebook: z.string().max(100, "Facebook URL too long").optional(),
-  twitter: z.string().max(50, "Twitter handle too long").optional(),
-  linkedin: z.string().max(100, "LinkedIn URL too long").optional(),
-  other: z.string().max(200, "Other contact info too long").optional(),
-  verifiedPlatforms: z.array(z.string()).optional(),
+  instagram: z.string().min(1, "Instagram handle is required so your matches can connect with you after Stage 2.").max(50, "Instagram handle too long"),
+  verifiedPlatforms: z.array(z.string()).default([]),
 })
 
 type FormData = z.infer<typeof formSchema>
@@ -37,62 +26,64 @@ interface ContactInfoFormProps {
 export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInfoFormProps) => {
   const t = useTranslations('profile.contact')
   const [isSubmitting, setIsSubmitting] = useState(false)
-  const { user } = useUser()
 
   const { register, handleSubmit, watch, formState: { errors, isDirty } } = useForm<FormData>({
-    resolver: zodResolver(formSchema),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(formSchema) as any,
     defaultValues: {
-      phone: initialData?.phone || '',
       instagram: initialData?.instagram || '',
-      telegram: initialData?.telegram || '',
-      snapchat: initialData?.snapchat || '',
-      whatsapp: initialData?.whatsapp || '',
-      wechat: initialData?.wechat || '',
-      other: initialData?.other || '',
       verifiedPlatforms: initialData?.verifiedPlatforms || [],
     },
   })
 
   const verifiedPlatforms = watch('verifiedPlatforms') || []
-
-  const handleConnectInstagram = () => {
-    if (user?.id) window.open(getInstagramConnectUrl(user.id), '_blank')
-  }
-
-  const contactFields = [
-    { name: 'phone', label: t('labels.phone'), placeholder: t('placeholders.phone'), icon: Phone },
-    { name: 'instagram', label: t('labels.instagram'), placeholder: t('placeholders.instagram'), icon: Instagram, verifiable: true },
-    { name: 'telegram', label: t('labels.telegram'), placeholder: t('placeholders.telegram'), icon: MessageCircle },
-    { name: 'snapchat', label: t('labels.snapchat'), placeholder: t('placeholders.snapchat'), icon: MessageCircle },
-    { name: 'whatsapp', label: t('labels.whatsapp'), placeholder: t('placeholders.whatsapp'), icon: Phone },
-    { name: 'wechat', label: t('labels.wechat'), placeholder: t('placeholders.wechat'), icon: MessageCircle },
-    { name: 'other', label: t('labels.other'), placeholder: t('placeholders.other'), icon: MessageCircle },
-  ] as const
+  const isVerified = verifiedPlatforms.includes('instagram')
 
   return (
     <form onSubmit={handleSubmit(async (data) => {
       setIsSubmitting(true)
       try { await onSubmit(data) } finally { setIsSubmitting(false) }
-    })} className={cn('space-y-4', className)}>
+    })} className={cn('space-y-6', className)}>
       <div className="mb-6">
-        <h3 className="text-lg font-bold text-foreground">{t('title')}</h3>
-        <p className="mt-1 text-sm text-muted-foreground">{t('subtitle')}</p>
+        <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
+          <Instagram className="w-5 h-5 text-instagram" />
+          Instagram <span className="text-destructive">*</span>
+        </h3>
+        <p className="mt-1 text-sm text-muted-foreground">
+          {t('instagramDesc')}
+        </p>
       </div>
 
-      <div className="grid gap-4">
-        {contactFields.map((field) => (
-          <ContactField
-            key={field.name}
-            {...field}
-            isVerified={verifiedPlatforms.includes(field.name)}
-            register={register}
-            error={errors[field.name as keyof FormData]?.message}
-            onConnect={field.name === 'instagram' ? handleConnectInstagram : undefined}
-          />
-        ))}
+      <div className="bg-card/50 border border-border rounded-xl p-4">
+        <div className="flex items-center gap-3">
+           <div className="relative flex-1">
+              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+              <input 
+                {...register('instagram')}
+                disabled={isVerified}
+                className={cn(
+                  "w-full bg-background/50 border rounded-lg py-2.5 pl-8 pr-4 text-sm focus:outline-none focus:ring-2 transition-all",
+                  errors.instagram ? "border-destructive focus:ring-destructive/20" : "border-input focus:ring-brand/20"
+                )}
+                placeholder="username"
+              />
+           </div>
+        </div>
+        {errors.instagram && <p className="mt-1 text-xs text-destructive">{errors.instagram.message}</p>}
+        
+        <div className="mt-2 flex items-center justify-between">
+           <p className="text-xs text-muted-foreground">
+             {t('instagramNote')}
+           </p>
+           {isVerified && (
+             <span className="flex items-center gap-1 text-xs font-medium text-blue-500">
+               <CheckCircle2 className="w-3 h-3" /> Verified
+             </span>
+           )}
+        </div>
       </div>
 
-      <div className="pt-4">
+      <div className="pt-2">
         <motion.button
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
@@ -106,7 +97,6 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
           {isSubmitting ? <><Loader2 className="w-5 h-5 animate-spin" />{t('saving')}</> : <><Save className="w-5 h-5" />{t('saveButton')}</>}
         </motion.button>
       </div>
-      <p className="text-xs text-center text-muted-foreground">{t('footerNote')}</p>
     </form>
   )
 }

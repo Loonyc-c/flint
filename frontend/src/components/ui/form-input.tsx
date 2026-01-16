@@ -12,7 +12,7 @@ import { cn } from '@/lib/utils'
 // =============================================================================
 
 interface FormInputProps extends React.InputHTMLAttributes<HTMLInputElement> {
-  label: string
+  label: React.ReactNode
   error?: FieldError
   containerClassName?: string
 }

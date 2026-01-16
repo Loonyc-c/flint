@@ -27,14 +27,6 @@ export const ContactSection = ({ register, errors }: ContactSectionProps) => {
         error={errors.contact?.instagram}
         {...register('contact.instagram')}
       />
-      
-      <FormInput
-        label={t('labels.phone')}
-        id="contact.phone"
-        placeholder={t('placeholders.phone')}
-        error={errors.contact?.phone}
-        {...register('contact.phone')}
-      />
     </section>
   );
 };

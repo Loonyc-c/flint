@@ -1,5 +1,5 @@
 import { NormalizedEvent } from '@/shared/api/types'
-import { matchService } from '@/features/matches/services/match.service'
+import { interactionService } from '@/features/matches/services/interaction.service'
 import { objectIdSchema, swipeSchema } from '@shared/validations'
 import { ServiceException } from '@/features/error'
 import { HttpStatus } from '@/data/constants'
@@ -24,7 +24,7 @@ const handler = async (event: NormalizedEvent) => {
   const { targetId, type } = swipeSchema.parse(body)
 
   try {
-    const result = await matchService.swipe(_id, targetId, type)
+    const result = await interactionService.swipe(_id, targetId, type)
 
     return result
   } catch (e: unknown) {
