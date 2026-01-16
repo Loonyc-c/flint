@@ -10,6 +10,8 @@ export interface QueueEntry {
 
 class LiveCallQueueService {
   private queue: Map<string, QueueEntry> = new Map()
+  // Track users in connecting state (userId -> partnerId)
+  private connectingUsers: Map<string, string> = new Map()
 
   /**
    * Add a user to the queue and try to find a match
@@ -22,6 +24,9 @@ class LiveCallQueueService {
     for (const [id, potentialMatch] of this.queue.entries()) {
       if (this.isMatch(entry, potentialMatch)) {
         this.queue.delete(id)
+        // Track both users as connecting
+        this.connectingUsers.set(entry.userId, id)
+        this.connectingUsers.set(id, entry.userId)
         return potentialMatch
       }
     }
@@ -36,6 +41,25 @@ class LiveCallQueueService {
    */
   public leaveQueue(userId: string): void {
     this.queue.delete(userId)
+    this.connectingUsers.delete(userId)
+  }
+
+  /**
+   * Get partner ID for a user in connecting state
+   */
+  public getPartner(userId: string): string | undefined {
+    return this.connectingUsers.get(userId)
+  }
+
+  /**
+   * Clear connecting state for a user
+   */
+  public clearConnecting(userId: string): void {
+    const partnerId = this.connectingUsers.get(userId)
+    this.connectingUsers.delete(userId)
+    if (partnerId) {
+      this.connectingUsers.delete(partnerId)
+    }
   }
 
   private isMatch(_a: QueueEntry, _b: QueueEntry): boolean {

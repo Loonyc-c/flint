@@ -39,6 +39,8 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
 
   // Ref to track status for cleanup function without triggering re-renders
   const statusRef = useRef(status)
+  // Ref to prevent multiple simultaneous join attempts
+  const isJoiningRef = useRef(false)
 
   // Sync ref with status
   useEffect(() => {
@@ -49,15 +51,19 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
   const [showPrompt, setShowPrompt] = useState(false)
   const [callStage, setCallStage] = useState<1 | 2 | 3>(1)
 
-  // RCA: previously, 'status' was in the dependency array. 
-  // When status changed from 'connecting' to 'in-call', the cleanup function ran.
-  // The cleanup function checked 'connecting' (stale or current) and called leaveQueue(),
-  // which reset the state to 'idle', triggering a re-join and the infinite loop.
-  // FIX: Removed 'status' from dependencies. Use ref for cleanup logic.
+  // Reset joining flag when call becomes active or ends
   useEffect(() => {
-    // Only auto-join if we are opening fresh and idle
-    if (isOpen && status === 'idle' && !isCheckingReadiness) {
+    if (status === 'in-call' || status === 'error' || status === 'idle') {
+      isJoiningRef.current = false
+    }
+  }, [status])
+
+  // Auto-join queue when overlay opens (without status in dependency array to prevent loops)
+  useEffect(() => {
+    // Only auto-join if we are opening fresh and idle, and not already joining
+    if (isOpen && status === 'idle' && !isCheckingReadiness && !isJoiningRef.current) {
       if (isReady) {
+        isJoiningRef.current = true
         joinQueue()
       } else {
         setShowGuidance(true)
@@ -72,7 +78,7 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
         leaveQueue()
       }
     }
-  }, [isOpen, status, isReady, isCheckingReadiness, joinQueue, leaveQueue])
+  }, [isOpen, isReady, isCheckingReadiness, joinQueue, leaveQueue])
 
   // Handle specific backend errors
   useEffect(() => {
@@ -94,10 +100,10 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
         setRemainingTime(prev => {
           if (prev <= 1000) {
             clearInterval(timer)
-            // If stage 1 ends, show prompt. If stage 2 ends, maybe end call?
-            if (callStage === 1) {
+            // Check if call is still active before showing prompt
+            if (statusRef.current === 'in-call' && callStage === 1) {
               setShowPrompt(true)
-            } else {
+            } else if (statusRef.current === 'in-call' && callStage === 2) {
               toast.info('Time limit reached!')
               // handleClose() // Optional: auto-close
             }
@@ -107,8 +113,18 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
         })
       }, 1000)
     }
-    return () => clearInterval(timer)
-  }, [status, callStage]) // Re-run when status or stage changes
+    return () => {
+      if (timer) clearInterval(timer)
+    }
+  }, [status, callStage])
+
+  // Clear timer and prompt if status changes during countdown
+  useEffect(() => {
+    if (status !== 'in-call') {
+      setRemainingTime(0)
+      setShowPrompt(false)
+    }
+  }, [status])
 
   const handleClose = () => {
     // Manual close should always leave queue if active

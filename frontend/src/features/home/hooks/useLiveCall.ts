@@ -17,6 +17,7 @@ interface UseLiveCallReturn {
   error: string | null
   joinQueue: () => void
   leaveQueue: () => void
+  cancel: () => void
   promoteToMatch: (partnerId: string) => void
   reset: () => void
 }
@@ -112,11 +113,18 @@ export const useLiveCall = (): UseLiveCallReturn => {
       setIcebreaker(data)
     }
 
+    const handleCancelled = () => {
+      setStatus('idle')
+      setMatchData(null)
+      setIcebreaker(null)
+    }
+
     socket.on('connect', handleConnect)
     socket.on('live-call-queued', handleQueued)
     socket.on('live-match-found', handleMatchFound)
     socket.on('live-call-error', handleError)
     socket.on('live-call-left', handleLeft)
+    socket.on('live-call-cancelled', handleCancelled)
     socket.on('live-call-match-promoted', handlePromoted)
     socket.on('contact-exchange', handleContactExchange)
     socket.on('stage-prompt-result', handlePromptResult)
@@ -128,6 +136,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
       socket.off('live-match-found', handleMatchFound)
       socket.off('live-call-error', handleError)
       socket.off('live-call-left', handleLeft)
+      socket.off('live-call-cancelled', handleCancelled)
       socket.off('live-call-match-promoted', handlePromoted)
       socket.off('contact-exchange', handleContactExchange)
       socket.off('stage-prompt-result', handlePromptResult)
@@ -145,6 +154,16 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const leaveQueue = useCallback(() => {
     if (socket && isConnected) {
       socket.emit('live-call-leave')
+    }
+  }, [socket, isConnected])
+
+  const cancel = useCallback(() => {
+    if (socket && isConnected) {
+      socket.emit('live-call-cancel', { status: statusRef.current })
+      setStatus('idle')
+      setMatchData(null)
+      setIcebreaker(null)
+      setError(null)
     }
   }, [socket, isConnected])
 
@@ -172,6 +191,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
     error,
     joinQueue,
     leaveQueue,
+    cancel,
     promoteToMatch,
     reset
   }

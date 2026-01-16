@@ -71,14 +71,15 @@ export const useAgora = ({
     clientRef.current = new AgoraClient()
 
     return () => {
+      // Set unmounted immediately to abort pending operations
       isMounted.current = false
       const client = clientRef.current
       if (client) {
-        // Stop hardware immediately and leave
+        // Force cleanup regardless of state
         client.leave().catch(err => console.error('[useAgora] Cleanup error:', err))
         client.destroy()
-        // Final safety net: Force stop all hardware tracks
-        AgoraClient.forceStopHardware()
+        // Safety net: Force stop ALL hardware tracks
+        AgoraClient.forceStopHardware().catch(err => console.error('[useAgora] Force stop error:', err))
       }
       clientRef.current = null
     }
@@ -211,19 +212,22 @@ export const useAgora = ({
     }
   }, [channelName, enableVideo])
 
-  // Leave channel
+  // Leave channel with enhanced cleanup
   const leave = useCallback(async (): Promise<void> => {
     if (!clientRef.current) return
 
     try {
       await clientRef.current.leave()
+    } catch (err) {
+      console.error('[useAgora] Error leaving channel:', err)
+      // Fallback: force stop hardware even if leave fails
+      await AgoraClient.forceStopHardware().catch(e => console.error('[useAgora] Force stop fallback error:', e))
+    } finally {
       setIsConnected(false)
       setLocalVideoTrack(null)
       setRemoteVideoTracks(new Map())
       setIsMicEnabled(true)
       setIsCameraEnabled(true)
-    } catch (err) {
-      console.error('[useAgora] Error leaving channel:', err)
     }
   }, [])
 

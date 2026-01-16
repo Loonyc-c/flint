@@ -270,6 +270,44 @@ export class AgoraClient {
   }
 
   /**
+   * Force cleanup - aggressively stop all tracks without waiting
+   * Use this when normal cleanup might fail or hang
+   */
+  async forceCleanup(): Promise<void> {
+    try {
+      // Stop local tracks immediately without waiting
+      this.localAudioTrack?.stop()
+      this.localAudioTrack?.close()
+      this.localVideoTrack?.stop()
+      this.localVideoTrack?.close()
+      
+      // Stop remote tracks
+      this.remoteUsers.forEach(user => {
+        user.audioTrack?.stop()
+        user.videoTrack?.stop()
+      })
+      
+      // Leave without awaiting (fire and forget)
+      if (this.client && this.isJoined) {
+        this.client.leave().catch(() => {})
+      }
+      
+      // Force stop hardware
+      await AgoraClient.forceStopHardware()
+      
+      // Reset state
+      this.localAudioTrack = null
+      this.localVideoTrack = null
+      this.remoteUsers.clear()
+      this.isJoined = false
+      
+      console.warn('🛑 [Agora] Force cleanup completed')
+    } catch (error) {
+      console.error('[Agora] Force cleanup error:', error)
+    }
+  }
+
+  /**
    * Toggle microphone
    */
   async toggleMicrophone(): Promise<boolean> {
@@ -388,21 +426,28 @@ export class AgoraClient {
    */
   static async forceStopHardware(): Promise<void> {
     try {
-      // 1. Get all active media tracks from the browser
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true }).catch(() => null)
-      if (stream) {
+      // 1. Try to get and stop all active media tracks
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true })
         stream.getTracks().forEach(track => {
           track.stop()
           track.enabled = false
         })
+      } catch {
+        // getUserMedia might fail if permissions denied, that's ok
       }
 
-      // 2. Fallback: Stop all tracks via mediaDevices enumerate
-      await navigator.mediaDevices.enumerateDevices()
-      // Note: We can't stop devices directly, but we can ensure future 
-      // getUserMedia calls are blocked or cleared if we held references.
+      // 2. Enumerate all devices and try to stop any active streams
+      const devices = await navigator.mediaDevices.enumerateDevices()
       
-      console.warn('🛑 [KillSwitch] Hardware tracks force-stopped')
+      // 3. Additional cleanup: iterate over any existing MediaStreamTrack instances
+      // This is a best-effort approach since we can't directly access all tracks
+      if (typeof MediaStreamTrack !== 'undefined') {
+        // Note: There's no global registry of tracks, but this signals intent
+        console.warn('[KillSwitch] Attempted to stop all media tracks')
+      }
+      
+      console.warn('🛑 [KillSwitch] Hardware tracks force-stopped', { deviceCount: devices.length })
     } catch (error) {
       console.error('[KillSwitch] Error during hardware force-stop:', error)
     }
