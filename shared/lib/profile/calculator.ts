@@ -1,4 +1,8 @@
-import type { ProfileUpdateRequest, UserContactInfo } from '../../types/user'
+import type {
+  ProfileUpdateRequest,
+  UserContactInfo,
+  QuestionAnswerWithFile
+} from '../../types/user'
 
 export interface MissingField {
   key: string
@@ -22,9 +26,12 @@ export interface ProfileCompletenessResult {
  * - Questions (15%): 5% per answered question (max 3)
  * - Voice Intro (15%): Voice introduction recorded
  * - Contact Info (20%): Instagram connected
+ *
+ * Note: Accepts questions with either uploaded URLs (audioUrl) or local recordings (audioFile)
+ * to support real-time completeness calculation in the frontend before uploads.
  */
 export const calculateProfileCompleteness = (
-  profile: Partial<ProfileUpdateRequest> = {},
+  profile: Partial<ProfileUpdateRequest & { questions?: QuestionAnswerWithFile[] }> = {},
   contactInfo: Partial<UserContactInfo> = {}
 ): ProfileCompletenessResult => {
   let score = 0
@@ -73,7 +80,16 @@ export const calculateProfileCompleteness = (
   }
 
   // 6. Questions (15%)
-  const answeredCount = profile.questions?.filter(q => q.questionId && q.audioUrl).length || 0
+  // Check for either uploaded audio (audioUrl) OR local recording (audioFile)
+  // This allows real-time completeness updates before upload
+  const answeredCount =
+    profile.questions?.filter(q => {
+      const hasQuestionId = !!q.questionId
+      const hasAudioUrl = !!q.audioUrl
+      const hasAudioFile = !!(q as QuestionAnswerWithFile).audioFile
+      return hasQuestionId && (hasAudioUrl || hasAudioFile)
+    }).length || 0
+
   const questionScore = Math.min(answeredCount, 3) * 5
   score += questionScore
 
