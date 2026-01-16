@@ -34,6 +34,12 @@ export interface QuestionAnswer {
   uploadId: string
 }
 
+// Extended type for form state that includes local audio file (Blob)
+// Used by frontend for real-time completeness calculation before upload
+export interface QuestionAnswerWithFile extends QuestionAnswer {
+  audioFile?: Blob | string
+}
+
 export interface ProfileUpdateRequest {
   nickName: string
   age: number

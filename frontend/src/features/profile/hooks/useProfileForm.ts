@@ -13,13 +13,29 @@ import {
 } from '@/shared-types/validations'
 import { z } from 'zod'
 import { useProfileSync } from './useProfileSync'
+import { QUESTION_POOL } from '@/shared-types/types'
 
-// Combine schemas for the form
+// Relaxed question schema for form state (allows local recordings without uploaded URLs)
+const questionAnswerFormSchema = z.object({
+  questionId: z
+    .string()
+    .min(1, 'Question ID is required')
+    .refine(id => !id || QUESTION_POOL.some(q => q.id === id), {
+      message: 'Question ID not found in the QUESTION_POOL'
+    }),
+  audioUrl: z.string().optional(),
+  uploadId: z.string().optional(),
+  audioFile: z.union([z.instanceof(Blob), z.string()]).optional()
+})
+
+// Combine schemas for the form - relax questions validation for form state
 const formSchema = profileUpdateSchema
+  .omit({ questions: true })
   .extend({
     voiceIntro: z.string().optional(), // Make optional in form because it might be in voiceIntroFile
     instagram: contactInfoSchema.shape.instagram,
-    voiceIntroFile: z.union([z.instanceof(Blob), z.string()]).optional()
+    voiceIntroFile: z.union([z.instanceof(Blob), z.string()]).optional(),
+    questions: z.array(questionAnswerFormSchema).length(3, 'Please complete all 3 questions')
   })
   .refine(data => data.voiceIntro || data.voiceIntroFile, {
     message: 'Please record a voice introduction',
@@ -121,7 +137,9 @@ export const useProfileForm = (
     const timer = setTimeout(() => {
       const dataForCalculation = pendingPhotoFile ? { ...formData, photo: 'pending' } : formData
       const { instagram, ...profileData } = dataForCalculation
-      const { score } = calculateProfileCompleteness(profileData, {
+      // Pass form data with optional audioUrl/uploadId (local recordings)
+      // Calculator accepts QuestionAnswerWithFile which includes audioFile
+      const { score } = calculateProfileCompleteness(profileData as any, {
         instagram: instagram || undefined
       })
       setCompleteness(score)
