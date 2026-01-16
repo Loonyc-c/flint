@@ -37,13 +37,18 @@ export const QuestionsSection = ({
   );
 
   const normalizedQuestions: QuestionAnswerFormState[] = [0, 1, 2].map(
-    (i) =>
-      questions[i] || {
+    (i) => {
+      // Preserve all properties including audioFile Blob reference
+      if (questions[i]) {
+        return { ...questions[i] }
+      }
+      return {
         questionId: "",
         audioUrl: "",
         uploadId: "",
         audioFile: undefined,
       }
+    }
   );
 
   const handleQuestionSelect = (questionId: string) => {

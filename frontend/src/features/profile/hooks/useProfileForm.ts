@@ -132,6 +132,30 @@ export const useProfileForm = (
   const onManualSave: SubmitHandler<ProfileAndContactFormData> = async data => {
     setIsSaving(true)
     try {
+      // PRE-SAVE VALIDATION: Ensure all 3 questions have valid audio
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const questionsWithAudio = data.questions.filter((q: any) => {
+        const hasAudioFile = q.audioFile instanceof Blob
+        const hasExistingAudio = q.audioUrl && q.uploadId
+        return q.questionId && (hasAudioFile || hasExistingAudio)
+      })
+
+      if (questionsWithAudio.length !== 3) {
+        const missingQuestions: number[] = []
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        data.questions.forEach((q: any, index: number) => {
+          const hasAudioFile = q.audioFile instanceof Blob
+          const hasExistingAudio = q.audioUrl && q.uploadId
+          if (!q.questionId || (!hasAudioFile && !hasExistingAudio)) {
+            missingQuestions.push(index + 1)
+          }
+        })
+        toast.error(
+          `Please complete all 3 questions with audio recordings. Missing or incomplete: Question ${missingQuestions.join(', ')}`
+        )
+        return
+      }
+
       let finalPhotoUrl = data.photo
       if (pendingPhotoFile) {
         const result = await uploadImageToCloudinary(pendingPhotoFile, {
@@ -176,12 +200,27 @@ export const useProfileForm = (
             setValue(`questions.${index}.audioFile` as any, undefined)
             return updated
           }
+          // FIX: Only use existing URLs if they are valid (not empty strings)
+          // This should always be true due to pre-save validation above
           return {
             questionId: question.questionId,
-            audioUrl: question.audioUrl || '',
-            uploadId: question.uploadId || ''
+            audioUrl: question.audioUrl,
+            uploadId: question.uploadId
           }
         })
+      )
+
+      // DEBUG LOGGING: Log the payload before submission
+      console.log('=== PROFILE SAVE DEBUG ===')
+      console.log('Questions to save:', JSON.stringify(questionsToSave, null, 2))
+      console.log(
+        'Questions breakdown:',
+        questionsToSave.map((q, idx) => ({
+          index: idx + 1,
+          questionId: q.questionId,
+          hasAudioUrl: !!q.audioUrl,
+          hasUploadId: !!q.uploadId
+        }))
       )
 
       const { instagram, voiceIntroFile: _voiceIntroFile, ...profilePayload } = data
@@ -203,6 +242,37 @@ export const useProfileForm = (
     console.error(JSON.stringify(errors, null, 2))
 
     if (errors && typeof errors === 'object') {
+      // Special handling for questions array errors
+      if ('questions' in errors) {
+        const questionsError = (errors as Record<string, unknown>).questions
+        if (questionsError && typeof questionsError === 'object' && 'message' in questionsError) {
+          toast.error(String(questionsError.message))
+          return
+        }
+        // Check for individual question errors
+        if (Array.isArray(questionsError)) {
+          const questionErrors = questionsError
+            .map((qErr, idx) => {
+              if (qErr && typeof qErr === 'object') {
+                const errorFields = Object.entries(qErr)
+                  .filter(([_, val]) => val && typeof val === 'object' && 'message' in val)
+                  .map(([field, val]) => `${field}: ${(val as { message: string }).message}`)
+                if (errorFields.length > 0) {
+                  return `Question ${idx + 1} - ${errorFields.join(', ')}`
+                }
+              }
+              return null
+            })
+            .filter(Boolean)
+          if (questionErrors.length > 0) {
+            toast.error(`Question validation failed: ${questionErrors.join('; ')}`)
+            return
+          }
+        }
+        toast.error('Please complete all 3 questions with audio recordings')
+        return
+      }
+
       const errorMessages = Object.entries(errors)
         .map(([field, err]) => {
           const errorMsg =
