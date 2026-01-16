@@ -14,9 +14,21 @@ interface QuestionVoiceRecorderProps {
   onCancel: () => void
 }
 
-const QuestionVoiceRecorder = ({ initialAudioFile, onSave, onCancel }: QuestionVoiceRecorderProps) => {
+const QuestionVoiceRecorder = ({
+  initialAudioFile,
+  onSave,
+  onCancel
+}: QuestionVoiceRecorderProps) => {
   const t = useTranslations('profile.questions.recorder')
-  const { isRecording, recordedAudio, audioURL, recordingTime, mimeType, startRecording, stopRecording, resetRecording } = useVoiceRecorder(initialAudioFile)
+  const {
+    isRecording,
+    recordedAudio,
+    audioURL,
+    recordingTime,
+    startRecording,
+    stopRecording,
+    resetRecording
+  } = useVoiceRecorder(initialAudioFile)
   const [isPlayback, setIsPlayback] = useState(false)
   const audioRef = useRef<HTMLAudioElement>(null)
 
@@ -53,14 +65,21 @@ const QuestionVoiceRecorder = ({ initialAudioFile, onSave, onCancel }: QuestionV
   return (
     <div className="space-y-6">
       {!recordedAudio && !isRecording && (
-        <Button onClick={startRecording} className="w-full h-14 bg-brand hover:bg-brand-300 text-white font-bold rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-brand/20 transition-all active:scale-95 cursor-pointer">
+        <Button
+          onClick={startRecording}
+          className="w-full h-14 bg-brand hover:bg-brand-300 text-white font-bold rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-brand/20 transition-all active:scale-95 cursor-pointer"
+        >
           <Mic className="h-6 w-6" /> {t('recordButton')}
         </Button>
       )}
 
       {isRecording && (
         <div className="space-y-4">
-          <Button onClick={stopRecording} variant="destructive" className="w-full h-14 font-bold rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-red-500/20 active:scale-95 cursor-pointer">
+          <Button
+            onClick={stopRecording}
+            variant="destructive"
+            className="w-full h-14 font-bold rounded-2xl flex items-center justify-center gap-3 shadow-lg shadow-red-500/20 active:scale-95 cursor-pointer"
+          >
             <Square className="h-6 w-6" /> {t('stopButton')}
           </Button>
           <div className="flex flex-col items-center gap-3">
@@ -69,7 +88,7 @@ const QuestionVoiceRecorder = ({ initialAudioFile, onSave, onCancel }: QuestionV
               {t('recordingStatus', { time: formatTime(recordingTime) })}
             </div>
             <div className="w-full bg-red-50 dark:bg-red-900/20 rounded-2xl px-6">
-               <WaveformVisualizer isActive={true} color="bg-red-500" />
+              <WaveformVisualizer isActive={true} color="bg-red-500" />
             </div>
           </div>
         </div>
@@ -79,7 +98,6 @@ const QuestionVoiceRecorder = ({ initialAudioFile, onSave, onCancel }: QuestionV
         <div className="space-y-6">
           <VoicePlaybackUI
             audioURL={audioURL}
-            mimeType={mimeType}
             audioRef={audioRef}
             isPlayback={isPlayback}
             togglePlayback={togglePlayback}
@@ -87,10 +105,17 @@ const QuestionVoiceRecorder = ({ initialAudioFile, onSave, onCancel }: QuestionV
             onEnded={() => setIsPlayback(false)}
           />
           <div className="flex gap-3">
-            <Button onClick={() => onSave(recordedAudio)} className="flex-1 h-12 bg-brand hover:bg-brand-300 text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer">
+            <Button
+              onClick={() => onSave(recordedAudio)}
+              className="flex-1 h-12 bg-brand hover:bg-brand-300 text-white font-bold rounded-xl flex items-center justify-center gap-2 cursor-pointer"
+            >
               <CheckCircle className="h-5 w-5" /> {t('done')}
             </Button>
-            <Button onClick={onCancel} variant="outline" className="flex-1 h-12 font-bold rounded-xl cursor-pointer">
+            <Button
+              onClick={onCancel}
+              variant="outline"
+              className="flex-1 h-12 font-bold rounded-xl cursor-pointer"
+            >
               {t('cancel')}
             </Button>
           </div>

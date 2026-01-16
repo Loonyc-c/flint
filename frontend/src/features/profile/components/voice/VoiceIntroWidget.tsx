@@ -95,7 +95,6 @@ export const VoiceIntroWidget = ({ initialVoiceIntro, onVoiceChange }: VoiceIntr
         <div className="animate-in fade-in slide-in-from-top-2 duration-300">
           <VoicePlaybackUI
             audioURL={audioURL}
-            mimeType={currentVoiceIntro instanceof Blob ? currentVoiceIntro.type : 'audio/webm'}
             audioRef={audioRef}
             isPlayback={isPlayback}
             togglePlayback={togglePlayback}

@@ -1,5 +1,39 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
 
+// =============================================================================
+// Helper Functions
+// =============================================================================
+
+/**
+ * Detects the best supported MIME type for MediaRecorder.
+ * Runs synchronously to avoid race conditions.
+ */
+const getSupportedMimeType = (): string => {
+  const types = [
+    'audio/webm;codecs=opus',
+    'audio/webm',
+    'audio/mp4',
+    'audio/ogg;codecs=opus',
+    'audio/wav'
+  ]
+
+  if (typeof MediaRecorder === 'undefined') {
+    return 'audio/webm' // Fallback for SSR
+  }
+
+  for (const type of types) {
+    if (MediaRecorder.isTypeSupported(type)) {
+      return type
+    }
+  }
+
+  return 'audio/webm' // Last resort fallback
+}
+
+// =============================================================================
+// Hook
+// =============================================================================
+
 export const useVoiceRecorder = (initialAudio?: Blob | string) => {
   const [isRecording, setIsRecording] = useState(false)
   const [recordedAudio, setRecordedAudio] = useState<Blob | string | undefined>(initialAudio)
@@ -9,27 +43,9 @@ export const useVoiceRecorder = (initialAudio?: Blob | string) => {
   const [recordingTime, setRecordingTime] = useState(0)
   const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null)
   const [mimeType, setMimeType] = useState<string>('audio/webm')
-  
+
   const audioChunks = useRef<Blob[]>([])
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-
-  useEffect(() => {
-    // Determine supported mime type with codec hints for better browser compatibility
-    const types = [
-      'audio/webm;codecs=opus',
-      'audio/webm',
-      'audio/mp4;codecs=mp4a',
-      'audio/mp4',
-      'audio/ogg;codecs=opus',
-      'audio/wav'
-    ]
-    for (const type of types) {
-      if (typeof MediaRecorder !== 'undefined' && MediaRecorder.isTypeSupported(type)) {
-        setMimeType(type)
-        break
-      }
-    }
-  }, [])
 
   useEffect(() => {
     if (recordedAudio && typeof recordedAudio !== 'string') {
@@ -57,31 +73,79 @@ export const useVoiceRecorder = (initialAudio?: Blob | string) => {
 
   const startRecording = useCallback(async () => {
     try {
+      // Get microphone stream
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      const recorder = new MediaRecorder(stream, { mimeType })
 
+      // Detect supported MIME type synchronously (no race condition)
+      const detectedMimeType = getSupportedMimeType()
+      setMimeType(detectedMimeType)
+
+      // Create MediaRecorder with detected MIME type
+      const recorder = new MediaRecorder(stream, { mimeType: detectedMimeType })
+
+      // Handle data available event
       recorder.ondataavailable = event => {
-        if (event.data.size > 0) {
+        if (event.data && event.data.size > 0) {
           audioChunks.current.push(event.data)
         }
       }
 
+      // Handle recording stop event
       recorder.onstop = () => {
-        const audioBlob = new Blob(audioChunks.current, { type: recorder.mimeType || mimeType })
+        // Validate that we captured audio data
+        if (audioChunks.current.length === 0) {
+          console.error('[useVoiceRecorder] No audio chunks captured')
+          alert('Recording failed: No audio data was captured. Please try again.')
+          stream.getTracks().forEach(track => track.stop())
+          return
+        }
+
+        // Create blob from chunks
+        const audioBlob = new Blob(audioChunks.current, {
+          type: recorder.mimeType || detectedMimeType
+        })
+
+        // Validate blob size
+        if (audioBlob.size === 0) {
+          console.error('[useVoiceRecorder] Empty audio blob created')
+          alert('Recording failed: Audio file is empty. Please try again.')
+          stream.getTracks().forEach(track => track.stop())
+          audioChunks.current = []
+          return
+        }
+
+        // Success - set the recorded audio
+        console.log('[useVoiceRecorder] Recording successful:', {
+          size: audioBlob.size,
+          type: audioBlob.type,
+          chunks: audioChunks.current.length
+        })
+
         setRecordedAudio(audioBlob)
         audioChunks.current = []
         stream.getTracks().forEach(track => track.stop())
       }
 
-      recorder.start(100) // Request data every 100ms for even better reliability
+      // Handle recording errors
+      recorder.onerror = event => {
+        console.error('[useVoiceRecorder] MediaRecorder error:', event)
+        alert('Recording error occurred. Please try again.')
+        stream.getTracks().forEach(track => track.stop())
+        setIsRecording(false)
+      }
+
+      // Start recording with 100ms timeslice for reliable data capture
+      recorder.start(100)
       setIsRecording(true)
       setMediaRecorder(recorder)
       setRecordedAudio(undefined)
+
+      console.log('[useVoiceRecorder] Recording started with MIME type:', detectedMimeType)
     } catch (err) {
-      console.error('Error accessing microphone:', err)
+      console.error('[useVoiceRecorder] Error accessing microphone:', err)
       alert('Could not access microphone. Please ensure permissions are granted.')
     }
-  }, [mimeType])
+  }, [])
 
   const stopRecording = useCallback(() => {
     if (mediaRecorder && isRecording) {
