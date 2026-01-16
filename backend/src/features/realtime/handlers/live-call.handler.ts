@@ -18,9 +18,20 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    */
   socket.on(LIVE_CALL_EVENTS.JOIN_QUEUE, async (data: unknown) => {
     try {
+      // First check: Prevent joining if already busy
       if (busyStateService.isUserBusy(userId)) {
         socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.live_call.already_busy' })
         return
+      }
+
+      // Safety check: Clear any stale busy states before proceeding
+      // This handles edge cases where busy state wasn't properly cleared
+      const currentStatus = busyStateService.getUserStatus(userId)
+      if (currentStatus !== 'available') {
+        console.warn(
+          `⚠️ [LiveCall] User ${userId} attempting to join queue while ${currentStatus} - forcing clear`,
+        )
+        busyStateService.clearUserStatus(userId) // Force clear stale state
       }
 
       // 1. Get user profile and preferences if not provided
@@ -51,6 +62,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         preferences,
       })
 
+      // Set status AFTER successfully adding to queue
       busyStateService.setUserStatus(userId, 'queueing')
 
       // 3. Try matching
@@ -71,6 +83,8 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
     } catch (error) {
       console.error('❌ [LiveCall] Join queue error:', error)
       socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.internal_server_error' })
+      // Clear busy state on error
+      busyStateService.clearUserStatus(userId)
     }
   })
 
@@ -86,6 +100,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    * Handle Like/Pass action during or after call
    */
   socket.on(LIVE_CALL_EVENTS.CALL_ACTION, async (data: unknown) => {
+    let result: Awaited<ReturnType<typeof liveCallService.handleAction>> | undefined
     try {
       const validation = liveCallActionSchema.safeParse(data)
       if (!validation.success) {
@@ -94,7 +109,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
       }
 
       const { matchId, action } = validation.data
-      const result = await liveCallService.handleAction(userId, matchId, action)
+      result = await liveCallService.handleAction(userId, matchId, action)
 
       if (result && result.isComplete) {
         const { isMatch, partnerId, newMatchId } = result
@@ -104,15 +119,17 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         io.to(`user:${userId}`).emit(LIVE_CALL_EVENTS.CALL_RESULT, resultPayload)
         io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.CALL_RESULT, resultPayload)
 
-        // Reset busy states
-        busyStateService.clearUserStatus(userId)
-        busyStateService.clearUserStatus(partnerId)
-
         console.log(`✨ [LiveCall] Result for ${matchId}: Match=${isMatch}`)
       }
     } catch (error) {
       console.error('❌ [LiveCall] Action error:', error)
       socket.emit(LIVE_CALL_EVENTS.ERROR, { message: 'err.internal_server_error' })
+    } finally {
+      // ALWAYS clear busy states, even if there's an error
+      busyStateService.clearUserStatus(userId)
+      if (result?.partnerId) {
+        busyStateService.clearUserStatus(result.partnerId)
+      }
     }
   })
 
@@ -120,10 +137,22 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    * Cleanup on disconnect
    */
   socket.on('disconnect', () => {
+    const userId = socket.userId
+
+    // Remove from queue if they were queueing
     liveCallService.removeFromQueue(userId)
-    // Note: If user was in a call, we might want to notify the partner.
-    // This is handled by Agora usually for the audio stream,
-    // but we should also clear the ongoing call in our service.
-    // For MVP, we'll keep it simple.
+
+    // CRITICAL FIX: Clear busy state on disconnect
+    // This handles cases where user disconnects during:
+    // - Queueing
+    // - Active call
+    // - Any other busy state
+    busyStateService.clearUserStatus(userId)
+
+    console.log(`🔌 [LiveCall] User ${userId} disconnected, cleared busy state`)
+
+    // Optional: Notify partner if user was in an active call
+    // You may want to track active live calls similar to staged calls
+    // For now, this ensures the user's busy state is always cleared
   })
 }
