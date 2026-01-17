@@ -123,24 +123,26 @@ export const UnifiedCallInterface = ({
                 />
             )}
 
-            {state === 'CONNECTING' && context && (
-                <ConnectingScreen
-                    partnerInfo={context.partnerInfo}
-                    onTimeout={handleClose}
-                />
-            )}
+            {(state === 'CONNECTING' || state === 'STAGE_ACTIVE') && context && (
+                <>
+                    <ActiveCallContainer
+                        context={context}
+                        remainingTime={remainingTime}
+                        onConnected={handleAgoraConnected}
+                        onStageEnded={handleStageEnded}
+                        onCallEnded={handleClose}
+                        onAgoraReady={(controls) => {
+                            agoraControlsRef.current = controls
+                        }}
+                    />
 
-            {state === 'STAGE_ACTIVE' && context && (
-                <ActiveCallContainer
-                    context={context}
-                    remainingTime={remainingTime}
-                    onConnected={handleAgoraConnected}
-                    onStageEnded={handleStageEnded}
-                    onCallEnded={handleClose}
-                    onAgoraReady={(controls) => {
-                        agoraControlsRef.current = controls
-                    }}
-                />
+                    {state === 'CONNECTING' && (
+                        <ConnectingScreen
+                            partnerInfo={context.partnerInfo}
+                            onTimeout={handleClose}
+                        />
+                    )}
+                </>
             )}
 
             {state === 'INTERMISSION' && context && (

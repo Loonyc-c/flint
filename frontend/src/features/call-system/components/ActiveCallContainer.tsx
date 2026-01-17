@@ -108,14 +108,16 @@ export const ActiveCallContainer = ({
 
     return (
         <div className="fixed inset-0 z-[100] bg-black">
-            <CallHeader
-                isConnected={isConnected}
-                isConnecting={isConnecting}
-                remainingTime={remainingTime}
-                stage={context.currentStage || 1}
-                remoteUserName={context.partnerInfo.name}
-                onClose={handleEndCall}
-            />
+            {isConnected && (
+                <CallHeader
+                    isConnected={isConnected}
+                    isConnecting={isConnecting}
+                    remainingTime={remainingTime}
+                    stage={context.currentStage || 1}
+                    remoteUserName={context.partnerInfo.name}
+                    onClose={handleEndCall}
+                />
+            )}
 
             {/* Video Grid */}
             <div className="h-full pt-16 pb-32 flex flex-col">
@@ -144,16 +146,18 @@ export const ActiveCallContainer = ({
             </div>
 
             {/* Controls */}
-            <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent">
-                <CallControls
-                    isMicEnabled={isMicEnabled}
-                    isCameraEnabled={isCameraEnabled}
-                    onToggleMic={toggleMic}
-                    onToggleCamera={toggleCamera}
-                    onEndCall={handleEndCall}
-                    className="pb-8"
-                />
-            </div>
+            {isConnected && (
+                <div className="absolute bottom-0 left-0 right-0 z-20 bg-gradient-to-t from-black/80 to-transparent">
+                    <CallControls
+                        isMicEnabled={isMicEnabled}
+                        isCameraEnabled={isCameraEnabled}
+                        onToggleMic={toggleMic}
+                        onToggleCamera={toggleCamera}
+                        onEndCall={handleEndCall}
+                        className="pb-8"
+                    />
+                </div>
+            )}
         </div>
     )
 }

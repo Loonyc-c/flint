@@ -55,12 +55,6 @@ export const useLiveCall = (): UseLiveCallReturn => {
       // eslint-disable-next-line no-console
       console.log('🎤 [LiveCall] Match found, triggering unified UI...', data)
 
-      setMatchData(data)
-      setStatus('connecting')
-      setError(null)
-      setHasLiked(false)
-      setHasPassed(false)
-
       // Delegate to UnifiedCallInterface
       startCall({
         callType: 'live',
