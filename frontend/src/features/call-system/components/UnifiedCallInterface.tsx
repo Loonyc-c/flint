@@ -135,7 +135,11 @@ export const UnifiedCallInterface = ({
         }
     }, [state, isOpen, preflight, onClose])
 
-    if (!isOpen || (!context && state !== 'PRE_FLIGHT')) return null
+    // Render if:
+    // 1. isOpen is true AND
+    // 2. Either we have context (call data) OR we're in PRE_FLIGHT mode (hardware check)
+    if (!isOpen) return null
+    if (!context && state !== 'PRE_FLIGHT') return null
 
     return (
         <AnimatePresence mode="wait">

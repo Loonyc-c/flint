@@ -8,6 +8,8 @@ import { registerLiveCallHandlers } from './handlers/live-call.handler'
 import { busyStateService } from './services/busy-state.service'
 
 let io: Server | null = null
+// STATE-03: Track active sockets for deduplication
+const activeSockets = new Map<string, string>() // userId -> socketId
 
 /**
  * Initialize Socket.io server with authentication and event handlers
@@ -39,9 +41,21 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
   // Handle new connections
   io.on('connection', (socket: Socket) => {
     const authSocket = socket as AuthenticatedSocket
-    
+    const userId = authSocket.userId
+
+    // STATE-03: Socket Deduplication
+    const existingSocketId = activeSockets.get(userId)
+    if (existingSocketId && existingSocketId !== socket.id) {
+      console.log(`[Socket] Duplicate connection for User ${userId}. Disconnecting old socket ${existingSocketId}.`)
+
+      // Force disconnect the logic
+      io?.to(existingSocketId).emit('force_disconnect', { reason: 'Logged in from another tab/device' })
+      io?.sockets.sockets.get(existingSocketId)?.disconnect(true)
+    }
+    activeSockets.set(userId, socket.id)
+
     // Join user's personal room for direct messages
-    socket.join(`user:${authSocket.userId}`)
+    socket.join(`user:${userId}`)
 
     // Send current busy states to the newly connected user
     socket.emit('busy-states-sync', busyStateService.getAllBusyUsers())
@@ -54,13 +68,16 @@ export const initializeSocketServer = (httpServer: HttpServer): Server => {
 
     // Handle disconnection
     socket.on('disconnect', (_reason) => {
-      // Disconnect cleanup logic
+      // Cleanup deduplication map
+      if (activeSockets.get(userId) === socket.id) {
+        activeSockets.delete(userId)
+      }
     })
 
     // Handle errors
     socket.on('error', (error) => {
       if (process.env.NODE_ENV !== 'production') {
-        console.error(`❌ [Socket.io] Socket error for user ${authSocket.userId}:`, error)
+        console.error(`❌ [Socket.io] Socket error for user ${userId}:`, error)
       }
     })
   })

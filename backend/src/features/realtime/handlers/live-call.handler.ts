@@ -54,7 +54,8 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
       })
 
       // Set status AFTER successfully adding to queue
-      busyStateService.setUserStatus(userId, 'queueing')
+      // ATOMIC UPDATE: Lock user in queueing state
+      busyStateService.trySetUserStatus(userId, 'queueing')
 
       // 3. Try matching
       const match = await liveCallService.findMatch(userId, (partnerId) => {
@@ -64,8 +65,21 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         const { payload1, payload2 } = match
         const partnerId = payload1.partner.id
 
-        busyStateService.setUserStatus(userId, 'in-call')
-        busyStateService.setUserStatus(partnerId, 'in-call')
+        // ATOMIC TRANSITION: queueing -> in-call
+        // If this fails (e.g. user cancelled), rollback
+        const myLock = busyStateService.trySetUserStatus(userId, 'in-call')
+        if (!myLock.success) {
+          console.log(`[LiveCall] Match cancelled - User ${userId} state changed`)
+          return
+        }
+
+        const partnerLock = busyStateService.trySetUserStatus(partnerId, 'in-call')
+        if (!partnerLock.success) {
+          // Partner is no longer available, rollback my status
+          busyStateService.trySetUserStatus(userId, 'queueing')
+          // Put me back in queue effectively (I am still in queue map)
+          return
+        }
 
         // Create Agora channel for this call (must be under 64 bytes)
         // Use short timestamp + truncated user IDs
@@ -123,6 +137,16 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
   socket.on(LIVE_CALL_EVENTS.LEAVE_QUEUE, () => {
     liveCallService.removeFromQueue(userId)
     busyStateService.clearUserStatus(userId)
+  })
+
+  /**
+   * Queue Heartbeat - Fixes STATE-01
+   * Client emits this while queueing. If server restart lost the queue,
+   * we tell client they are no longer in queue.
+   */
+  socket.on(LIVE_CALL_EVENTS.QUEUE_HEARTBEAT, () => {
+    const isInQueue = liveCallService.isUserInQueue(userId)
+    socket.emit(LIVE_CALL_EVENTS.QUEUE_STATUS, { inQueue: isInQueue })
   })
 
   /**

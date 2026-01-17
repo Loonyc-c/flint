@@ -21,9 +21,64 @@ const acceptLocks = new Map<string, boolean>() // NEW: Prevent duplicate accepts
 export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSocket) => {
   const userId = socket.userId
 
-  socket.on(
-    'request-call',
-    async (data: { matchId: string; calleeId: string; stage: 1 | 2 }) => {
+  /**
+   * Helper to handle call acceptance (reused for deduplication)
+   */
+  const handleAcceptCall = async (matchId: string) => {
+    const call = activeStagedCalls.get(matchId)
+    // Verify user is the callee (or allow if it's a cross-call auto-accept scenario)
+    if (!call || call.calleeId !== userId) return
+
+    // FIXED: Atomic accept lock
+    if (acceptLocks.get(matchId)) {
+      console.log(`Accept duplicate ignored for ${matchId}`)
+      return
+    }
+    acceptLocks.set(matchId, true)
+
+    try {
+      if (call.ringTimeoutId) clearTimeout(call.ringTimeoutId)
+
+      busyStateService.trySetUserStatus(call.callerId, 'in-call')
+      busyStateService.trySetUserStatus(call.calleeId, 'in-call')
+
+      call.startTime = new Date()
+      call.status = 'active'
+      await stagedCallService.updateStagedCallStatus(matchId, 'active', {
+        startTime: call.startTime,
+      })
+
+      call.timerId = setTimeout(
+        () => stagedCallLogic.handleCallComplete(io, matchId),
+        call.duration,
+      )
+      setTimeout(() => stagedCallLogic.triggerIcebreakers(io, matchId), 3000)
+
+      // FIXED: Single emit pattern - use 'call-started' for BOTH
+      io.to(`user:${call.callerId}`).emit('call-started', {
+        matchId,
+        channelName: call.channelName,
+        stage: call.stage,
+        duration: call.duration,
+      })
+
+      // Use io.to(userId) instead of socket.emit to support multi-device/deduplication context
+      io.to(`user:${userId}`).emit('call-started', {
+        matchId,
+        channelName: call.channelName,
+        stage: call.stage,
+        duration: call.duration,
+      })
+    } finally {
+      setTimeout(() => acceptLocks.delete(matchId), 2000)
+    }
+  }
+
+  /**
+   * Handle incoming call request
+   */
+  socket.on('request-call', async (data: { matchId: string; calleeId: string; stage: 1 | 2 }) => {
+    try {
       const { matchId, calleeId, stage } = data
 
       // ENTRY GATE 1: Circuit breaker check
@@ -32,27 +87,38 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
         return
       }
 
-      // ENTRY GATE 2: Caller busy state check
-      const callerCheck = busyStateService.canUserStartCall(userId)
-      if (!callerCheck.allowed) {
+      // ENTRY GATE 2: Atomic caller busy state check and set
+      const callerResult = busyStateService.trySetUserStatus(userId, 'connecting')
+      if (!callerResult.success) {
         socket.emit('staged-call-error', {
           matchId,
-          error: `You cannot start a call: ${callerCheck.reason}`
+          error: `You cannot start a call: ${callerResult.reason}`
         })
-        console.log(`[StagedCall] Request blocked - Caller ${userId} is ${callerCheck.reason}`)
+        console.log(
+          `[StagedCall] Request blocked - Caller ${userId} busy (${callerResult.reason})`
+        )
         return
       }
 
-      // ENTRY GATE 3: Callee busy state check
-      const calleeCheck = busyStateService.canUserStartCall(calleeId)
-      if (!calleeCheck.allowed) {
+      // ENTRY GATE 3: Atomic callee busy state check and set
+      const calleeResult = busyStateService.trySetUserStatus(calleeId, 'connecting')
+      if (!calleeResult.success) {
+        // ROLLBACK: Caller status
+        busyStateService.trySetUserStatus(userId, 'available')
+
         socket.emit('staged-call-error', {
           matchId,
-          error: `User is currently busy: ${calleeCheck.reason}`
+          error: `User is currently busy: ${calleeResult.reason}`
         })
-        console.log(`[StagedCall] Request blocked - Callee ${calleeId} is ${calleeCheck.reason}`)
+        console.log(
+          `[StagedCall] Request blocked - Callee ${calleeId} busy (${calleeResult.reason})`
+        )
         return
       }
+
+      console.log(
+        `[StagedCall] Call request accepted - ${userId} -> ${calleeId} (v${callerResult.currentVersion}, v${calleeResult.currentVersion})`
+      )
 
       const user = await (await getUserCollection()).findOne({ _id: new ObjectId(userId) })
       if (!user || initiationLocks.has(matchId)) return
@@ -62,10 +128,37 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
         const matchStage = await stagedCallService.getMatchStage(matchId)
 
         if (
-          !stagedCallService.canInitiateStage(matchStage, stage) ||
-          activeStagedCalls.has(matchId)
+          !stagedCallService.canInitiateStage(matchStage, stage)
         ) {
           socket.emit('staged-call-error', { matchId, error: 'Cannot initiate call' })
+          return
+        }
+
+        // UX-02: Simultaneous Call Request Deduplication
+        if (activeStagedCalls.has(matchId)) {
+          const existingCall = activeStagedCalls.get(matchId)
+          // If I am the callee of the existing call, this is a cross-call -> Auto-Accept!
+          if (
+            existingCall?.status === 'ringing' &&
+            existingCall.calleeId === userId &&
+            existingCall.callerId === calleeId
+          ) {
+            console.log(
+              `[StagedCall] Cross-call detected for ${matchId} (User ${userId} calling back Caller ${calleeId}). Auto-accepting.`
+            )
+            // Release initiation lock since we are accepting instead
+            initiationLocks.delete(matchId)
+            // Rollback my "connecting" status so accept logic can set "in-call"
+            // Actually handleAcceptCall will trySet "in-call", which transitions from "connecting" fine? 
+            // Valid transitions: connecting -> in-call. Yes. 
+            // But verify: callerResult set me to "connecting". 
+            // handleAcceptCall sets me to "in-call". Valid.
+
+            await handleAcceptCall(matchId)
+            return
+          }
+
+          socket.emit('staged-call-error', { matchId, error: 'Call already in progress' })
           return
         }
 
@@ -103,13 +196,14 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
             busyStateService.clearUserStatus(userId)
             busyStateService.clearUserStatus(calleeId)
             io.to(`user:${userId}`).emit('staged-call-timeout', { matchId })
-            io.to(`user:${calleeId}`).emit('staged-call-missed', { matchId, callerId: userId })
+            io.to(`user:${calleeId}`).emit('staged-call-missed', { matchId })
           }
         }, STAGED_CALL_CONSTANTS.RING_TIMEOUT)
 
         const call: ActiveStagedCall = {
           matchId,
           stage,
+          status: 'ringing',
           callerId: userId,
           calleeId,
           channelName,
@@ -149,59 +243,28 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
           agoraToken: callerToken.token,
           agoraUid: callerUid,
         })
+      } catch (error) {
+        console.error('[StagedCall] Request error:', error)
+        socket.emit('staged-call-error', { matchId, error: 'err.internal_server_error' })
+        // Rollback on error
+        busyStateService.trySetUserStatus(userId, 'available')
+        busyStateService.trySetUserStatus(calleeId, 'available')
+        stagedCallLogic.clearCall(matchId)
       } finally {
         initiationLocks.delete(matchId)
       }
-    },
-  )
+    } catch (error) {
+      console.error('[StagedCall] Outer request error:', error)
+      // Ensure cleanup on any error
+      if (data.matchId) {
+        busyStateService.trySetUserStatus(userId, 'available')
+        busyStateService.trySetUserStatus(data.calleeId, 'available')
+      }
+    }
+  })
 
   socket.on('accept-call', async (data: { matchId: string }) => {
-    const { matchId } = data
-    const call = activeStagedCalls.get(matchId)
-    if (!call || call.calleeId !== userId) return
-
-    // FIXED: Atomic accept lock
-    if (acceptLocks.get(matchId)) {
-      console.log(`Accept duplicate ignored for ${matchId}`)
-      return
-    }
-    acceptLocks.set(matchId, true)
-
-    try {
-      if (call.ringTimeoutId) clearTimeout(call.ringTimeoutId)
-
-      busyStateService.setUserStatus(call.callerId, 'in-call')
-      busyStateService.setUserStatus(call.calleeId, 'in-call')
-
-      call.startTime = new Date()
-      await stagedCallService.updateStagedCallStatus(matchId, 'active', {
-        startTime: call.startTime,
-      })
-
-      call.timerId = setTimeout(
-        () => stagedCallLogic.handleCallComplete(io, matchId),
-        call.duration,
-      )
-      setTimeout(() => stagedCallLogic.triggerIcebreakers(io, matchId), 3000)
-
-      // FIXED: Single emit pattern - use 'call-started' for BOTH
-      io.to(`user:${call.callerId}`).emit('call-started', {
-        // Changed from accepted
-        matchId,
-        channelName: call.channelName,
-        stage: call.stage,
-        duration: call.duration,
-      })
-
-      socket.emit('call-started', {
-        matchId,
-        channelName: call.channelName,
-        stage: call.stage,
-        duration: call.duration,
-      })
-    } finally {
-      setTimeout(() => acceptLocks.delete(matchId), 2000) // Cleanup after delay
-    }
+    await handleAcceptCall(data.matchId)
   })
 
   // Rest of handlers unchanged...
