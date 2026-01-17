@@ -3,20 +3,20 @@
 import React, { createContext, useContext, useState, useCallback, useEffect, useRef, type ReactNode } from 'react'
 import { useSocket } from '@/features/realtime'
 import { LIVE_CALL_EVENTS } from '@shared/types'
-import type { LiveCallMatchPayload, LiveCallPreferences, LiveCallStatus } from '@shared/types'
+import type { LiveCallMatchPayload, LiveCallPreferences } from '@shared/types'
 import { useCallSystem } from '@/features/call-system'
 
 // Note: We use the shared type for LiveCallStatus if available, otherwise define it locally
-type LocalLiveCallStatus = 'idle' | 'queueing' | 'connecting' | 'in-call' | 'error' | 'ended'
+export type LiveCallStatus = 'idle' | 'queueing' | 'connecting' | 'in-call' | 'error' | 'ended'
 
 interface LiveCallContextValue {
-    status: LocalLiveCallStatus
+    status: LiveCallStatus
     matchData: LiveCallMatchPayload | null
     error: string | null
     joinQueue: (preferences?: LiveCallPreferences) => void
     leaveQueue: () => void
     reset: () => void
-    setStatus: (status: LocalLiveCallStatus) => void
+    setStatus: (status: LiveCallStatus) => void
 }
 
 const LiveCallContext = createContext<LiveCallContextValue | null>(null)
@@ -25,7 +25,7 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
     const { socket, isConnected } = useSocket()
     const { startCall, closeCall } = useCallSystem()
 
-    const [status, setStatus] = useState<LocalLiveCallStatus>('idle')
+    const [status, setStatus] = useState<LiveCallStatus>('idle')
     const [matchData, setMatchData] = useState<LiveCallMatchPayload | null>(null)
     const [error, setError] = useState<string | null>(null)
 

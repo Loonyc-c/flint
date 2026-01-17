@@ -4,7 +4,7 @@ import { motion } from 'framer-motion'
 import { useTranslations } from 'next-intl'
 import { Phone, ShieldCheck, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import type { LiveCallStatus } from '@/features/live-call/hooks/useLiveCall'
+import { type LiveCallStatus } from '@/features/live-call/context/LiveCallContext'
 
 interface LiveCallStateQueueingProps {
     status: LiveCallStatus

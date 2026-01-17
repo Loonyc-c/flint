@@ -4,8 +4,7 @@ import { useEffect, useCallback, useState, useRef } from 'react'
 import { useSocket } from '@/features/realtime'
 import { LIVE_CALL_EVENTS } from '@shared/types'
 import type { LiveCallMatchPayload, LiveCallPreferences } from '@shared/types'
-
-export type LiveCallStatus = 'idle' | 'queueing' | 'connecting' | 'in-call' | 'error' | 'ended'
+import { useLiveCallContext, type LiveCallStatus } from '../context/LiveCallContext'
 
 // Note: RemainingTime and matchData are now primarily managed by UnifiedCallInterface
 // but we keep some local state for queueing status.
@@ -24,7 +23,6 @@ interface UseLiveCallReturn {
   reset: () => void
 }
 
-import { useLiveCallContext } from '../context/LiveCallContext'
 
 export const useLiveCall = (): UseLiveCallReturn => {
   const { socket, isConnected } = useSocket()
