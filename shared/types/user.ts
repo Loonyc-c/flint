@@ -1,14 +1,16 @@
 import type { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
 
 export type UserProfile = {
-  nickName: string
-  age: number
-  gender: USER_GENDER
-  bio: string
-  interests: INTERESTS[]
-  photo: string
-  voiceIntro: string
-  questions: QuestionAnswer[]
+  firstName?: string
+  lastName?: string
+  nickName?: string
+  age?: number
+  gender?: USER_GENDER
+  bio?: string
+  interests?: INTERESTS[]
+  photo?: string
+  voiceIntro?: string
+  questions?: QuestionAnswer[]
 }
 
 export type Subscription = {
@@ -41,23 +43,24 @@ export interface QuestionAnswerWithFile extends QuestionAnswer {
 }
 
 export interface ProfileUpdateRequest {
-  nickName: string
-  age: number
-  gender: USER_GENDER
-  bio: string
-  interests: INTERESTS[]
-  photo: string
-  voiceIntro: string
-  questions: QuestionAnswer[]
+  firstName?: string
+  lastName?: string
+  nickName?: string
+  age?: number
+  gender?: USER_GENDER
+  bio?: string
+  interests?: INTERESTS[]
+  photo?: string
+  voiceIntro?: string
+  questions?: QuestionAnswer[]
 }
 export interface ProfileResponse {
   isComplete: boolean
+  profileCompletion?: number
   profile?: ProfileUpdateRequest
 }
 
 export interface UserAuth {
-  firstName: string
-  lastName: string
   email: string
   password: string
   passwordResetToken?: string

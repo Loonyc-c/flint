@@ -96,8 +96,19 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           error={errors.password}
           disabled={isLoading}
           {...register('password')}
-          containerClassName="mb-4"
+          containerClassName="mb-2"
         />
+
+        {/* Helpful hint for Google users */}
+        <p className="text-xs text-muted-foreground mb-4">
+          {t('googleUserHint')}{' '}
+          <Link
+            href="/auth/forget-password"
+            className="text-brand hover:text-brand-200 font-medium"
+          >
+            {t('setPasswordLink')}
+          </Link>
+        </p>
 
         <div className="mb-4 text-right">
           <Link

@@ -23,19 +23,20 @@ export const questionAnswerSchema = z.object({
 });
 
 export const profileUpdateSchema = z.object({
-  nickName: nameSchema,
+  firstName: nameSchema.optional(),
+  lastName: nameSchema.optional(),
+  nickName: nameSchema.optional(),
   age: z
     .number()
     .min(18, "You must be at least 18 years old")
-    .max(100, "Invalid age"),
-  gender: GenderEnum,
-  bio: z.string().max(500, "Bio must be under 500 characters"),
-  interests: z.array(InterestEnum).min(3, "Please select at least 3 interests that describe you."),
-  photo: z.string(),
-  voiceIntro: z.string(),
-  questions: z
-    .array(questionAnswerSchema)
-    .length(3, "Please record audio answers for all 3 profile questions."),
+    .max(100, "Invalid age")
+    .optional(),
+  gender: GenderEnum.optional(),
+  bio: z.string().max(500, "Bio must be under 500 characters").optional(),
+  interests: z.array(InterestEnum).optional(),
+  photo: z.string().optional(),
+  voiceIntro: z.string().optional(),
+  questions: z.array(questionAnswerSchema).optional(),
   contact: contactInfoSchema.optional(),
 });
 

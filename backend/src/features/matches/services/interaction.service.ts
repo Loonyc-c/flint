@@ -152,7 +152,7 @@ export const interactionService = {
     const pendingLikerIds = pendingLikes.map((like) => like.actorId)
     const likers = await userCollection
       .find({ _id: { $in: pendingLikerIds } })
-      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photo': 1 })
+      .project({ _id: 1, 'profile.nickName': 1, 'profile.photo': 1 })
       .toArray()
 
     const userMap = new Map(likers.map((user) => [user._id.toHexString(), user]))
@@ -166,8 +166,7 @@ export const interactionService = {
           id: like._id.toHexString(),
           user: {
             id: liker._id.toHexString(),
-            firstName: liker.auth.firstName as string,
-            lastName: liker.auth.lastName as string,
+            nickName: liker.profile?.nickName || 'User',
             avatar,
           },
           createdAt: like.createdAt.toISOString(),

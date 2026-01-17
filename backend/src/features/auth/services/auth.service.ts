@@ -21,8 +21,6 @@ if (!JWT_SECRET) {
 
 export type AuthorizerPayload = {
   userId: string
-  firstName: string
-  lastName: string
   email: string
   subscription: {
     plan: SUBSCRIPTION_PLANS
@@ -42,8 +40,6 @@ export interface AuthToken {
 }
 
 interface createUserReq {
-  firstName: string
-  lastName: string
   email: string
   password: string
 }
@@ -128,7 +124,7 @@ export const authService: AuthService = {
   // Requirement 3: Use MongoDB transaction to prevent race condition in user creation
   // This ensures atomicity - check and insert happen in same transaction
   createUser: async (input) => {
-    const { firstName, lastName, email, password } = input
+    const { email, password } = input
 
     // Hash password outside transaction to minimize transaction duration
     const salt = await bcrypt.genSalt(10)
@@ -146,8 +142,6 @@ export const authService: AuthService = {
 
       const doc: DbUser = {
         auth: {
-          firstName,
-          lastName,
           email,
           password: hashedPassword,
         },
@@ -207,12 +201,12 @@ export const authService: AuthService = {
     const [CLIENT_URL] = rawClientUrl.split(',')
     const resetLink = `${CLIENT_URL?.trim()}/auth/reset-password?token=${resetToken}`
 
-    const emailText = `Hello ${user.auth.firstName},\n\nYou requested a password reset. Please click on the following link to reset your password:\n\n${resetLink}\n\nThis link will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.\n\nBest regards,\nFlint Team`
+    const emailText = `Hello,\n\nYou requested a password reset. Please click on the following link to reset your password:\n\n${resetLink}\n\nThis link will expire in 15 minutes.\n\nIf you didn't request this, please ignore this email.\n\nBest regards,\nFlint Team`
 
     const emailHtml = `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
         <h2>Password Reset Request</h2>
-        <p>Hello ${user.auth.firstName},</p>
+        <p>Hello,</p>
         <p>You requested a password reset. Please click on the following link to reset your password:</p>
         <p style="margin: 20px 0;">
           <a href="${resetLink}" style="background-color: #007bff; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
@@ -295,14 +289,12 @@ export const authService: AuthService = {
 
       if (
         isNil(payload) ||
-        isNil(payload.email) ||
-        isNil(payload.given_name) ||
-        isNil(payload.family_name)
+        isNil(payload.email)
       ) {
         throw new ServiceException('err.auth.invalid_token', ErrorCode.BAD_REQUEST)
       }
 
-      const { email, given_name: firstName, family_name: lastName } = payload
+      const { email } = payload
 
       const userCollection = await getUserCollection()
 
@@ -310,7 +302,7 @@ export const authService: AuthService = {
         { 'auth.email': email },
         {
           $setOnInsert: {
-            auth: { firstName, lastName, email, password: '' },
+            auth: { email, password: '' },
             subscription: { plan: SUBSCRIPTION_PLANS.FREE, isActive: true },
             preferences: { ageRange: DEFAULT_AGE_RANGE, lookingFor: LOOKING_FOR.ALL },
             profileCompletion: 0,

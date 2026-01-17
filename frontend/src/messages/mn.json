@@ -21,7 +21,9 @@
       "forgotPassword": "Нууц үгээ мартсан уу?",
       "button": "Нэвтрэх →",
       "loading": "Нэвтэрч байна...",
-      "success": "Тавтай морил!"
+      "success": "Тавтай морил!",
+      "googleUserHint": "Google-ээр бүртгүүлсэн үү?",
+      "setPasswordLink": "Нууц үг үүсгэх"
     },
     "signup": {
       "title": "Flint-д тавтай морил",

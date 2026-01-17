@@ -40,7 +40,7 @@ export const CardPhoto = ({
           >
             <Image
               src={photos[currentPhotoIndex] ?? ''}
-              alt={candidate.profile?.nickName || candidate.firstName || 'User'}
+              alt={candidate.profile?.nickName || 'User'}
               fill
               className="object-cover pointer-events-none"
               priority

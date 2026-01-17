@@ -35,7 +35,7 @@ export const matchService = {
     const otherUserObjectIds = otherUserIdStrings.map((id) => new ObjectId(id))
     const otherUsers = await userCollection
       .find({ _id: { $in: otherUserObjectIds } })
-      .project({ _id: 1, 'auth.firstName': 1, 'auth.lastName': 1, 'profile.photo': 1 })
+      .project({ _id: 1, 'profile.nickName': 1, 'profile.photo': 1 })
       .toArray()
 
     const userMap = new Map(otherUsers.map((user) => [user._id.toHexString(), user]))
@@ -52,10 +52,10 @@ export const matchService = {
         const isTheirTurn = match.currentTurn === otherUserId
         const lastMessage = match.lastMessage
           ? {
-              text: match.lastMessage.text,
-              senderId: match.lastMessage.senderId,
-              createdAt: match.lastMessage.createdAt.toISOString(),
-            }
+            text: match.lastMessage.text,
+            senderId: match.lastMessage.senderId,
+            createdAt: match.lastMessage.createdAt.toISOString(),
+          }
           : undefined
 
         return {
@@ -63,8 +63,7 @@ export const matchService = {
           createdAt: match.createdAt,
           otherUser: {
             id: otherUser._id.toHexString(),
-            firstName: otherUser.auth.firstName as string,
-            lastName: otherUser.auth.lastName as string,
+            nickName: otherUser.profile?.nickName || 'User',
             avatar: otherUser.profile?.photo || undefined,
           },
           lastMessage,

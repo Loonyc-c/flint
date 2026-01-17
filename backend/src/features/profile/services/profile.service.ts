@@ -18,6 +18,8 @@ export const profileService = {
 
     const updates: Partial<DbUser> = {
       profile: {
+        firstName: data.firstName,
+        lastName: data.lastName,
         nickName: data.nickName,
         age: data.age,
         gender: data.gender,
@@ -65,6 +67,8 @@ export const profileService = {
     }
 
     const profileData: ProfileUpdateRequest = {
+      firstName: user.profile.firstName,
+      lastName: user.profile.lastName,
       nickName: user.profile.nickName,
       age: user.profile.age,
       gender: user.profile.gender,
@@ -114,7 +118,7 @@ export const profileService = {
 
     const currentContactInfo = user.contactInfo || { verifiedPlatforms: [] }
     const verifiedPlatforms = [...(currentContactInfo.verifiedPlatforms || [])]
-    
+
     if (!verifiedPlatforms.includes(platform)) {
       verifiedPlatforms.push(platform)
     }

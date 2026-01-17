@@ -10,8 +10,7 @@ export interface LikePreview {
   id: string // interaction ID
   user: {
     id: string
-    firstName: string
-    lastName: string
+    nickName: string
     avatar?: string
   }
   createdAt: string // ISO string
@@ -56,8 +55,7 @@ export interface MatchWithUser {
   createdAt: Date
   otherUser: {
     id: string
-    firstName: string
-    lastName: string
+    nickName: string
     avatar?: string
   }
   // Chat-related fields for efficient list view

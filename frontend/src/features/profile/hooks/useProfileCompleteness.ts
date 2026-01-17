@@ -1,12 +1,16 @@
 import { useState, useEffect } from 'react'
-import { calculateProfileCompleteness } from '@shared/lib'
+import { calculateProfileCompleteness, type ProfileCompletenessResult } from '@shared/lib'
 import type { ProfileAndContactFormData } from '../schemas/profile-form'
 
 export const useProfileCompleteness = (
     formData: ProfileAndContactFormData,
     pendingPhotoFile: File | null
 ) => {
-    const [completeness, setCompleteness] = useState(0)
+    const [result, setResult] = useState<ProfileCompletenessResult>({
+        score: 0,
+        isFeatureUnlocked: false,
+        missingFields: []
+    })
 
     useEffect(() => {
         const timer = setTimeout(() => {
@@ -14,13 +18,13 @@ export const useProfileCompleteness = (
             const { instagram, ...profileData } = dataForCalculation
 
             // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const { score } = calculateProfileCompleteness(profileData as any, {
+            const calculation = calculateProfileCompleteness(profileData as any, {
                 instagram: instagram || undefined
             })
-            setCompleteness(score)
+            setResult(calculation)
         }, 500)
         return () => clearTimeout(timer)
     }, [formData, pendingPhotoFile])
 
-    return completeness
+    return result
 }

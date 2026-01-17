@@ -11,10 +11,9 @@ import type { UserProfile } from './user'
 export interface User {
   id: string
   email: string
-  firstName: string
-  lastName: string
   name?: string
   profile?: UserProfile
+  profileCompletion?: number
   createdAt?: Date
   updatedAt?: Date
 }
@@ -37,8 +36,6 @@ export interface LoginResponse {
   user: {
     id: string
     email: string
-    firstName: string
-    lastName: string
     name: string
   }
 }
@@ -48,8 +45,6 @@ export interface LoginResponse {
  * Used by frontend (form submission) and backend (API endpoint)
  */
 export interface SignupRequest {
-  firstName: string
-  lastName: string
   email: string
   password: string
 }
@@ -61,8 +56,6 @@ export interface SignupRequest {
 export interface SignupResponse {
   id: string
   email: string
-  firstName: string
-  lastName: string
   message: string
 }
 
@@ -115,8 +108,6 @@ export interface AuthTokenPayload {
   exp: number
   data: {
     userId: string
-    firstName: string
-    lastName: string
     email: string
   }
 }
@@ -147,10 +138,10 @@ export interface ApiResponse<T = unknown> {
  */
 export interface AuthError {
   code:
-    | 'INVALID_CREDENTIALS'
-    | 'USER_NOT_FOUND'
-    | 'EMAIL_ALREADY_EXISTS'
-    | 'INVALID_TOKEN'
-    | 'TOKEN_EXPIRED'
+  | 'INVALID_CREDENTIALS'
+  | 'USER_NOT_FOUND'
+  | 'EMAIL_ALREADY_EXISTS'
+  | 'INVALID_TOKEN'
+  | 'TOKEN_EXPIRED'
   message: string
 }

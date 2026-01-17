@@ -53,7 +53,7 @@ export const registerVideoHandlers = (io: Server, socket: AuthenticatedSocket) =
     io.to(`user:${calleeId}`).emit('call-incoming', {
       matchId,
       callerId: userId,
-      callerName: socket.user.firstName,
+      callerName: 'User', // Profile not available in socket context, will be fetched by client
       channelName,
       timestamp: new Date().toISOString(),
     })
@@ -70,13 +70,13 @@ export const registerVideoHandlers = (io: Server, socket: AuthenticatedSocket) =
       const call = activeCalls.get(matchId)
       if (call && call.status === 'ringing') {
         activeCalls.delete(matchId)
-        
+
         io.to(`user:${userId}`).emit('call-timeout', { matchId })
         io.to(`user:${calleeId}`).emit('call-missed', {
           matchId,
           callerId: userId,
         })
-        
+
         console.log(`⏰ [Video] Call timeout in match ${matchId}`)
       }
     }, 30000)
@@ -171,7 +171,7 @@ export const registerVideoHandlers = (io: Server, socket: AuthenticatedSocket) =
 
     // Notify both users
     const otherUserId = call.callerId === userId ? call.calleeId : call.callerId
-    
+
     io.to(`user:${otherUserId}`).emit('call-ended', {
       matchId,
       endedBy: userId,
@@ -238,15 +238,15 @@ export const registerVideoHandlers = (io: Server, socket: AuthenticatedSocket) =
     for (const [matchId, call] of activeCalls.entries()) {
       if (call.callerId === userId || call.calleeId === userId) {
         const otherUserId = call.callerId === userId ? call.calleeId : call.callerId
-        
+
         activeCalls.delete(matchId)
-        
+
         io.to(`user:${otherUserId}`).emit('call-ended', {
           matchId,
           endedBy: userId,
           reason: 'disconnect',
         })
-        
+
         console.log(`📵 [Video] Call ended due to disconnect in match ${matchId}`)
       }
     }

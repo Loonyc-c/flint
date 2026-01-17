@@ -17,7 +17,7 @@ export const MatchContent = ({ showContent, matchedUser, onClose }: MatchContent
   const t = useTranslations('swipe.modals.match')
   const router = useRouter()
   const userPhoto = matchedUser.profile?.photo
-  const userName = matchedUser.profile?.nickName || matchedUser.firstName
+  const userName = matchedUser.profile?.nickName || 'User'
 
   return (
     <motion.div

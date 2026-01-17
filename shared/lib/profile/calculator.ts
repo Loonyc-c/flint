@@ -12,23 +12,32 @@ export interface MissingField {
 
 export interface ProfileCompletenessResult {
   score: number
+  isFeatureUnlocked: boolean
   missingFields: MissingField[]
 }
 
 /**
  * Calculates the profile completeness score based on weighted fields.
+ * Now implements a "Quality Gate" with strict requirements.
  *
  * Score Distribution (100% Total):
- * - Basic Info (20%): Age (10%), Gender (10%)
+ * - Identity (25%): firstName (5%), lastName (5%), nickName (5%), age (5%), gender (5%)
  * - Photo (10%): Main profile photo
  * - Bio (10%): At least 10 characters
  * - Interests (10%): At least 3 interests
- * - Questions (15%): 5% per answered question (max 3)
+ * - Questions (10%): 3.33% per answered question (max 3)
  * - Voice Intro (15%): Voice introduction recorded
  * - Contact Info (20%): Instagram connected
  *
- * Note: Accepts questions with either uploaded URLs (audioUrl) or local recordings (audioFile)
- * to support real-time completeness calculation in the frontend before uploads.
+ * THE 80% RULE (Cap System):
+ * It is mathematically impossible to reach 80% (isFeatureUnlocked) without ALL of:
+ * - Full Identity (First, Last, Nick, Age, Gender)
+ * - Photo & Bio
+ * - Voice Intro
+ * - 3 Questions
+ * - Instagram
+ *
+ * If ANY critical field is missing, the score is capped at 75%.
  */
 export const calculateProfileCompleteness = (
   profile: Partial<ProfileUpdateRequest & { questions?: QuestionAnswerWithFile[] }> = {},
@@ -37,17 +46,35 @@ export const calculateProfileCompleteness = (
   let score = 0
   const missingFields: MissingField[] = []
 
-  // 1. Basic Info (20%)
-  if (profile.age) {
-    score += 10
+  // 1. Identity (25%)
+  if (profile.firstName) {
+    score += 5
   } else {
-    missingFields.push({ key: 'age', label: 'Age', weight: 10 })
+    missingFields.push({ key: 'firstName', label: 'First Name', weight: 5 })
+  }
+
+  if (profile.lastName) {
+    score += 5
+  } else {
+    missingFields.push({ key: 'lastName', label: 'Last Name', weight: 5 })
+  }
+
+  if (profile.nickName) {
+    score += 5
+  } else {
+    missingFields.push({ key: 'nickName', label: 'Nickname', weight: 5 })
+  }
+
+  if (profile.age) {
+    score += 5
+  } else {
+    missingFields.push({ key: 'age', label: 'Age', weight: 5 })
   }
 
   if (profile.gender) {
-    score += 10
+    score += 5
   } else {
-    missingFields.push({ key: 'gender', label: 'Gender', weight: 10 })
+    missingFields.push({ key: 'gender', label: 'Gender', weight: 5 })
   }
 
   // 2. Photo (10%)
@@ -57,19 +84,18 @@ export const calculateProfileCompleteness = (
     missingFields.push({ key: 'photo', label: 'Profile Photo', weight: 10 })
   }
 
-  // 3. Contact Info (20%) - Instagram
-  // Check if instagram field is present
-  if (contactInfo.instagram) {
-    score += 20
-  } else {
-    missingFields.push({ key: 'instagram', label: 'Instagram', weight: 20 })
-  }
-
-  // 4. Bio (10%)
+  // 3. Bio (10%)
   if (profile.bio && profile.bio.trim().length >= 10) {
     score += 10
   } else {
     missingFields.push({ key: 'bio', label: 'Bio (min 10 chars)', weight: 10 })
+  }
+
+  // 4. Voice Intro (15%)
+  if (profile.voiceIntro && profile.voiceIntro.trim().length > 0) {
+    score += 15
+  } else {
+    missingFields.push({ key: 'voiceIntro', label: 'Voice Introduction', weight: 15 })
   }
 
   // 5. Interests (10%)
@@ -79,9 +105,8 @@ export const calculateProfileCompleteness = (
     missingFields.push({ key: 'interests', label: 'Interests (min 3)', weight: 10 })
   }
 
-  // 6. Questions (15%)
+  // 6. Questions (10%)
   // Check for either uploaded audio (audioUrl) OR local recording (audioFile)
-  // This allows real-time completeness updates before upload
   const answeredCount =
     profile.questions?.filter(q => {
       const hasQuestionId = !!q.questionId
@@ -90,26 +115,56 @@ export const calculateProfileCompleteness = (
       return hasQuestionId && (hasAudioUrl || hasAudioFile)
     }).length || 0
 
-  const questionScore = Math.min(answeredCount, 3) * 5
+  // 3.33 points per question, max 10 points
+  const questionScore = Math.min(answeredCount, 3) * (10 / 3)
   score += questionScore
 
   if (answeredCount < 3) {
     missingFields.push({
       key: 'questions',
       label: `Voice Answers (${3 - answeredCount} more needed)`,
-      weight: 15 - questionScore
+      weight: 10 - questionScore,
     })
   }
 
-  // 7. Voice Intro (15%)
-  if (profile.voiceIntro && profile.voiceIntro.trim().length > 0) {
-    score += 15
+  // 7. Contact Info (20%) - Instagram
+  if (contactInfo.instagram) {
+    score += 20
   } else {
-    missingFields.push({ key: 'voiceIntro', label: 'Voice Introduction', weight: 15 })
+    missingFields.push({ key: 'instagram', label: 'Instagram', weight: 20 })
   }
 
+  // HARD PENALTY CAP SYSTEM
+  // If critical fields are missing, cap score at 75%
+  // This guarantees 80% is only reachable if ALL criticals are present
+  const hasCriticalIdentity =
+    profile.firstName &&
+    profile.lastName &&
+    profile.nickName &&
+    profile.age &&
+    profile.gender
+
+  const hasCriticalContent =
+    profile.photo &&
+    profile.bio &&
+    profile.bio.trim().length >= 10 &&
+    profile.voiceIntro &&
+    profile.voiceIntro.trim().length > 0
+
+  const hasCriticalEngagement = answeredCount >= 3 && profile.interests && profile.interests.length >= 3
+
+  const hasCriticalContact = contactInfo.instagram
+
+  // If ANY of these "Gate Components" are missing, the user CANNOT pass 80%
+  const isGateOpen = hasCriticalIdentity && hasCriticalContent && hasCriticalEngagement && hasCriticalContact
+
+  const maxScore = isGateOpen ? 100 : 75
+
+  const finalScore = Math.min(Math.round(score), maxScore)
+
   return {
-    score: Math.min(score, 100),
-    missingFields
+    score: finalScore,
+    isFeatureUnlocked: finalScore >= 80,
+    missingFields,
   }
 }

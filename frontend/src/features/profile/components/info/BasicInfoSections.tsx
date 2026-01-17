@@ -28,6 +28,22 @@ export const BasicInfoSection = ({ register, errors }: BasicInfoProps) => {
 
   return (
     <section className="p-6 border shadow-sm bg-card rounded-3xl border-border space-y-6">
+      <div className="grid grid-cols-2 gap-6">
+        <FormInput
+          label={t('firstNameLabel')}
+          id="firstName"
+          placeholder={t('firstNamePlaceholder')}
+          error={errors.firstName}
+          {...register('firstName')}
+        />
+        <FormInput
+          label={t('lastNameLabel')}
+          id="lastName"
+          placeholder={t('lastNamePlaceholder')}
+          error={errors.lastName}
+          {...register('lastName')}
+        />
+      </div>
       <FormInput
         label={t('nicknameLabel')}
         id="nickName"

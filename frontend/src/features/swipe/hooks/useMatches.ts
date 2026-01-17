@@ -20,27 +20,27 @@ export const useMatches = () => {
     try {
       // Fetch up to 100 matches to ensure we cover most use cases without true UI pagination yet
       const data = await getMatches(user.id, { limit: 100 })
-      
+
       // Transform MatchWithUser to ChatConversation
       const conversations: ChatConversation[] = data.map(match => ({
         id: match.id,
         matchId: match.id,
         otherUser: {
           id: match.otherUser.id,
-          name: `${match.otherUser.firstName} ${match.otherUser.lastName}`,
+          name: match.otherUser.nickName || 'User', // nickName is now public name
           avatar: match.otherUser.avatar,
         },
         unreadCount: match.unreadCount,
         isTheirTurn: match.isTheirTurn,
         stage: match.stage || 'fresh',
-        lastMessage: match.lastMessage 
+        lastMessage: match.lastMessage
           ? {
-              id: `${match.id}-last`,
-              matchId: match.id,
-              senderId: match.lastMessage.senderId,
-              text: match.lastMessage.text,
-              createdAt: match.lastMessage.createdAt,
-            }
+            id: `${match.id}-last`,
+            matchId: match.id,
+            senderId: match.lastMessage.senderId,
+            text: match.lastMessage.text,
+            createdAt: match.lastMessage.createdAt,
+          }
           : undefined,
       }))
 

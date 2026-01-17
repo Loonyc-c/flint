@@ -58,11 +58,13 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       const response = await apiRequest<ProfileResponse>(`/profile/${user.id}`, {
         method: 'GET'
       })
-      
-      if (response.profile) {
+
+      const profile = response.profile
+      if (profile) {
         setUser(prev => prev ? {
           ...prev,
-          profile: response.profile
+          profile,
+          name: profile.nickName || prev.name
         } : null)
       }
     } catch (error) {
@@ -89,10 +91,8 @@ export const UserProvider = ({ children }: UserProviderProps) => {
       setToken(storedToken)
       const newUser = {
         id: decoded.data.userId,
-        firstName: decoded.data.firstName,
-        lastName: decoded.data.lastName,
         email: decoded.data.email,
-        name: `${decoded.data.lastName} ${decoded.data.firstName}`
+        name: 'User' // Will be populated from profile after refresh
       }
       setUser(newUser)
     } catch {
@@ -108,11 +108,11 @@ export const UserProvider = ({ children }: UserProviderProps) => {
     const cookieToken =
       typeof document !== 'undefined'
         ? document.cookie
-            .split('; ')
-            .find(v => v.startsWith(`${STORAGE_KEY}=`))
-            ?.split('=')
-            .slice(1)
-            .join('=') ?? null
+          .split('; ')
+          .find(v => v.startsWith(`${STORAGE_KEY}=`))
+          ?.split('=')
+          .slice(1)
+          .join('=') ?? null
         : null
 
     // Keep client (localStorage/UserContext) and middleware (cookie) in sync.
