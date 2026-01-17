@@ -11,6 +11,7 @@ import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
 import { useCallSystem } from '@/features/call-system'
 
 import { LiveCallStateQueueing } from './live-call/LiveCallStateQueueing'
+import { useLiveCallContext } from '@/features/live-call/context/LiveCallContext'
 
 interface LiveCallOverlayProps {
   isOpen: boolean
@@ -22,8 +23,9 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     status,
     joinQueue,
     leaveQueue,
-    reset
-  } = useLiveCall()
+    reset,
+    setStatus
+  } = useLiveCallContext()
 
   const { score, missingFields, isReady, isLoading: isCheckingReadiness } = useProfileReadiness()
   const [showGuidance, setShowGuidance] = useState(false)
@@ -56,8 +58,9 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
 
       // Pre-flight hardware check before queueing
       if (!isHardwareReady) {
+        // Set a local pseudo-status or just rely on the component rendering 'queueing' visual below line 108
         startPreflight({
-          requireVideo: false, // Live call starts with audio
+          requireVideo: false,
           onReady: () => {
             setIsHardwareReady(true)
             joinQueue()

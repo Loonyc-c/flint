@@ -20,7 +20,7 @@ interface StartCallParams {
 
 interface CallSystemContextValue {
     startCall: (params: StartCallParams) => void
-    receiveCall: (params: StartCallParams) => void
+    ringCall: (params: StartCallParams, isIncoming: boolean) => void
     startPreflight: (options: { requireVideo: boolean, onReady: () => void, onCancel: () => void }) => void
     acceptCall: () => void
     declineCall: () => void
@@ -47,7 +47,7 @@ interface CallParams {
     currentStage?: 1 | 2 | 3
     remainingTime?: number
     isIncoming?: boolean
-    action?: 'accept' | 'decline'
+    action?: 'accept' | 'decline' | 'start'
     onHangup?: () => void
     preflight?: {
         requireVideo: boolean
@@ -63,16 +63,18 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
         setCallParams({
             ...params,
             isOpen: true,
+            isIncoming: false,
+            action: 'start',
             currentStage: params.currentStage || 1,
             remainingTime: params.remainingTime || 0
         })
     }, [])
 
-    const receiveCall = useCallback((params: StartCallParams) => {
+    const ringCall = useCallback((params: StartCallParams, isIncoming: boolean) => {
         setCallParams({
             ...params,
             isOpen: true,
-            isIncoming: true,
+            isIncoming,
             currentStage: params.currentStage || 1,
             remainingTime: params.remainingTime || 0
         })
@@ -100,7 +102,7 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
     const isCallActive = !!(callParams?.isOpen)
 
     return (
-        <CallSystemContext.Provider value={{ startCall, receiveCall, startPreflight, acceptCall, declineCall, closeCall, isCallActive }}>
+        <CallSystemContext.Provider value={{ startCall, ringCall, startPreflight, acceptCall, declineCall, closeCall, isCallActive }}>
             {children}
             {callParams?.isOpen && (
                 <UnifiedCallInterface

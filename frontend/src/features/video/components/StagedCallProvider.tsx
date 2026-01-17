@@ -49,7 +49,7 @@ export const StagedCallProvider = ({
   activeMatchId,
   onStageComplete,
 }: StagedCallProviderProps) => {
-  const { startCall, receiveCall, closeCall } = useCallSystem()
+  const { startCall, ringCall, closeCall } = useCallSystem()
 
   // Find info for the active conversation
   const activeMatch = useMemo(() =>
@@ -71,7 +71,8 @@ export const StagedCallProvider = ({
             name: match.otherUser.name,
             avatar: match.otherUser.avatar
           },
-          currentStage: data.stage as 1 | 2 | 3
+          currentStage: data.stage as 1 | 2 | 3,
+          onHangup: () => endCall(data.matchId)
         })
       }
     },
@@ -126,7 +127,7 @@ export const StagedCallProvider = ({
     // Receiver Side: Ringing
     if (incomingCall && callStatus === 'ringing') {
       const match = matches.find(m => m.matchId === incomingCall.matchId)
-      receiveCall({
+      ringCall({
         callType: 'staged',
         matchId: incomingCall.matchId,
         channelName: incomingCall.channelName,
@@ -137,14 +138,14 @@ export const StagedCallProvider = ({
         },
         currentStage: incomingCall.stage as 1 | 2 | 3,
         onHangup: () => endCall(incomingCall.matchId)
-      })
+      }, true)
     }
 
     // Caller Side: Calling
     if (callStatus === 'calling' && currentCall) {
       const match = matches.find(m => m.matchId === currentCall.matchId)
       if (match) {
-        startCall({
+        ringCall({
           callType: 'staged',
           matchId: currentCall.matchId,
           channelName: currentCall.channelName,
@@ -155,10 +156,10 @@ export const StagedCallProvider = ({
           },
           currentStage: currentCall.stage as 1 | 2 | 3,
           onHangup: () => endCall(currentCall.matchId)
-        })
+        }, false)
       }
     }
-  }, [incomingCall, currentCall, callStatus, matches, startCall, receiveCall, endCall])
+  }, [incomingCall, currentCall, callStatus, matches, startCall, ringCall, endCall])
 
   const contextValue: StagedCallContextValue = useMemo(() => ({
     initiateCall,
