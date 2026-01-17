@@ -47,7 +47,7 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
       <div className="mb-6">
         <h3 className="text-lg font-bold text-foreground flex items-center gap-2">
           <Instagram className="w-5 h-5 text-instagram" />
-          Instagram <span className="text-destructive">*</span>
+          {t('labels.instagram')} <span className="text-destructive">*</span>
         </h3>
         <p className="mt-1 text-sm text-muted-foreground">
           {t('instagramDesc')}
@@ -56,30 +56,30 @@ export const ContactInfoForm = ({ initialData, onSubmit, className }: ContactInf
 
       <div className="bg-card/50 border border-border rounded-xl p-4">
         <div className="flex items-center gap-3">
-           <div className="relative flex-1">
-              <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
-              <input 
-                {...register('instagram')}
-                disabled={isVerified}
-                className={cn(
-                  "w-full bg-background/50 border rounded-lg py-2.5 pl-8 pr-4 text-sm focus:outline-none focus:ring-2 transition-all",
-                  errors.instagram ? "border-destructive focus:ring-destructive/20" : "border-input focus:ring-brand/20"
-                )}
-                placeholder="username"
-              />
-           </div>
+          <div className="relative flex-1">
+            <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">@</span>
+            <input
+              {...register('instagram')}
+              disabled={isVerified}
+              className={cn(
+                "w-full bg-background/50 border rounded-lg py-2.5 pl-8 pr-4 text-sm focus:outline-none focus:ring-2 transition-all",
+                errors.instagram ? "border-destructive focus:ring-destructive/20" : "border-input focus:ring-brand/20"
+              )}
+              placeholder="username"
+            />
+          </div>
         </div>
         {errors.instagram && <p className="mt-1 text-xs text-destructive">{errors.instagram.message}</p>}
-        
+
         <div className="mt-2 flex items-center justify-between">
-           <p className="text-xs text-muted-foreground">
-             {t('instagramNote')}
-           </p>
-           {isVerified && (
-             <span className="flex items-center gap-1 text-xs font-medium text-blue-500">
-               <CheckCircle2 className="w-3 h-3" /> Verified
-             </span>
-           )}
+          <p className="text-xs text-muted-foreground">
+            {t('instagramNote')}
+          </p>
+          {isVerified && (
+            <span className="flex items-center gap-1 text-xs font-medium text-blue-500">
+              <CheckCircle2 className="w-3 h-3" /> Verified
+            </span>
+          )}
         </div>
       </div>
 

@@ -1,21 +1,23 @@
 'use client'
 
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useCallback, useRef } from 'react'
 import type { ICameraVideoTrack, IRemoteVideoTrack } from 'agora-rtc-sdk-ng'
-import { AgoraClient } from '../lib/agora-client'
-import { apiRequest } from '@/lib/api-client'
+import type { AgoraClient } from '../lib/agora-client'
+import { forceStopHardware } from '../lib/agora/hardware'
 
 // =============================================================================
 // Types
 // =============================================================================
 
-interface AgoraTokenResponse {
-  token: string
-  channelName: string
-  uid: number
-  appId: string
-  expiresAt: number
-}
+import { useMobileAudio } from './useMobileAudio'
+import { fetchAgoraToken } from '../api/agora'
+import { useAgoraLifecycle } from './useAgoraLifecycle'
+import { useAgoraEvents } from './useAgoraEvents'
+import { useAgoraMediaActions } from './useAgoraMediaActions'
+
+// =============================================================================
+// Types
+// =============================================================================
 
 interface UseAgoraOptions {
   channelName: string
@@ -65,93 +67,19 @@ export const useAgora = ({
 
   const isMounted = useRef(true)
 
-  // Initialize client on mount
-  useEffect(() => {
-    isMounted.current = true
-    clientRef.current = new AgoraClient()
-
-    return () => {
-      // Set unmounted immediately to abort pending operations
-      isMounted.current = false
-      const client = clientRef.current
-      if (client) {
-        // Force cleanup regardless of state
-        client.leave().catch(err => console.error('[useAgora] Cleanup error:', err))
-        client.destroy()
-        // Safety net: Force stop ALL hardware tracks
-        AgoraClient.forceStopHardware().catch(err => console.error('[useAgora] Force stop error:', err))
-      }
-      clientRef.current = null
-    }
-  }, [])
+  useAgoraLifecycle(clientRef, isMounted)
 
   // Mobile Audio Routing Fix
-  useEffect(() => {
-    const handleDeviceChange = async () => {
-      try {
-        const devices = await navigator.mediaDevices.enumerateDevices()
-        const audioOutputs = devices.filter(d => d.kind === 'audiooutput')
-        
-        // Prefer Bluetooth or Wired Headset
-        const headset = audioOutputs.find(d => 
-          d.label.toLowerCase().includes('bluetooth') || 
-          d.label.toLowerCase().includes('headset') ||
-          d.label.toLowerCase().includes('wired')
-        )
+  useMobileAudio()
 
-        // Note: Agora SDK handles output routing internally via its playback devices,
-        // but explicit selection can help on some mobile browsers if supported.
-        // We log it here for debugging/verification.
-        if (headset) {
-          console.warn('[MobileAudio] Headset detected:', headset.label)
-        }
-      } catch (e) {
-        console.warn('[MobileAudio] Failed to enumerate devices', e)
-      }
-    }
-
-    navigator.mediaDevices.addEventListener('devicechange', handleDeviceChange)
-    handleDeviceChange() // Check on mount
-
-    return () => {
-      navigator.mediaDevices.removeEventListener('devicechange', handleDeviceChange)
-    }
-  }, [])
-
-  // Set up event handlers
-  useEffect(() => {
-    if (!clientRef.current) return
-
-    clientRef.current.setEventHandlers({
-      onUserJoined: (uid) => {
-        onUserJoined?.(uid)
-      },
-      onUserLeft: (uid) => {
-        setRemoteVideoTracks((prev) => {
-          const next = new Map(prev)
-          next.delete(uid)
-          return next
-        })
-        onUserLeft?.(uid)
-      },
-      onRemoteVideoAdded: (uid, track) => {
-        setRemoteVideoTracks((prev) => {
-          const next = new Map(prev)
-          next.set(uid, track)
-          return next
-        })
-        onRemoteVideoAdded?.(uid, track)
-      },
-      onRemoteVideoRemoved: (uid) => {
-        setRemoteVideoTracks((prev) => {
-          const next = new Map(prev)
-          next.delete(uid)
-          return next
-        })
-        onRemoteVideoRemoved?.(uid)
-      },
-    })
-  }, [onUserJoined, onUserLeft, onRemoteVideoAdded, onRemoteVideoRemoved])
+  useAgoraEvents({
+    clientRef,
+    setRemoteVideoTracks,
+    onUserJoined,
+    onUserLeft,
+    onRemoteVideoAdded,
+    onRemoteVideoRemoved
+  })
 
   // Join channel
   const join = useCallback(async (): Promise<boolean> => {
@@ -165,16 +93,13 @@ export const useAgora = ({
 
     try {
       // Get Agora token from backend
-      const tokenData = await apiRequest<AgoraTokenResponse>('/agora/token', {
-        method: 'POST',
-        body: JSON.stringify({ channelName }),
-      })
+      const tokenData = await fetchAgoraToken(channelName)
 
       if (!isMounted.current) return false
 
       // Initialize and join
       await clientRef.current.init()
-      
+
       if (!isMounted.current) {
         await clientRef.current.leave()
         return false
@@ -221,7 +146,7 @@ export const useAgora = ({
     } catch (err) {
       console.error('[useAgora] Error leaving channel:', err)
       // Fallback: force stop hardware even if leave fails
-      await AgoraClient.forceStopHardware().catch(e => console.error('[useAgora] Force stop fallback error:', e))
+      await forceStopHardware().catch(e => console.error('[useAgora] Force stop fallback error:', e))
     } finally {
       setIsConnected(false)
       setLocalVideoTrack(null)
@@ -231,52 +156,13 @@ export const useAgora = ({
     }
   }, [])
 
-  // Mute all (Pause)
-  const muteAll = useCallback(async (): Promise<void> => {
-    if (!clientRef.current) return
-    await clientRef.current.muteLocalTracks()
-    setIsMicEnabled(false)
-    setIsCameraEnabled(false)
-  }, [])
-
-  // Unmute all (Resume)
-  const unmuteAll = useCallback(async (audio = true, video = false): Promise<void> => {
-    if (!clientRef.current) return
-    await clientRef.current.unmuteLocalTracks(audio, video)
-    setIsMicEnabled(audio)
-    setIsCameraEnabled(video)
-  }, [])
-
-  // Toggle microphone
-  const toggleMic = useCallback(async (): Promise<void> => {
-    if (!clientRef.current) return
-
-    try {
-      const enabled = await clientRef.current.toggleMicrophone()
-      setIsMicEnabled(enabled)
-    } catch (err) {
-      console.error('[useAgora] Error toggling mic:', err)
-    }
-  }, [])
-
-  // Toggle camera
-  const toggleCamera = useCallback(async (): Promise<void> => {
-    if (!clientRef.current) return
-
-    try {
-      if (isCameraEnabled) {
-        await clientRef.current.disableVideo()
-        setLocalVideoTrack(null)
-        setIsCameraEnabled(false)
-      } else {
-        const track = await clientRef.current.enableVideo()
-        setLocalVideoTrack(track)
-        setIsCameraEnabled(!!track)
-      }
-    } catch (err) {
-      console.error('[useAgora] Error toggling camera:', err)
-    }
-  }, [isCameraEnabled])
+  const { muteAll, unmuteAll, toggleMic, toggleCamera } = useAgoraMediaActions({
+    clientRef,
+    isCameraEnabled,
+    setIsMicEnabled,
+    setIsCameraEnabled,
+    setLocalVideoTrack
+  })
 
   return {
     isConnected,

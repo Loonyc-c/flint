@@ -51,7 +51,7 @@ export const IcebreakerOverlay = ({ questions, onClose }: IcebreakerOverlayProps
             <span className="text-[10px] font-black uppercase tracking-widest text-white/80">
               AI Wingman Suggestion
             </span>
-            <button 
+            <button
               onClick={handleClose}
               className="ml-auto p-1 hover:bg-white/10 rounded-full transition-colors"
             >
@@ -60,7 +60,7 @@ export const IcebreakerOverlay = ({ questions, onClose }: IcebreakerOverlayProps
           </div>
 
           {/* Question Text */}
-          <div className="min-h-[60px] flex items-center justify-center text-center px-2">
+          <div className="min-h-16 flex items-center justify-center text-center px-2">
             <motion.p
               key={currentIndex}
               initial={{ opacity: 0, x: 20 }}
@@ -75,23 +75,23 @@ export const IcebreakerOverlay = ({ questions, onClose }: IcebreakerOverlayProps
           <div className="flex items-center justify-between mt-4">
             <div className="flex gap-1">
               {questions.map((_, i) => (
-                <div 
-                  key={i} 
+                <div
+                  key={i}
                   className={cn(
                     "h-1 rounded-full transition-all duration-300",
                     i === currentIndex ? "w-4 bg-white" : "w-1 bg-white/30"
-                  )} 
+                  )}
                 />
               ))}
             </div>
             <div className="flex gap-2">
-              <button 
+              <button
                 onClick={prevQuestion}
                 className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              <button 
+              <button
                 onClick={nextQuestion}
                 className="p-2 bg-white/10 hover:bg-white/20 rounded-full text-white transition-colors"
               >

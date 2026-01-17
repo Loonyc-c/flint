@@ -380,6 +380,10 @@
       "errorTitle": "Call Connection Lost",
       "tryAgain": "Try Again"
     },
+    "grid": {
+      "live": "LIVE",
+      "calling": "Calling..."
+    },
     "header": {
       "connecting": "Connecting...",
       "connected": "Connected",

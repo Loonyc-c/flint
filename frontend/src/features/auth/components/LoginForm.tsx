@@ -11,7 +11,7 @@ import { ApiError } from '@/lib/api-client'
 import GoogleAuthButton from './GoogleAuthButton'
 import { AuthFormWrapper } from './AuthFormWrapper'
 import { FormInput } from '@/components/ui/form-input'
-import { BottomGradient } from '@/utils'
+import { AuthButton } from './AuthButton'
 import { useUser } from '../context/UserContext'
 import { useTranslations } from 'next-intl'
 
@@ -108,14 +108,9 @@ const LoginForm = ({ onSuccess }: LoginFormProps) => {
           </Link>
         </div>
 
-        <button
-          className="group/btn relative block h-10 w-full rounded-md bg-linear-to-br from-brand-400 to-brand font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          type="submit"
-          disabled={isLoading}
-        >
-          {isLoading ? t('loading') : t('button')}
-          <BottomGradient />
-        </button>
+        <AuthButton type="submit" isLoading={isLoading} loadingText={t('loading')}>
+          {t('button')}
+        </AuthButton>
 
         <div className="bg-linear-to-r from-transparent via-neutral-300 dark:via-neutral-700 to-transparent my-8 h-px w-full" />
 

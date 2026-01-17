@@ -1,17 +1,16 @@
 'use client'
 
 import { useState } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { Link, useSearchParams } from '@/i18n/routing'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { Link } from '@/i18n/routing'
 import { toast } from 'react-toastify'
 import { resetPassword } from '@/features/auth/api/auth'
 import { type ResetPasswordFormData, resetPasswordSchema } from '@shared/validations'
 import { ApiError } from '@/lib/api-client'
 import { AuthFormWrapper } from './AuthFormWrapper'
 import { FormInput } from '@/components/ui/form-input'
-import { BottomGradient } from '@/utils'
+import { AuthButton } from './AuthButton'
 
 // =============================================================================
 // Sub-Components
@@ -134,14 +133,9 @@ const ResetPasswordForm = () => {
           containerClassName="mb-8"
         />
 
-        <button
-          className="group/btn relative block h-10 w-full rounded-md bg-linear-to-br from-brand-400 to-brand font-medium text-white shadow-[0px_1px_0px_0px_#ffffff40_inset,0px_-1px_0px_0px_#ffffff40_inset] dark:bg-zinc-800 dark:from-zinc-900 dark:to-zinc-900 dark:shadow-[0px_1px_0px_0px_#27272a_inset,0px_-1px_0px_0px_#27272a_inset] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-          type="submit"
-          disabled={isLoading}
-        >
-          {isLoading ? 'Resetting...' : 'Reset Password →'}
-          <BottomGradient />
-        </button>
+        <AuthButton type="submit" isLoading={isLoading} loadingText="Resetting...">
+          Reset Password →
+        </AuthButton>
       </form>
 
       <div className="text-center mt-4">

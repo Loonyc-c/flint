@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import type { ICameraVideoTrack, IRemoteVideoTrack } from 'agora-rtc-sdk-ng'
 import { VideoOff, User } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
 // =============================================================================
@@ -37,6 +38,7 @@ const VideoPlayer = ({
   isCameraEnabled = true,
   className,
 }: VideoPlayerProps) => {
+  const t = useTranslations('video')
   const containerRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
@@ -90,7 +92,7 @@ const VideoPlayer = ({
       {/* Local indicator */}
       {isLocal && (
         <div className="absolute top-4 right-4 z-20 px-2 py-1 bg-brand/80 backdrop-blur-sm rounded-full">
-          <p className="text-white text-xs font-bold">LIVE</p>
+          <p className="text-white text-xs font-bold">{t('grid.live')}</p>
         </div>
       )}
     </motion.div>
@@ -108,6 +110,7 @@ export const VideoGrid = ({
   remoteUserName = 'Partner',
   isCameraEnabled,
 }: VideoGridProps) => {
+  const t = useTranslations('video')
   const remoteTracksArray = Array.from(remoteVideoTracks.entries())
   const hasRemote = remoteTracksArray.length > 0
 
@@ -173,7 +176,7 @@ export const VideoGrid = ({
                   <div className="w-8 h-8 rounded-full bg-brand" />
                 </div>
               </motion.div>
-              <p className="text-white text-lg font-bold mb-1">Calling...</p>
+              <p className="text-white text-lg font-bold mb-1">{t('grid.calling')}</p>
               <p className="text-white/60 text-sm">Waiting for {remoteUserName} to join</p>
             </div>
           </motion.div>

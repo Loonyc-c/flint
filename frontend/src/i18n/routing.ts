@@ -1,36 +1,13 @@
-import { defineRouting } from 'next-intl/routing'
 import { createNavigation } from 'next-intl/navigation'
-import {
-  SUPPORTED_LOCALES,
-  DEFAULT_LOCALE,
-  isValidLocale as sharedIsValidLocale,
-  type Locale as SharedLocale
-} from '@/shared-types/types/i18n'
+import { routing } from './config'
 
-// =============================================================================
-// Re-exports
-// =============================================================================
-
-/**
- * Re-export shared i18n types and utilities for frontend use.
- * This ensures the frontend stays in sync with the shared package.
- */
-export const locales = SUPPORTED_LOCALES
-export type Locale = SharedLocale
-export const isValidLocale = sharedIsValidLocale
+export * from './config'
 
 // =============================================================================
 // Routing Configuration
 // =============================================================================
 
-/**
- * Next-intl routing configuration.
- * Defines supported locales and default locale for the application.
- */
-export const routing = defineRouting({
-  locales: [...SUPPORTED_LOCALES],
-  defaultLocale: DEFAULT_LOCALE
-})
+// Re-exported from ./config
 
 // =============================================================================
 // Navigation Exports
@@ -41,3 +18,9 @@ export const routing = defineRouting({
  * Use these instead of next/navigation for locale-aware routing.
  */
 export const { Link, redirect, usePathname, useRouter } = createNavigation(routing)
+
+/**
+ * Re-export standard Next.js navigation hooks to maintain a single import source.
+ * This ensures strict compliance with the rule: "ALWAYS import from @/i18n/routing".
+ */
+export { useParams, useSearchParams, notFound } from 'next/navigation'

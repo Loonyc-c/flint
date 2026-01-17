@@ -1,5 +1,5 @@
 import createMiddleware from 'next-intl/middleware'
-import { routing } from './i18n/routing'
+import { routing } from './i18n/config'
 import { type NextRequest, NextResponse } from 'next/server'
 
 /**
@@ -11,7 +11,7 @@ const intlMiddleware = createMiddleware(routing)
 const AUTH_PAGES = ['/auth']
 const PROTECTED_PAGES = ['/home', '/profile', '/swipe', '/chat']
 
-export default function middleware(request: NextRequest) {
+const middleware = (request: NextRequest) => {
   const { pathname } = request.nextUrl
   const token = request.cookies.get('flint_access_token')?.value
 
@@ -20,10 +20,10 @@ export default function middleware(request: NextRequest) {
   const currentLocale = segments[1]
   const locales = routing.locales as unknown as string[]
   const hasLocalePrefix = !!currentLocale && locales.includes(currentLocale)
-  
+
   // The "pure" pathname without the locale prefix
-  const purePathname = hasLocalePrefix 
-    ? `/${segments.slice(2).join('/')}` 
+  const purePathname = hasLocalePrefix
+    ? `/${segments.slice(2).join('/')}`
     : pathname
 
   const isAuthPage = AUTH_PAGES.some(path => purePathname.startsWith(path))
@@ -43,6 +43,8 @@ export default function middleware(request: NextRequest) {
 
   return intlMiddleware(request)
 }
+
+export default middleware
 
 /**
  * Middleware matcher configuration.

@@ -1,5 +1,5 @@
 import { getRequestConfig } from 'next-intl/server'
-import { routing, isValidLocale, type Locale } from './routing'
+import { routing, isValidLocale, type Locale } from './config'
 
 // =============================================================================
 // Message Loader
