@@ -134,6 +134,8 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
                     isIncoming={callParams.isIncoming}
                     action={callParams.action}
                     onHangup={callParams.onHangup}
+                    onAcceptReady={callParams.onAcceptReady}
+                    onDecline={callParams.onDecline}
                     onClose={closeCall}
                 />
             )}

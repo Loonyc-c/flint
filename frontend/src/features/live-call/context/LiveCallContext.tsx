@@ -42,6 +42,9 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
             },
             onCancel: () => {
                 console.log('❌ [LiveCall] Join queue cancelled or hardware failed')
+                // CRITICAL: Reset state to prevent queue UI from showing
+                setStatus('idle')
+                setError('Hardware check failed or cancelled')
             }
         })
     }, [socket, isConnected, startPreflight])
