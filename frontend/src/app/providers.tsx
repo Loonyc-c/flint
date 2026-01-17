@@ -68,14 +68,14 @@ const AuthProviders = ({ children }: AuthProvidersProps) => {
       <UserProvider>
         <GlobalSocketProvider>
           <GlobalNotificationListener />
-          <LiveCallProvider>
-            <CallSystemProvider>
+          <CallSystemProvider>
+            <LiveCallProvider>
               <AuthGuard>
                 <HeaderWrapper />
                 {children}
               </AuthGuard>
-            </CallSystemProvider>
-          </LiveCallProvider>
+            </LiveCallProvider>
+          </CallSystemProvider>
           <ThemedToastContainer />
         </GlobalSocketProvider>
       </UserProvider>
