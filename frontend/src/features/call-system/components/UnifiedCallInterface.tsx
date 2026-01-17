@@ -97,7 +97,7 @@ export const UnifiedCallInterface = ({
         }
     }, [state, reset])
 
-    if (!isOpen || !context) return null
+    if (!isOpen || (!context && state !== 'PRE_FLIGHT')) return null
 
     return (
         <AnimatePresence mode="wait">
@@ -123,14 +123,14 @@ export const UnifiedCallInterface = ({
                 />
             )}
 
-            {state === 'CONNECTING' && (
+            {state === 'CONNECTING' && context && (
                 <ConnectingScreen
                     partnerInfo={context.partnerInfo}
                     onTimeout={handleClose}
                 />
             )}
 
-            {state === 'STAGE_ACTIVE' && (
+            {state === 'STAGE_ACTIVE' && context && (
                 <ActiveCallContainer
                     context={context}
                     remainingTime={remainingTime}
@@ -143,7 +143,7 @@ export const UnifiedCallInterface = ({
                 />
             )}
 
-            {state === 'INTERMISSION' && (
+            {state === 'INTERMISSION' && context && (
                 <IntermissionOverlay
                     context={context}
                     onResponse={handleNextStageResponse}
@@ -152,7 +152,7 @@ export const UnifiedCallInterface = ({
                 />
             )}
 
-            {state === 'FINISHED' && (
+            {state === 'FINISHED' && context && (
                 <CallEndedScreen
                     context={context}
                     wasSuccessful={callType === 'live'}

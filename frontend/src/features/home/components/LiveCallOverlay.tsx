@@ -100,40 +100,42 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
               />
             </motion.div>
           ) : (
-            <div className="bg-card rounded-3xl shadow-2xl border border-border overflow-hidden">
-              {(status === 'queueing' || status === 'connecting') && (
-                <LiveCallStateQueueing
-                  status={status}
-                  onClose={handleClose}
-                />
-              )}
+            status !== 'idle' ? (
+              <div className="bg-card rounded-3xl shadow-2xl border border-border overflow-hidden">
+                {(status === 'queueing' || status === 'connecting') && (
+                  <LiveCallStateQueueing
+                    status={status}
+                    onClose={handleClose}
+                  />
+                )}
 
-              {status === 'in-call' && matchData && (
-                <LiveCallStateActive
-                  matchData={matchData}
-                  remainingTime={remainingTime}
-                  hasLiked={hasLiked}
-                  hasPassed={hasPassed}
-                  performAction={performAction}
-                  onClose={handleClose}
-                />
-              )}
+                {status === 'in-call' && matchData && (
+                  <LiveCallStateActive
+                    matchData={matchData}
+                    remainingTime={remainingTime}
+                    hasLiked={hasLiked}
+                    hasPassed={hasPassed}
+                    performAction={performAction}
+                    onClose={handleClose}
+                  />
+                )}
 
-              {status === 'ended' && (
-                <LiveCallStateEnded
-                  hasLiked={hasLiked}
-                  hasPassed={hasPassed}
-                  onClose={handleClose}
-                />
-              )}
+                {status === 'ended' && (
+                  <LiveCallStateEnded
+                    hasLiked={hasLiked}
+                    hasPassed={hasPassed}
+                    onClose={handleClose}
+                  />
+                )}
 
-              {status === 'error' && (
-                <LiveCallStateError
-                  error={error}
-                  onClose={handleClose}
-                />
-              )}
-            </div>
+                {status === 'error' && (
+                  <LiveCallStateError
+                    error={error}
+                    onClose={handleClose}
+                  />
+                )}
+              </div>
+            ) : null
           )}
         </div>
       </motion.div>
