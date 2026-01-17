@@ -5,6 +5,7 @@ import { motion } from 'framer-motion'
 import { Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { UserAvatar } from '@/components/ui/UserAvatar'
+import { useCallSounds } from '../hooks/useCallSounds'
 import type { PartnerInfo } from '../types/call-fsm'
 
 // =============================================================================
@@ -29,16 +30,27 @@ export const ConnectingScreen = ({
     timeoutMs = 15000
 }: ConnectingScreenProps) => {
     const t = useTranslations('call.connecting')
+    const { playDialing, stopDialing } = useCallSounds()
     const [timedOut, setTimedOut] = useState(false)
 
     useEffect(() => {
+        if (isRequester && !timedOut) {
+            playDialing()
+        } else {
+            stopDialing()
+        }
+
         const timer = setTimeout(() => {
             setTimedOut(true)
+            stopDialing()
             onTimeout?.()
         }, timeoutMs)
 
-        return () => clearTimeout(timer)
-    }, [timeoutMs, onTimeout])
+        return () => {
+            clearTimeout(timer)
+            stopDialing()
+        }
+    }, [timeoutMs, onTimeout, isRequester, timedOut, playDialing, stopDialing])
 
     return (
         <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4">

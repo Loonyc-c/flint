@@ -1,6 +1,6 @@
 'use client'
 
-import { useReducer, useCallback, useMemo } from 'react'
+import { useReducer, useCallback, useMemo, useEffect } from 'react'
 import type {
     CallState,
     FSMState,
@@ -137,7 +137,7 @@ const fsmReducer = (state: FSMState, event: FSMEvent): FSMState => {
                 error: event.payload.error
             }
 
-        case 'INCOMING_CALL':
+        case 'SET_RINGING':
             if (state.state !== 'IDLE') return state
             return {
                 state: 'RINGING',
@@ -212,6 +212,17 @@ export const useCallFSM = (): UseCallFSMReturn => {
         dispatch({ type: 'CLEANUP_COMPLETE' })
     }, [])
 
+    // Ringing Timeout (15 seconds)
+    useEffect(() => {
+        if (fsmState.state !== 'RINGING') return
+
+        const timer = setTimeout(() => {
+            dispatch({ type: 'CLEANUP_COMPLETE' })
+        }, 15000)
+
+        return () => clearTimeout(timer)
+    }, [fsmState.state])
+
     const isActive = useMemo(() => {
         return ['PRE_FLIGHT', 'RINGING', 'CHECK_DEVICES', 'CONNECTING', 'STAGE_ACTIVE', 'INTERMISSION'].includes(fsmState.state)
     }, [fsmState.state])
@@ -230,8 +241,8 @@ export const useCallFSM = (): UseCallFSMReturn => {
         endCall,
         reset,
         startPreflight,
-        receiveCall: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
-            dispatch({ type: 'INCOMING_CALL', payload: context })
+        ringCall: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>, isIncoming: boolean) => {
+            dispatch({ type: 'SET_RINGING', payload: { ...context, isIncoming } })
         },
         acceptCall: () => {
             dispatch({ type: 'ACCEPT_CALL' })

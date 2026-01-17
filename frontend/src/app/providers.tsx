@@ -8,6 +8,7 @@ import 'react-toastify/dist/ReactToastify.css'
 import { UserProvider } from '@/features/auth/context/UserContext'
 import { GlobalSocketProvider, GlobalNotificationListener } from '@/features/realtime'
 import { CallSystemProvider } from '@/features/call-system'
+import { LiveCallProvider } from '@/features/live-call/context/LiveCallContext'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { HeaderWrapper } from '@/components/HeaderWrapper'
 
@@ -67,12 +68,14 @@ const AuthProviders = ({ children }: AuthProvidersProps) => {
       <UserProvider>
         <GlobalSocketProvider>
           <GlobalNotificationListener />
-          <CallSystemProvider>
-            <AuthGuard>
-              <HeaderWrapper />
-              {children}
-            </AuthGuard>
-          </CallSystemProvider>
+          <LiveCallProvider>
+            <CallSystemProvider>
+              <AuthGuard>
+                <HeaderWrapper />
+                {children}
+              </AuthGuard>
+            </CallSystemProvider>
+          </LiveCallProvider>
           <ThemedToastContainer />
         </GlobalSocketProvider>
       </UserProvider>
