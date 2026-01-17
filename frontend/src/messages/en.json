@@ -399,7 +399,8 @@
       "calling": "Calling...",
       "callingTo": "Calling {name}...",
       "timeout": "Connection Timeout",
-      "timeoutMessage": "Unable to connect. Please try again."
+      "timeoutMessage": "Unable to connect. Please try again.",
+      "cancel": "Cancel"
     },
     "incoming": {
       "title": "Incoming Call",

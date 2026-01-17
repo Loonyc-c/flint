@@ -15,6 +15,9 @@ import {
 } from '../services/staged-call-logic.service'
 import { agoraService } from '@/features/agora'
 
+// DEBUG LOGGING
+const LOG_TAG = '[StagedCall-Debug]'
+
 const initiationLocks = new Set<string>()
 const acceptLocks = new Map<string, boolean>() // NEW: Prevent duplicate accepts
 
@@ -225,10 +228,25 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
         })
 
         // FIXED: Send credentials to BOTH immediately, but frontend waits for accept
-        io.to(`user:${calleeId}`).emit('request-call', {
+        const roomName = `user:${calleeId}`
+        const roomSockets = io.sockets.adapter.rooms.get(roomName)?.size || 0
+        console.log(`${LOG_TAG} Emitting 'request-call' to Callee: ${calleeId} (Room: ${roomName})`)
+        console.log(`${LOG_TAG} Target Room Socket Count: ${roomSockets}`)
+
+        if (roomSockets === 0) {
+          console.warn(`${LOG_TAG} ⚠️ WARNING: No sockets found in room ${roomName}. The user is likely not connected or the socket didn't join the room.`)
+        } else {
+          const socketIds = Array.from(io.sockets.adapter.rooms.get(roomName) || [])
+          console.log(`${LOG_TAG} Target Socket IDs: ${socketIds.join(', ')}`)
+        }
+
+        console.log(`${LOG_TAG} Caller Name: ${user.profile?.nickName}, Avatar: ${user.profile?.photo ? 'Present' : 'None'}`)
+
+        io.to(roomName).emit('request-call', {
           matchId,
           callerId: userId,
-          callerName: socket.user.firstName,
+          callerName: user.profile?.nickName || 'User',
+          callerAvatar: user.profile?.photo,
           channelName,
           stage,
           callType: stage === 1 ? 'audio' : 'video',
@@ -278,10 +296,12 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
 
   socket.on('staged-call-end', (data: { matchId: string }) => {
     const { matchId } = data
+    console.log(`[DEBUG-HANGUP] Received 'staged-call-end' from Socket: ${socket.id}, User: ${userId}, MatchId: ${matchId}`)
     const call = stagedCallLogic.clearCall(matchId)
     if (!call || (call.callerId !== userId && call.calleeId !== userId)) return
 
     const otherId = call.callerId === userId ? call.calleeId : call.callerId
+    console.log(`[DEBUG-HANGUP] Emitting 'staged-call-ended' to Partner: ${otherId} and Self: ${userId}`)
     io.to(`user:${otherId}`).emit('staged-call-ended', {
       matchId,
       stage: call.stage,

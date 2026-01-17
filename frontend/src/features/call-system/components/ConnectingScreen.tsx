@@ -55,57 +55,63 @@ export const ConnectingScreen = ({
     }, [timeoutMs, onTimeout, isRequester, timedOut, playDialing, stopDialing])
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
             <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
-                className="max-w-md w-full text-center"
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-sm bg-card rounded-3xl shadow-2xl p-8 border border-border/50 relative overflow-hidden"
             >
-                {/* Partner Avatar */}
-                <motion.div
-                    animate={{ scale: [1, 1.05, 1] }}
-                    transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
-                    className="mb-8"
-                >
-                    <UserAvatar
-                        src={partnerInfo.avatar}
-                        name={partnerInfo.name}
-                        size="xl"
-                        className="mx-auto ring-4 ring-brand/30"
-                    />
-                </motion.div>
+                {/* Background decorative elements */}
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand/10 to-transparent pointer-events-none" />
 
-                {/* Connecting Text */}
-                <h3 className="text-2xl font-bold text-white mb-2">
-                    {timedOut ? t('timeout') : (isRequester ? t('calling') : t('connecting'))}
-                </h3>
-                <p className="text-white/60 mb-8">
-                    {timedOut ? t('timeoutMessage') : (isRequester ? t('callingTo', { name: partnerInfo.name }) : t('connectingTo', { name: partnerInfo.name }))}
-                </p>
+                <div className="relative z-10 flex flex-col items-center text-center">
+                    {/* Partner Avatar */}
+                    <motion.div
+                        animate={{ scale: [1, 1.05, 1] }}
+                        transition={{ duration: 2, repeat: Infinity, ease: 'easeInOut' }}
+                        className="mb-8"
+                    >
+                        <UserAvatar
+                            src={partnerInfo.avatar}
+                            name={partnerInfo.name}
+                            size="xl"
+                            className="mx-auto ring-4 ring-brand/30 shadow-lg"
+                        />
+                    </motion.div>
 
-                {/* Spinner */}
-                {!timedOut && (
-                    <div className="flex flex-col items-center gap-8">
-                        <motion.div
-                            animate={{ rotate: 360 }}
-                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                            className="inline-block"
-                        >
-                            <Loader2 className="w-8 h-8 text-brand" />
-                        </motion.div>
+                    {/* Connecting Text */}
+                    <h3 className="text-xl font-bold text-foreground mb-2">
+                        {timedOut ? t('timeout') : (isRequester ? t('calling') : t('connecting'))}
+                    </h3>
+                    <p className="text-muted-foreground mb-8 text-base">
+                        {timedOut ? t('timeoutMessage') : (isRequester ? t('callingTo', { name: partnerInfo.name }) : t('connectingTo', { name: partnerInfo.name }))}
+                    </p>
 
-                        {isRequester && (
-                            <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
-                                onClick={onCancel || onTimeout}
-                                className="px-8 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 font-medium hover:bg-red-500 hover:text-white transition-all"
+                    {/* Spinner */}
+                    {!timedOut && (
+                        <div className="flex flex-col items-center gap-8 w-full">
+                            <motion.div
+                                animate={{ rotate: 360 }}
+                                transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                                className="inline-block"
                             >
-                                {t('cancel')}
-                            </motion.button>
-                        )}
-                    </div>
-                )}
+                                <Loader2 className="w-8 h-8 text-brand" />
+                            </motion.div>
+
+                            {isRequester && (
+                                <motion.button
+                                    whileHover={{ scale: 1.02 }}
+                                    whileTap={{ scale: 0.98 }}
+                                    onClick={onCancel || onTimeout}
+                                    className="w-full h-12 rounded-full bg-destructive/10 border border-destructive/20 text-destructive font-semibold hover:bg-destructive hover:text-white transition-all flex items-center justify-center"
+                                >
+                                    {t('cancel')}
+                                </motion.button>
+                            )}
+                        </div>
+                    )}
+                </div>
             </motion.div>
         </div>
     )

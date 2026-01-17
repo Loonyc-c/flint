@@ -150,6 +150,28 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
   })
 
   /**
+   * Handle user voluntarily ending the call
+   * This is critical to clear busy state without waiting for disconnect
+   */
+  socket.on(LIVE_CALL_EVENTS.END_CALL, () => {
+    console.log(`[DEBUG-HANGUP] Received LIVE_CALL_EVENTS.END_CALL from Socket: ${socket.id}, User: ${userId}`)
+    console.log(`📞 [LiveCall] User ${userId} ended call explicitly`)
+
+    // Clear busy state immediately for self
+    liveCallService.removeFromQueue(userId)
+    busyStateService.clearUserStatus(userId)
+
+    // NEW: End active call and notify partner
+    const partnerId = liveCallService.endLiveCall(userId)
+    if (partnerId) {
+      console.log(`[DEBUG-HANGUP] Notifying Live Call partner ${partnerId} of hangup`)
+      io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.END_CALL)
+      // Also clear partner's busy state just in case
+      busyStateService.clearUserStatus(partnerId)
+    }
+  })
+
+  /**
    * Cleanup on disconnect
    */
   socket.on('disconnect', () => {
@@ -159,11 +181,16 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
     liveCallService.removeFromQueue(userId)
 
     // CRITICAL FIX: Clear busy state on disconnect
-    // This handles cases where user disconnects during:
-    // - Queueing
-    // - Active call
-    // - Any other busy state
     busyStateService.clearUserStatus(userId)
+
+    // NEW: End active call and notify partner
+    const partnerId = liveCallService.endLiveCall(userId)
+    if (partnerId) {
+      console.log(`[LiveCall] User ${userId} disconnected during active call with ${partnerId}`)
+      io.to(`user:${partnerId}`).emit(LIVE_CALL_EVENTS.END_CALL)
+      // Also clear partner's busy state
+      busyStateService.clearUserStatus(partnerId)
+    }
 
     console.log(`🔌 [LiveCall] User ${userId} disconnected, cleared busy state`)
 

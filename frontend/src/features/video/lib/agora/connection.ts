@@ -17,19 +17,27 @@ export async function performJoin(
     try {
         await client.join(appId, channel, token, uid)
 
-        try {
-            localAudioTrack = await createAudioTrackWithRetry()
-            await client.publish([localAudioTrack])
-        } catch (_audioError) {
-            throw new Error('Microphone access failed. Please check permissions.')
-        }
+        // Check for Mock Hardware Mode
+        const isMockMode = process.env.NEXT_PUBLIC_MOCK_HARDWARE === 'true'
 
-        if (enableVideo) {
+        if (isMockMode) {
+            console.warn('[Agora] ⚠️ Mock Hardware Mode: Skipping track creation and publishing')
+        } else {
             try {
-                localVideoTrack = await createVideoTrackWithRetry()
-                await client.publish([localVideoTrack])
-            } catch (_videoError) {
-                localVideoTrack = null
+                localAudioTrack = await createAudioTrackWithRetry()
+                await client.publish([localAudioTrack])
+            } catch (_audioError) {
+                // In production/real mode, this is a critical error
+                throw new Error('Microphone access failed. Please check permissions.')
+            }
+
+            if (enableVideo) {
+                try {
+                    localVideoTrack = await createVideoTrackWithRetry()
+                    await client.publish([localVideoTrack])
+                } catch (_videoError) {
+                    localVideoTrack = null
+                }
             }
         }
 
@@ -43,7 +51,7 @@ export async function performJoin(
 
         return {
             success: true,
-            localAudioTrack,
+            localAudioTrack: localAudioTrack ?? undefined,
             localVideoTrack: localVideoTrack ?? undefined,
         }
     } catch (error) {

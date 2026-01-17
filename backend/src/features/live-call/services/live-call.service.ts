@@ -11,6 +11,10 @@ import { randomUUID } from 'crypto'
 
 // In-memory queue for matching
 const queue = new Map<string, LiveCallQueueUser>()
+// In-memory active calls for cleanup tracking (User -> Partner ID is NOT enough due to many-to-many potential if buggy, better MatchID -> Users)
+// But we need fast lookup by userId.
+// Let's use: Map<userId, partnerId> - Simple and effective for 1-1 calls.
+const activeLiveCalls = new Map<string, string>() // UserId -> PartnerId
 
 export const liveCallService = {
   /**
@@ -121,6 +125,11 @@ export const liveCallService = {
           expiresAt,
         }
 
+        // Store active call relationship for both users
+        activeLiveCalls.set(userId, otherId)
+        activeLiveCalls.set(otherId, userId)
+        console.log(`[LiveCall] Registered active call relationship: ${userId} <-> ${otherId}`)
+
         return { matchId, payload1, payload2 }
       }
     }
@@ -155,5 +164,23 @@ export const liveCallService = {
     }
 
     return match
+  },
+
+
+  /**
+   * End a live call for a user and return the partner ID (if any)
+   */
+  endLiveCall: (userId: string): string | null => {
+    const partnerId = activeLiveCalls.get(userId)
+    if (partnerId) {
+      activeLiveCalls.delete(userId)
+      // Check if partner still points to us (might have already ended)
+      if (activeLiveCalls.get(partnerId) === userId) {
+        activeLiveCalls.delete(partnerId)
+        console.log(`[LiveCall] Ended active call: ${userId} <-> ${partnerId}`)
+        return partnerId
+      }
+    }
+    return null
   },
 }

@@ -43,6 +43,20 @@ export const useHardwareGate = (options: UseHardwareGateOptions = {}): UseHardwa
         cleanup()
 
         try {
+            // MOCK MODE: Bypass hardware checks if env var is set
+            if (process.env.NEXT_PUBLIC_MOCK_HARDWARE === 'true') {
+                console.warn('⚠️ [useHardwareGate] Using MOCK HARDWARE mode')
+                await new Promise(resolve => setTimeout(resolve, 500)) // Fake delay
+                setResult({
+                    ready: true,
+                    hasAudio: true,
+                    hasVideo: true,
+                    error: undefined
+                })
+                setChecking(false)
+                return
+            }
+
             // 1. First check if devices even exist
             const devices = await navigator.mediaDevices.enumerateDevices()
             const hasAudioDevice = devices.some(d => d.kind === 'audioinput')

@@ -240,6 +240,22 @@ export const useCallFSM = (): UseCallFSMReturn => {
         return ['PRE_FLIGHT', 'INCOMING', 'CALLING', 'CHECK_DEVICES', 'CONNECTING', 'STAGE_ACTIVE', 'INTERMISSION'].includes(fsmState.state)
     }, [fsmState.state])
 
+    const setCalling = useCallback((context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
+        dispatch({ type: 'SET_CALLING', payload: context })
+    }, [])
+
+    const setIncoming = useCallback((context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
+        dispatch({ type: 'SET_INCOMING', payload: context })
+    }, [])
+
+    const acceptCall = useCallback(() => {
+        dispatch({ type: 'ACCEPT_CALL' })
+    }, [])
+
+    const declineCall = useCallback(() => {
+        dispatch({ type: 'DECLINE_CALL' })
+    }, [])
+
     return {
         state: fsmState.state,
         context: fsmState.context,
@@ -254,17 +270,9 @@ export const useCallFSM = (): UseCallFSMReturn => {
         endCall,
         reset,
         startPreflight,
-        setCalling: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
-            dispatch({ type: 'SET_CALLING', payload: context })
-        },
-        setIncoming: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
-            dispatch({ type: 'SET_INCOMING', payload: context })
-        },
-        acceptCall: () => {
-            dispatch({ type: 'ACCEPT_CALL' })
-        },
-        declineCall: () => {
-            dispatch({ type: 'DECLINE_CALL' })
-        }
+        setCalling,
+        setIncoming,
+        acceptCall,
+        declineCall
     }
 }

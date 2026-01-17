@@ -104,6 +104,7 @@ export interface StagedCallRingingPayload {
   channelName: string
   stage: 1 | 2
   callType: StagedCallType
+  callerAvatar?: string
 }
 
 export interface StagedCallAcceptedPayload {
