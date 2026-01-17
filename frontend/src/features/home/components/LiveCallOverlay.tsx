@@ -4,17 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import {
-  useLiveCall,
-  type LiveCallStatus as _LiveCallStatus
+  useLiveCall
 } from '@/features/live-call/hooks/useLiveCall'
 import { useProfileReadiness } from '@/features/profile/hooks/useProfileReadiness'
 import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
 import { useCallSystem } from '@/features/call-system'
 
 import { LiveCallStateQueueing } from './live-call/LiveCallStateQueueing'
-import { LiveCallStateActive } from './live-call/LiveCallStateActive'
-import { LiveCallStateEnded } from './live-call/LiveCallStateEnded'
-import { LiveCallStateError } from './live-call/LiveCallStateError'
 
 interface LiveCallOverlayProps {
   isOpen: boolean
@@ -24,14 +20,8 @@ interface LiveCallOverlayProps {
 export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
   const {
     status,
-    matchData,
-    remainingTime,
-    error,
-    hasLiked,
-    hasPassed,
     joinQueue,
     leaveQueue,
-    performAction,
     reset
   } = useLiveCall()
 
@@ -49,6 +39,13 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     setIsHardwareReady(false)
     onClose()
   }, [status, leaveQueue, reset, onClose])
+
+  // Handle handover: close overlay when match is found and global UI takes over
+  useEffect(() => {
+    if (status === 'in-call') {
+      onClose()
+    }
+  }, [status, onClose])
 
   useEffect(() => {
     if (isOpen && status === 'idle' && !isCheckingReadiness) {
@@ -108,32 +105,6 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
                     onClose={handleClose}
                   />
                 )}
-
-                {status === 'in-call' && matchData && (
-                  <LiveCallStateActive
-                    matchData={matchData}
-                    remainingTime={remainingTime}
-                    hasLiked={hasLiked}
-                    hasPassed={hasPassed}
-                    performAction={performAction}
-                    onClose={handleClose}
-                  />
-                )}
-
-                {status === 'ended' && (
-                  <LiveCallStateEnded
-                    hasLiked={hasLiked}
-                    hasPassed={hasPassed}
-                    onClose={handleClose}
-                  />
-                )}
-
-                {status === 'error' && (
-                  <LiveCallStateError
-                    error={error}
-                    onClose={handleClose}
-                  />
-                )}
               </div>
             ) : null
           )}
@@ -142,4 +113,3 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     </AnimatePresence>
   )
 }
-
