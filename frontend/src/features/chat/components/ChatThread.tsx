@@ -3,6 +3,7 @@
 import { useCallback } from 'react'
 import { type ChatConversation, type MatchStage } from '@shared/types'
 import { useCallSystem } from '@/features/call-system'
+import { useStagedCallContext } from '@/features/video/components/StagedCallProvider'
 import { ChatHeader } from './thread/ChatHeader'
 import { MessageList } from './thread/MessageList'
 import { ChatInput } from './thread/ChatInput'
@@ -16,35 +17,28 @@ interface ChatThreadProps {
 }
 
 export const ChatThread = ({ conversation, onClose, onVideoCall, matchStage }: ChatThreadProps) => {
-  const { startCall } = useCallSystem()
+  const { startPreflight } = useCallSystem()
+  const { initiateCall } = useStagedCallContext()
 
   const handleStagedAudioCall = useCallback(() => {
-    startCall({
-      callType: 'staged',
-      matchId: conversation.matchId,
-      channelName: conversation.matchId, // Standard for staged calls
-      partnerInfo: {
-        id: conversation.otherUser.id,
-        name: conversation.otherUser.name,
-        avatar: conversation.otherUser.avatar
+    startPreflight({
+      requireVideo: false,
+      onReady: () => {
+        initiateCall(conversation.matchId, conversation.otherUser.id, 1)
       },
-      currentStage: 1
+      onCancel: () => { }
     })
-  }, [conversation, startCall])
+  }, [conversation, initiateCall, startPreflight])
 
   const handleStagedVideoCall = useCallback(() => {
-    startCall({
-      callType: 'staged',
-      matchId: conversation.matchId,
-      channelName: conversation.matchId,
-      partnerInfo: {
-        id: conversation.otherUser.id,
-        name: conversation.otherUser.name,
-        avatar: conversation.otherUser.avatar
+    startPreflight({
+      requireVideo: true,
+      onReady: () => {
+        initiateCall(conversation.matchId, conversation.otherUser.id, 2)
       },
-      currentStage: 2
+      onCancel: () => { }
     })
-  }, [conversation, startCall])
+  }, [conversation, initiateCall, startPreflight])
 
   const {
     user,
