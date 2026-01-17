@@ -97,14 +97,34 @@ export const ActiveCallContainer = ({
         onCallEnded()
     }, [leave, onCallEnded])
 
-    // Cleanup on unmount
+    // EXIT CLEANUP: Handle browser close, refresh, and navigation
     useEffect(() => {
+        const emitDisconnect = () => {
+            // Synchronous socket emit (no async) - works in beforeunload
+            if (socket && context?.matchId) {
+                socket.emit('staged-call-end', { matchId: context.matchId })
+                console.log('[ActiveCall] Emitted staged-call-end due to disconnect')
+            }
+        }
+
+        const handleBeforeUnload = () => {
+            emitDisconnect()
+        }
+
+        // Register beforeunload for browser close/refresh
+        window.addEventListener('beforeunload', handleBeforeUnload)
+
         return () => {
-            if (isConnected) {
+            window.removeEventListener('beforeunload', handleBeforeUnload)
+
+            // Navigation/unmount cleanup
+            if (isConnected && context?.matchId) {
+                emitDisconnect()
+                // Also clean up Agora
                 leave()
             }
         }
-    }, [isConnected, leave])
+    }, [socket, isConnected, context?.matchId, leave])
 
     return (
         <div className="fixed inset-0 z-[100] bg-black">

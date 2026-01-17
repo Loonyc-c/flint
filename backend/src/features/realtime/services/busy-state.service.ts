@@ -12,9 +12,9 @@ class BusyStateService {
     } else {
       this.busyUsers.set(userId, status)
     }
-    
+
     console.log(`[BusyState] User ${userId} status changed: ${currentStatus} -> ${status}`)
-    
+
     // REMOVED: Global broadcast is a performance bottleneck for 1000+ users
     // if (this.io) {
     //   this.io.emit('user-busy-state-changed', { userId, status })
@@ -28,6 +28,14 @@ class BusyStateService {
   public isUserBusy(userId: string): boolean {
     const status = this.getUserStatus(userId)
     return status !== 'available'
+  }
+
+  public canUserStartCall(userId: string): { allowed: boolean; reason?: string } {
+    const status = this.getUserStatus(userId)
+    if (status !== 'available') {
+      return { allowed: false, reason: `User is ${status}` }
+    }
+    return { allowed: true }
   }
 
   public clearUserStatus(userId: string) {

@@ -23,7 +23,7 @@ const LiveCallContext = createContext<LiveCallContextValue | null>(null)
 
 export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
     const { socket, isConnected } = useSocket()
-    const { startCall, closeCall } = useCallSystem()
+    const { startCall, closeCall, startPreflight } = useCallSystem()
 
     const [status, setStatus] = useState<LiveCallStatus>('idle')
     const [matchData, setMatchData] = useState<LiveCallMatchPayload | null>(null)
@@ -31,11 +31,20 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
 
     const joinQueue = useCallback((preferences?: LiveCallPreferences) => {
         if (!socket || !isConnected) return
-        console.log('🔍 [LiveCall] Joining queue...')
-        socket.emit(LIVE_CALL_EVENTS.JOIN_QUEUE, preferences)
-        setStatus('queueing')
-        setError(null)
-    }, [socket, isConnected])
+
+        startPreflight({
+            requireVideo: true, // Live calls require video
+            onReady: () => {
+                console.log('🔍 [LiveCall] Hardware ready, joining queue...')
+                socket.emit(LIVE_CALL_EVENTS.JOIN_QUEUE, preferences)
+                setStatus('queueing')
+                setError(null)
+            },
+            onCancel: () => {
+                console.log('❌ [LiveCall] Join queue cancelled or hardware failed')
+            }
+        })
+    }, [socket, isConnected, startPreflight])
 
     const leaveQueue = useCallback(() => {
         if (!socket || !isConnected) return
@@ -58,9 +67,14 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
         const onMatchFound = async (
             data: LiveCallMatchPayload & { agoraToken?: string; agoraUid?: number }
         ) => {
-            console.log('🎤 [LiveCall] Match found, triggering unified UI...', data)
+            console.log('🎤 [LiveCall] Match found, triggering connecting state...', data)
             setMatchData(data)
-            setStatus('in-call')
+            setStatus('connecting')
+
+            // Transition to in-call after a brief delay to allow UI feedback
+            setTimeout(() => {
+                setStatus('in-call')
+            }, 500)
 
             startCall({
                 callType: 'live',

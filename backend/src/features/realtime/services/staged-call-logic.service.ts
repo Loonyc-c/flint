@@ -27,6 +27,25 @@ export const activePrompts = new Map<string, { timeoutId: NodeJS.Timeout, userId
  */
 export const stagedCallLogic = {
   /**
+   * Universal cleanup for a staged call session
+   */
+  clearCall: (matchId: string) => {
+    const call = activeStagedCalls.get(matchId)
+    if (!call) return null
+
+    if (call.ringTimeoutId) clearTimeout(call.ringTimeoutId)
+    if (call.timerId) clearTimeout(call.timerId)
+    if (call.icebreakerTimerId) clearTimeout(call.icebreakerTimerId)
+
+    busyStateService.clearUserStatus(call.callerId)
+    busyStateService.clearUserStatus(call.calleeId)
+    activeStagedCalls.delete(matchId)
+    stagedCallService.endStagedCall(matchId)
+
+    return call
+  },
+
+  /**
    * Handle call completion when timer runs out
    */
   handleCallComplete: async (io: Server, matchId: string) => {
@@ -36,7 +55,7 @@ export const stagedCallLogic = {
     if (call.icebreakerTimerId) clearTimeout(call.icebreakerTimerId)
     activeStagedCalls.delete(matchId)
     await stagedCallService.endStagedCall(matchId, call.duration)
-    
+
     busyStateService.clearUserStatus(call.callerId)
     busyStateService.clearUserStatus(call.calleeId)
 

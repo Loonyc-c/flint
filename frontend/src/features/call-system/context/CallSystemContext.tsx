@@ -16,11 +16,14 @@ interface StartCallParams {
     currentStage?: 1 | 2 | 3
     remainingTime?: number
     onHangup?: () => void
+    onAcceptReady?: () => void
+    onDecline?: () => void
 }
 
 interface CallSystemContextValue {
     startCall: (params: StartCallParams) => void
-    ringCall: (params: StartCallParams, isIncoming: boolean) => void
+    setCalling: (params: StartCallParams) => void
+    setIncoming: (params: StartCallParams) => void
     startPreflight: (options: { requireVideo: boolean, onReady: () => void, onCancel: () => void }) => void
     acceptCall: () => void
     declineCall: () => void
@@ -49,6 +52,8 @@ interface CallParams {
     isIncoming?: boolean
     action?: 'accept' | 'decline' | 'start'
     onHangup?: () => void
+    onAcceptReady?: () => void
+    onDecline?: () => void
     preflight?: {
         requireVideo: boolean
         onReady: () => void
@@ -70,13 +75,25 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
         })
     }, [])
 
-    const ringCall = useCallback((params: StartCallParams, isIncoming: boolean) => {
+    const setCalling = useCallback((params: StartCallParams) => {
         setCallParams({
             ...params,
             isOpen: true,
-            isIncoming,
+            isIncoming: false,
             currentStage: params.currentStage || 1,
             remainingTime: params.remainingTime || 0
+        })
+    }, [])
+
+    const setIncoming = useCallback((params: StartCallParams) => {
+        setCallParams({
+            ...params,
+            isOpen: true,
+            isIncoming: true,
+            currentStage: params.currentStage || 1,
+            remainingTime: params.remainingTime || 0,
+            onAcceptReady: params.onAcceptReady,
+            onDecline: params.onDecline
         })
     }, [])
 
@@ -102,7 +119,7 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
     const isCallActive = !!(callParams?.isOpen)
 
     return (
-        <CallSystemContext.Provider value={{ startCall, ringCall, startPreflight, acceptCall, declineCall, closeCall, isCallActive }}>
+        <CallSystemContext.Provider value={{ startCall, setCalling, setIncoming, startPreflight, acceptCall, declineCall, closeCall, isCallActive }}>
             {children}
             {callParams?.isOpen && (
                 <UnifiedCallInterface

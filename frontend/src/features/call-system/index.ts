@@ -1,6 +1,7 @@
 export { UnifiedCallInterface } from './components/UnifiedCallInterface'
 export { useCallFSM } from './hooks/useCallFSM'
 export { useHardwareGate } from './hooks/useHardwareGate'
+export { useCallGuard } from './hooks/useCallGuard'
 export type {
     CallState,
     CallType,

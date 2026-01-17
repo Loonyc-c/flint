@@ -13,6 +13,8 @@ export type CallState =
     | 'STAGE_ACTIVE'
     | 'INTERMISSION'
     | 'RINGING'
+    | 'CALLING'
+    | 'INCOMING'
     | 'FINISHED'
 
 /**
@@ -71,7 +73,8 @@ export type FSMEvent =
     | { type: 'NEXT_STAGE_DECLINED' }
     | { type: 'CALL_ENDED' }
     | { type: 'CLEANUP_COMPLETE' }
-    | { type: 'SET_RINGING'; payload: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'> }
+    | { type: 'SET_CALLING'; payload: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'> }
+    | { type: 'SET_INCOMING'; payload: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'> }
     | { type: 'ACCEPT_CALL' }
     | { type: 'DECLINE_CALL' }
     | { type: 'ERROR'; payload: { error: string } }
@@ -100,7 +103,8 @@ export interface CallFSMActions {
     handleStageEnded: () => void
     handleNextStageResponse: (accepted: boolean) => void
     endCall: () => void
-    ringCall: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>, isIncoming: boolean) => void
+    setCalling: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => void
+    setIncoming: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => void
     acceptCall: () => void
     declineCall: () => void
     reset: () => void
