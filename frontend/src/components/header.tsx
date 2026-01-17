@@ -45,7 +45,7 @@ const MainHeader = () => {
             >
               <UserAvatar
                 src={user?.profile?.photo}
-                name={user?.name || user?.firstName}
+                name={user?.profile?.nickName || user?.name || 'User'}
                 size="md"
                 border
               />

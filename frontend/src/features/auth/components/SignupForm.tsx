@@ -67,26 +67,6 @@ const SignupForm = ({ onSuccess }: SignupFormProps) => {
   return (
     <AuthFormWrapper title={t('title')}>
       <form className="my-8" onSubmit={handleSubmit(onSubmit)}>
-        <div className="mb-4 flex flex-col space-y-2 md:flex-row md:space-y-0 md:space-x-2">
-          <FormInput
-            id="signup-firstname"
-            label={t('firstNameLabel')}
-            placeholder={t('firstNamePlaceholder')}
-            type="text"
-            error={errors.firstName}
-            disabled={isLoading}
-            {...register('firstName')}
-          />
-          <FormInput
-            id="signup-lastname"
-            label={t('lastNameLabel')}
-            placeholder={t('lastNamePlaceholder')}
-            type="text"
-            error={errors.lastName}
-            disabled={isLoading}
-            {...register('lastName')}
-          />
-        </div>
         <FormInput
           id="signup-email"
           label={t('emailLabel')}

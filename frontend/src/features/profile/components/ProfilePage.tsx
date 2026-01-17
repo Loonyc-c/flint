@@ -127,7 +127,7 @@ export const ProfilePage = () => {
               <div className="bg-white dark:bg-neutral-900 rounded-3xl p-6 shadow-sm border border-neutral-100 dark:border-neutral-800">
                 <ProfileAvatar
                   photo={photoPreviewUrl || formData.photo || ""}
-                  completeness={completeness}
+                  completeness={completeness.score}
                   onEdit={triggerFileInput}
                   isUploading={isSaving && !!pendingPhotoFile}
                 />

@@ -11,6 +11,10 @@ import { type User, type SwipeAction } from '@shared/types'
 // import { SwipeHeader } from './controls/SwipeHeader'
 import { EmptyState } from './states/EmptyState'
 import { SwipeSkeleton } from './states/SwipeSkeleton'
+import { IncompleteProfileModal } from '@/features/profile/components/modals/IncompleteProfileModal'
+import { useUser } from '@/features/auth/context/UserContext'
+import { calculateProfileCompleteness, type MissingField } from '@shared/lib'
+import { type UserContactInfo } from '@shared/types'
 
 export const SwipeFeature = () => {
   const {
@@ -27,11 +31,24 @@ export const SwipeFeature = () => {
   const cardRef = useRef<SwipeCardRef>(null)
   const [matchedUser, setMatchedUser] = useState<User | null>(null)
   const [showMatchModal, setShowMatchModal] = useState(false)
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false)
   const [isRefreshing, setIsRefreshing] = useState(false)
+
+  const { user } = useUser()
+
+  // Calculate completeness for the gate
+  const completeness = user?.profile
+    ? calculateProfileCompleteness(user.profile, (user as unknown as { contactInfo?: UserContactInfo }).contactInfo || {})
+    : { score: 0, isFeatureUnlocked: false, missingFields: [] as MissingField[] }
 
   const onSwipeAction = useCallback(
     async (type: SwipeAction, fromDrag = false) => {
       if (isSwiping || !currentCandidate) return
+
+      if (!completeness.isFeatureUnlocked) {
+        setShowIncompleteModal(true)
+        return
+      }
 
       if (cardRef.current && !fromDrag) {
         await cardRef.current.triggerSwipe(type)
@@ -44,7 +61,7 @@ export const SwipeFeature = () => {
         setShowMatchModal(true)
       }
     },
-    [isSwiping, currentCandidate, handleSwipe]
+    [isSwiping, currentCandidate, handleSwipe, completeness.isFeatureUnlocked]
   )
 
   useSwipeShortcuts({
@@ -136,6 +153,14 @@ export const SwipeFeature = () => {
         isOpen={showMatchModal}
         matchedUser={matchedUser}
         onClose={() => setShowMatchModal(false)}
+      />
+
+      <IncompleteProfileModal
+        isOpen={showIncompleteModal}
+        onClose={() => setShowIncompleteModal(false)}
+        score={completeness.score}
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        missingFields={completeness.missingFields as any}
       />
     </div>
   )

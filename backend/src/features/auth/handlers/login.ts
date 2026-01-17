@@ -16,8 +16,6 @@ const handler = async (event: NormalizedEvent): Promise<LoginResponse> => {
 
     const accessToken = authService.generateToken(user._id.toHexString(), {
       userId: user._id.toHexString(),
-      firstName: user.auth.firstName,
-      lastName: user.auth.lastName,
       email: user.auth.email,
       subscription: user.subscription,
     })
@@ -28,9 +26,7 @@ const handler = async (event: NormalizedEvent): Promise<LoginResponse> => {
       user: {
         id: user._id.toHexString(),
         email: user.auth.email,
-        firstName: user.auth.firstName,
-        lastName: user.auth.lastName,
-        name: `${user.auth.firstName} ${user.auth.lastName}`,
+        name: user.profile?.nickName || 'User',
       },
     }
   } catch (e: unknown) {

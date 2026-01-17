@@ -103,11 +103,11 @@ export const liveCallService = {
           agoraToken: token1.token,
           partner: {
             id: otherId,
-            nickName: profile2.profile.nickName,
-            age: profile2.profile.age,
-            photo: profile2.profile.photo,
+            nickName: profile2.profile.nickName || 'User',
+            age: profile2.profile.age || 18,
+            photo: profile2.profile.photo || '',
           },
-          partnerName: profile2.profile.nickName,
+          partnerName: profile2.profile.nickName || 'User',
           expiresAt,
         }
 
@@ -117,11 +117,11 @@ export const liveCallService = {
           agoraToken: token2.token,
           partner: {
             id: userId,
-            nickName: profile1.profile.nickName,
-            age: profile1.profile.age,
-            photo: profile1.profile.photo,
+            nickName: profile1.profile.nickName || 'User',
+            age: profile1.profile.age || 18,
+            photo: profile1.profile.photo || '',
           },
-          partnerName: profile1.profile.nickName,
+          partnerName: profile1.profile.nickName || 'User',
           expiresAt,
         }
 

@@ -71,9 +71,7 @@ export const discoveryService = {
     return candidates.map((user) => ({
       id: user._id.toHexString(),
       email: user.auth.email,
-      firstName: user.auth.firstName,
-      lastName: user.auth.lastName,
-      name: `${user.auth.firstName} ${user.auth.lastName}`,
+      name: user.profile?.nickName || 'User',
       profile: user.profile,
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,

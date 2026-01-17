@@ -89,8 +89,6 @@ export type LoginFormData = z.infer<typeof loginSchema>
  * Signup Validation Schema
  */
 export const signupSchema = z.object({
-  firstName: nameSchema,
-  lastName: nameSchema,
   email: emailSchema,
   password: passwordSchema
 })

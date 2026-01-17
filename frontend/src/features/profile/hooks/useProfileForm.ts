@@ -22,6 +22,8 @@ export const useProfileForm = (
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(formSchema) as any,
     defaultValues: {
+      firstName: '',
+      lastName: '',
       nickName: '',
       age: 18,
       bio: '',

@@ -21,7 +21,9 @@
       "forgotPassword": "Forgot Password?",
       "button": "Login →",
       "loading": "Logging in...",
-      "success": "Welcome back!"
+      "success": "Welcome back!",
+      "googleUserHint": "Signed up with Google?",
+      "setPasswordLink": "Set a password here"
     },
     "signup": {
       "title": "Welcome to Flint",
@@ -101,6 +103,13 @@
         "playful": "Playful",
         "thoughtful": "Thoughtful",
         "chill": "Chill"
+      },
+      "gate": {
+        "title": "Profile Incomplete",
+        "subtitle": "You're almost there! Complete your profile to 80% to unlock Swiping and Live Calls.",
+        "missingTitle": "You still need:",
+        "button": "Complete Profile",
+        "score": "{score}% Complete"
       }
     },
     "matchingPref": {
@@ -248,8 +257,12 @@
       "saveChanges": "Save Changes"
     },
     "info": {
-      "nicknameLabel": "How others see you (Nickname)",
-      "nicknamePlaceholder": "Display Name",
+      "firstNameLabel": "First Name (Private)",
+      "firstNamePlaceholder": "Legal first name",
+      "lastNameLabel": "Last Name (Private)",
+      "lastNamePlaceholder": "Legal last name",
+      "nicknameLabel": "Public Nickname",
+      "nicknamePlaceholder": "How others see you",
       "ageLabel": "Your Age",
       "genderLabel": "Gender",
       "genders": {

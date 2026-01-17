@@ -21,7 +21,7 @@ export const CardInfo = ({ candidate, isPlayingVoice, handleToggleVoice }: CardI
         <div className="flex items-end justify-between mb-2">
           <div className="flex-1">
             <h2 className="text-3xl sm:text-4xl font-bold text-white drop-shadow-md flex items-baseline gap-2">
-              {candidate.profile?.nickName || candidate.firstName}
+              {candidate.profile?.nickName || 'User'}
               {candidate.profile?.age && (
                 <span className="text-2xl sm:text-3xl font-normal text-white/80">
                   {candidate.profile.age}

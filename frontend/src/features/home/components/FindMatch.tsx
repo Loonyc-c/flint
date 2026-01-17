@@ -19,6 +19,9 @@ import { LiveCallOverlay } from "./LiveCallOverlay";
 import { useSocket } from "@/features/realtime";
 import { useUser } from "@/features/auth/context/UserContext";
 import { cn } from "@/lib/utils";
+import { IncompleteProfileModal } from "@/features/profile/components/modals/IncompleteProfileModal";
+import { calculateProfileCompleteness, type MissingField } from "@shared/lib";
+import { type UserContactInfo } from "@shared/types";
 
 // =============================================================================
 // Sub-Components
@@ -187,8 +190,22 @@ const FindMatch = () => {
   const { user } = useUser();
   const { isUserBusy } = useSocket();
   const [showLiveCall, setShowLiveCall] = useState(false);
+  const [showIncompleteModal, setShowIncompleteModal] = useState(false);
 
   const isMeBusy = isUserBusy(user?.id || "");
+
+  // Calculate completeness on the fly for the guard
+  const completeness = user?.profile
+    ? calculateProfileCompleteness(user.profile, (user as unknown as { contactInfo?: UserContactInfo }).contactInfo || {})
+    : { score: 0, isFeatureUnlocked: false, missingFields: [] as MissingField[] };
+
+  const checkGate = (action: () => void) => {
+    if (!completeness.isFeatureUnlocked) {
+      setShowIncompleteModal(true);
+      return;
+    }
+    action();
+  };
 
   return (
     <div className="w-full flex justify-center">
@@ -209,10 +226,10 @@ const FindMatch = () => {
 
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
             <LiveCallCard
-              onClick={() => setShowLiveCall(true)}
+              onClick={() => checkGate(() => setShowLiveCall(true))}
               disabled={isMeBusy}
             />
-            <SwipeCard onNavigate={() => router.push("/swipe")} />
+            <SwipeCard onNavigate={() => checkGate(() => router.push("/swipe"))} />
           </div>
         </div>
 
@@ -224,6 +241,14 @@ const FindMatch = () => {
         <LiveCallOverlay
           isOpen={showLiveCall}
           onClose={() => setShowLiveCall(false)}
+        />
+
+        <IncompleteProfileModal
+          isOpen={showIncompleteModal}
+          onClose={() => setShowIncompleteModal(false)}
+          score={completeness.score}
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          missingFields={completeness.missingFields as any}
         />
       </section>
     </div>

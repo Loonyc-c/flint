@@ -12,18 +12,18 @@ interface LikesListProps {
 }
 
 // Card component for each like
-const LikeCard = ({ 
-  like, 
+const LikeCard = ({
+  like,
   onSelect,
   index
-}: { 
+}: {
   like: LikePreview
   onSelect: () => void
   index: number
 }) => {
   const t = useTranslations('swipe.hub')
-  const fullName = `${like.user.firstName} ${like.user.lastName}`
-  
+  const fullName = like.user.nickName || 'User' // nickName is now public name
+
   // Check if this is a "blurred" preview (premium feature)
   const isBlurred = true // Can be controlled by subscription status
 
@@ -31,7 +31,7 @@ const LikeCard = ({
     <motion.button
       initial={{ opacity: 0, scale: 0.9, y: 20 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
-      transition={{ 
+      transition={{
         delay: index * 0.05,
         type: 'spring',
         stiffness: 300,
@@ -53,7 +53,7 @@ const LikeCard = ({
       ) : (
         <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-amber-100 to-orange-200 dark:from-amber-900/50 dark:to-orange-900/50">
           <span className={`text-5xl font-bold text-amber-500/50 ${isBlurred ? 'blur-sm' : ''}`}>
-            {like.user.firstName.charAt(0)}
+            {(like.user.nickName || 'U').charAt(0)}
           </span>
         </div>
       )}
@@ -62,7 +62,7 @@ const LikeCard = ({
       <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-black/10" />
 
       {/* "New" badge */}
-      <motion.div 
+      <motion.div
         initial={{ scale: 0, rotate: -12 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ delay: index * 0.05 + 0.2, type: 'spring' }}
@@ -85,7 +85,7 @@ const LikeCard = ({
 
       {/* Blur overlay with reveal button (for premium feature) */}
       {isBlurred && (
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="absolute inset-0 flex items-center justify-center"
@@ -127,7 +127,7 @@ const LikeCard = ({
 const EmptyState = () => {
   const t = useTranslations('swipe.hub')
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       className="col-span-full flex flex-col items-center justify-center py-20 px-4"

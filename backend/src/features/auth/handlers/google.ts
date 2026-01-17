@@ -13,12 +13,10 @@ const handler = async (event: NormalizedEvent) => {
     const { token: googleToken } = googleSchema.parse(body)
     const { user, isNewUser } = await authService.handleGoogleAuth(googleToken)
 
-    const name = `${user.auth.lastName} ${user.auth.firstName}`
+    const name = user.profile?.nickName || 'User'
 
     const accessToken = authService.generateToken(user._id.toHexString(), {
       userId: user._id.toHexString(),
-      firstName: user.auth.firstName,
-      lastName: user.auth.lastName,
       email: user.auth.email,
       subscription: user.subscription,
     })

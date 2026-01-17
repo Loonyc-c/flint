@@ -34,13 +34,22 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
         return
       }
 
+      // STRICT GATE: Block if profile < 80%
+      if ((user.profileCompletion || 0) < 80) {
+        socket.emit(LIVE_CALL_EVENTS.ERROR, {
+          message: 'err.profile.incomplete_for_call',
+          isReadableMessage: true
+        })
+        return
+      }
+
       // Use provided preferences or user defaults
       const validation = liveCallPreferencesSchema.safeParse(data)
       const preferences: LiveCallPreferences = validation.success
         ? validation.data
         : {
-          age: user.profile.age,
-          gender: user.profile.gender,
+          age: user.profile.age!,
+          gender: user.profile.gender!,
           lookingFor: user.preferences?.lookingFor || 'all',
           minAge: 18,
           maxAge: 100,
@@ -48,8 +57,8 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
 
       // 2. Add to queue
       await liveCallService.addToQueue(userId, {
-        gender: user.profile.gender,
-        age: user.profile.age,
+        gender: user.profile.gender!,
+        age: user.profile.age!,
         preferences,
       })
 
