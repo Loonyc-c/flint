@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo, createContext, useContext, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, createContext, useContext, type ReactNode } from 'react'
 import { useStagedCall, type StagedCallStatus } from '@/features/realtime'
 import { ContactExchangeModal } from './staged'
 import { toast } from 'react-toastify'
@@ -121,8 +121,9 @@ export const StagedCallProvider = ({
     setShowContactModal(true)
   }
 
-  // Handle incoming call - trigger the unified UI
-  useMemo(() => {
+  // Handle incoming or outbound call - trigger the unified UI
+  useEffect(() => {
+    // Receiver Side: Ringing
     if (incomingCall && callStatus === 'ringing') {
       const match = matches.find(m => m.matchId === incomingCall.matchId)
       startCall({
@@ -137,7 +138,25 @@ export const StagedCallProvider = ({
         currentStage: incomingCall.stage as 1 | 2 | 3
       })
     }
-  }, [incomingCall, callStatus, matches, startCall])
+
+    // Caller Side: Calling
+    if (callStatus === 'calling' && currentCall) {
+      const match = matches.find(m => m.matchId === currentCall.matchId)
+      if (match) {
+        startCall({
+          callType: 'staged',
+          matchId: currentCall.matchId,
+          channelName: currentCall.channelName,
+          partnerInfo: {
+            id: match.otherUser.id,
+            name: match.otherUser.name,
+            avatar: match.otherUser.avatar
+          },
+          currentStage: currentCall.stage as 1 | 2 | 3
+        })
+      }
+    }
+  }, [incomingCall, currentCall, callStatus, matches, startCall])
 
   const contextValue: StagedCallContextValue = {
     initiateCall,
