@@ -12,6 +12,7 @@ export type CallState =
     | 'CONNECTING'
     | 'STAGE_ACTIVE'
     | 'INTERMISSION'
+    | 'RINGING'
     | 'FINISHED'
 
 /**
@@ -50,6 +51,7 @@ export interface CallContext {
     deviceCheck?: DeviceCheckResult
     startTime?: number
     duration?: number
+    remainingTime?: number
 }
 
 /**
@@ -67,6 +69,9 @@ export type FSMEvent =
     | { type: 'NEXT_STAGE_DECLINED' }
     | { type: 'CALL_ENDED' }
     | { type: 'CLEANUP_COMPLETE' }
+    | { type: 'INCOMING_CALL'; payload: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'> }
+    | { type: 'ACCEPT_CALL' }
+    | { type: 'DECLINE_CALL' }
     | { type: 'ERROR'; payload: { error: string } }
 
 /**
@@ -93,6 +98,9 @@ export interface CallFSMActions {
     handleStageEnded: () => void
     handleNextStageResponse: (accepted: boolean) => void
     endCall: () => void
+    receiveCall: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => void
+    acceptCall: () => void
+    declineCall: () => void
     reset: () => void
 }
 

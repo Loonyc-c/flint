@@ -97,16 +97,20 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
               />
             </motion.div>
           ) : (
-            status !== 'idle' ? (
-              <div className="bg-card rounded-3xl shadow-2xl border border-border overflow-hidden">
-                {(status === 'queueing' || status === 'connecting') && (
-                  <LiveCallStateQueueing
-                    status={status}
-                    onClose={handleClose}
-                  />
-                )}
-              </div>
-            ) : null
+            <div className="bg-card rounded-3xl shadow-2xl border border-border overflow-hidden">
+              {(status === 'queueing' || status === 'connecting') ? (
+                <LiveCallStateQueueing
+                  status={status}
+                  onClose={handleClose}
+                />
+              ) : (
+                /* This handles the 'idle' status while hardware check is running */
+                <LiveCallStateQueueing
+                  status="queueing"
+                  onClose={handleClose}
+                />
+              )}
+            </div>
           )}
         </div>
       </motion.div>

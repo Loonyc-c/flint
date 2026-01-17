@@ -137,6 +137,29 @@ const fsmReducer = (state: FSMState, event: FSMEvent): FSMState => {
                 error: event.payload.error
             }
 
+        case 'INCOMING_CALL':
+            if (state.state !== 'IDLE') return state
+            return {
+                state: 'RINGING',
+                context: {
+                    ...event.payload,
+                    startTime: Date.now()
+                },
+                error: undefined
+            }
+
+        case 'ACCEPT_CALL':
+            if (state.state !== 'RINGING' || !state.context) return state
+            return {
+                state: 'CHECK_DEVICES',
+                context: state.context,
+                error: undefined
+            }
+
+        case 'DECLINE_CALL':
+            if (state.state !== 'RINGING') return state
+            return initialState
+
         default:
             return state
     }
@@ -190,7 +213,7 @@ export const useCallFSM = (): UseCallFSMReturn => {
     }, [])
 
     const isActive = useMemo(() => {
-        return ['PRE_FLIGHT', 'CHECK_DEVICES', 'CONNECTING', 'STAGE_ACTIVE', 'INTERMISSION'].includes(fsmState.state)
+        return ['PRE_FLIGHT', 'RINGING', 'CHECK_DEVICES', 'CONNECTING', 'STAGE_ACTIVE', 'INTERMISSION'].includes(fsmState.state)
     }, [fsmState.state])
 
     return {
@@ -206,6 +229,15 @@ export const useCallFSM = (): UseCallFSMReturn => {
         handleNextStageResponse,
         endCall,
         reset,
-        startPreflight
+        startPreflight,
+        receiveCall: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
+            dispatch({ type: 'INCOMING_CALL', payload: context })
+        },
+        acceptCall: () => {
+            dispatch({ type: 'ACCEPT_CALL' })
+        },
+        declineCall: () => {
+            dispatch({ type: 'DECLINE_CALL' })
+        }
     }
 }
