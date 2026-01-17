@@ -158,11 +158,11 @@ export const StagedCallProvider = ({
     }
   }, [incomingCall, currentCall, callStatus, matches, startCall])
 
-  const contextValue: StagedCallContextValue = {
+  const contextValue: StagedCallContextValue = useMemo(() => ({
     initiateCall,
     currentCall: currentCall ? { stage: currentCall.stage, matchId: currentCall.matchId } : null,
     callStatus
-  }
+  }), [initiateCall, currentCall, callStatus])
 
   const partnerName = activeMatch?.otherUser.name || incomingCall?.callerName || 'Partner'
 

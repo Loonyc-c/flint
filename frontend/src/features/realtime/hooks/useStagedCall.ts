@@ -46,7 +46,11 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
   // Timer Hook
   const { remainingTime, startTimer, setRemainingTime } = useCallTimer()
 
-  // Refs for immediate checks
+  // Refs for immediate checks and stable actions
+  const socketRef = useRef(socket)
+  socketRef.current = socket
+  const isConnectedRef = useRef(isConnected)
+  isConnectedRef.current = isConnected
   const callStatusRef = useRef<StagedCallStatus>(callStatus)
   const joiningRef = useRef(false)
   callStatusRef.current = callStatus
@@ -79,56 +83,61 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     joiningRef
   })
 
-  // Actions
+  // Actions - Made stable with refs to prevent stale closure issues
   const initiateCall = useCallback(
     (matchId: string, calleeId: string, stage: 1 | 2) => {
-      if (socket && isConnected && callStatusRef.current === 'idle') {
-        socket.emit('staged-call-initiate', { matchId, calleeId, stage })
+      const currentSocket = socketRef.current
+      if (currentSocket && isConnectedRef.current && callStatusRef.current === 'idle') {
+        currentSocket.emit('staged-call-initiate', { matchId, calleeId, stage })
       }
     },
-    [socket, isConnected]
+    []
   )
 
   const acceptCall = useCallback(
     (matchId: string) => {
-      if (socket && isConnected && incomingCall) {
-        socket.emit('staged-call-accept', { matchId })
+      const currentSocket = socketRef.current
+      if (currentSocket && isConnectedRef.current) {
+        currentSocket.emit('staged-call-accept', { matchId })
       }
     },
-    [socket, isConnected, incomingCall]
+    []
   )
 
   const declineCall = useCallback(
     (matchId: string) => {
-      if (socket && isConnected) {
-        socket.emit('staged-call-decline', { matchId })
+      const currentSocket = socketRef.current
+      if (currentSocket && isConnectedRef.current) {
+        currentSocket.emit('staged-call-decline', { matchId })
         cleanupCall()
         setCallStatus('idle')
         callStatusRef.current = 'idle'
       }
     },
-    [socket, isConnected, cleanupCall]
+    [cleanupCall]
   )
 
   const endCall = useCallback(
     (matchId: string) => {
-      if (socket && isConnected && currentCall) {
-        socket.emit('staged-call-end', { matchId })
+      const currentSocket = socketRef.current
+      if (currentSocket && isConnectedRef.current) {
+        currentSocket.emit('staged-call-end', { matchId })
         cleanupCall()
         setCallStatus('idle')
         callStatusRef.current = 'idle'
       }
     },
-    [socket, isConnected, currentCall, cleanupCall]
+    [cleanupCall]
   )
 
   const respondToPrompt = useCallback(
     (matchId: string, accepted: boolean) => {
-      if (socket && isConnected) {
-        socket.emit('stage-prompt-response', { matchId, accepted })
+      const currentSocket = socketRef.current
+      if (currentSocket && isConnectedRef.current) {
+        currentSocket.emit('stage-prompt-response', { matchId, accepted })
       }
     },
-    [socket, isConnected]
+    []
   )
 
   return {
