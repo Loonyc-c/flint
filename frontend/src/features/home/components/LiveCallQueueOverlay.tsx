@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Phone, Loader2, ShieldCheck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
-import { type LiveCallStatus } from '@/features/live-call/hooks/useLiveCall'
+import { type LiveCallStatus } from '@/features/live-call/context/LiveCallContext'
 
 interface LiveCallQueueOverlayProps {
   status: LiveCallStatus
@@ -43,10 +43,10 @@ export const LiveCallQueueOverlay = ({ status, onCancel }: LiveCallQueueOverlayP
           <h2 className="text-2xl font-bold mb-4">
             {status === 'queueing' ? t('finding') : t('matchFound')}
           </h2>
-          
+
           <p className="text-muted-foreground mb-8">
-            {status === 'queueing' 
-              ? t('findingDesc') 
+            {status === 'queueing'
+              ? t('findingDesc')
               : t('connecting')}
           </p>
 
