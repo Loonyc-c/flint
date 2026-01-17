@@ -53,7 +53,28 @@ You are the Lead Architect for the **Flint** project. Your primary directive is 
 
 ---
 
-## 3. Definition of Done Checklist
+## 4. 📞 Real-Time System Protocols (Staged Call / Live)
+
+Strict rules for real-time logic to prevent race conditions and zombie states.
+
+1.  **The "Gate First" Rule:**
+    *   **Client:** `useHardwareGate` MUST return `ready: true` BEFORE any socket event (e.g., `join-queue`, `request-call`) is emitted. Violation = Rejected PR.
+    *   **Server:** `busyStateService.isUserBusy()` MUST be checked at the top of every entry handler.
+
+2.  **State Atomicity:**
+    *   **Queueing:** The Frontend UI MUST NOT enter a "Searching" state until the Backend confirms the success. No optimistic UI updates for queue entry.
+    *   **Matching:** A match is ONLY valid if users have mutual preferences.
+
+3.  **Lifecycle Integrity (The "Zombie" Rule):**
+    *   **Cleanup:** Every `useEffect` or event handler that starts a call/queue MUST have a corresponding cleanup function that emits `leave-queue` or `end-call`.
+    *   **Server Safety:** The `socket.on('disconnect')` handler is the Ultimate Truth. It must forcibly clear `busyStateService` for that user.
+
+4.  **UI Consistency:**
+    *   **Global Overlay:** All Call UI (Ringing, Calling, Active Call) MUST be rendered via the global `UnifiedCallInterface`. NEVER create inline call components within pages.
+
+---
+
+## 5. Definition of Done Checklist
 
 *Append this validation to your response:*
 
@@ -66,4 +87,8 @@ You are the Lead Architect for the **Flint** project. Your primary directive is 
 > - [ ] **i18n:** Used `@/i18n/routing`?
 > - [ ] **Localization:** Zero hardcoded strings?
 > - [ ] **Theming:** Semantic colors only?
+> - [ ] **Gate First:** Hardware/Busy checked?
+> - [ ] **Atomicity:** No optimistic queue UI?
+> - [ ] **Cleanup:** Disconnect handles state clear?
+> - [ ] **UI:** Used UnifiedCallInterface?
 > - [ ] **Log:** Created session log?

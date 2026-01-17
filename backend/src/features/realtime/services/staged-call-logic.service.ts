@@ -9,6 +9,7 @@ import { icebreakerService } from './icebreaker.service'
 export interface ActiveStagedCall {
   matchId: string
   stage: 1 | 2
+  status: 'ringing' | 'active'
   callerId: string
   calleeId: string
   channelName: string

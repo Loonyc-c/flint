@@ -39,6 +39,13 @@ export const liveCallService = {
   },
 
   /**
+   * Check if a user is in the queue
+   */
+  isUserInQueue: (userId: string): boolean => {
+    return queue.has(userId)
+  },
+
+  /**
    * Find a match for a user in the queue
    */
   findMatch: async (
