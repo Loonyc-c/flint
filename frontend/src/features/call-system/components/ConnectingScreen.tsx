@@ -16,6 +16,7 @@ interface ConnectingScreenProps {
     partnerInfo: PartnerInfo
     isRequester?: boolean
     onTimeout?: () => void
+    onCancel?: () => void
     timeoutMs?: number
 }
 
@@ -27,6 +28,7 @@ export const ConnectingScreen = ({
     partnerInfo,
     isRequester = false,
     onTimeout,
+    onCancel,
     timeoutMs = 15000
 }: ConnectingScreenProps) => {
     const t = useTranslations('call.connecting')
@@ -83,13 +85,26 @@ export const ConnectingScreen = ({
 
                 {/* Spinner */}
                 {!timedOut && (
-                    <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
-                        className="inline-block"
-                    >
-                        <Loader2 className="w-8 h-8 text-brand" />
-                    </motion.div>
+                    <div className="flex flex-col items-center gap-8">
+                        <motion.div
+                            animate={{ rotate: 360 }}
+                            transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
+                            className="inline-block"
+                        >
+                            <Loader2 className="w-8 h-8 text-brand" />
+                        </motion.div>
+
+                        {isRequester && (
+                            <motion.button
+                                whileHover={{ scale: 1.05 }}
+                                whileTap={{ scale: 0.95 }}
+                                onClick={onCancel || onTimeout}
+                                className="px-8 h-12 rounded-full bg-red-500/10 border border-red-500/20 text-red-500 font-medium hover:bg-red-500 hover:text-white transition-all"
+                            >
+                                {t('cancel')}
+                            </motion.button>
+                        )}
+                    </div>
                 )}
             </motion.div>
         </div>

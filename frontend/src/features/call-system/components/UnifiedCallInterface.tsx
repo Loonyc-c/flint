@@ -26,6 +26,8 @@ interface UnifiedCallInterfaceProps {
     isIncoming?: boolean
     action?: 'accept' | 'decline' | 'start'
     onHangup?: () => void
+    onAcceptReady?: () => void
+    onDecline?: () => void
     onClose: () => void
 }
 
@@ -45,6 +47,8 @@ export const UnifiedCallInterface = ({
     action,
     preflight,
     onHangup,
+    onAcceptReady,
+    onDecline,
     onClose
 }: UnifiedCallInterfaceProps & { preflight?: { requireVideo: boolean, onReady: () => void, onCancel: () => void } }) => {
     const {
@@ -58,7 +62,8 @@ export const UnifiedCallInterface = ({
         endCall,
         acceptCall: fsm_acceptCall,
         declineCall: fsm_declineCall,
-        ringCall,
+        setCalling,
+        setIncoming,
         reset,
         startCall,
         startPreflight
@@ -77,18 +82,18 @@ export const UnifiedCallInterface = ({
                 onReady: preflight.onReady
             })
         } else if (matchId && channelName && partnerInfo) {
+            const callData = { callType, matchId, channelName, partnerInfo, currentStage, remainingTime, onHangup }
             if (isIncoming) {
-                ringCall({ callType, matchId, channelName, partnerInfo, currentStage, remainingTime, onHangup }, true)
+                setIncoming(callData)
             } else {
-                // Requester starts in RINGING state (shows "Calling...")
-                ringCall({ callType, matchId, channelName, partnerInfo, currentStage, remainingTime, onHangup }, false)
+                setCalling(callData)
             }
         }
-    }, [isOpen, state, callType, matchId, channelName, partnerInfo, currentStage, remainingTime, preflight, isIncoming, ringCall, startCall, startPreflight, onHangup])
+    }, [isOpen, state, callType, matchId, channelName, partnerInfo, currentStage, remainingTime, preflight, isIncoming, setCalling, setIncoming, startCall, startPreflight, onHangup])
 
     // Handle incoming actions from provider signals
     useEffect(() => {
-        if (state === 'RINGING') {
+        if (state === 'INCOMING' || state === 'CALLING') {
             if (action === 'accept') fsm_acceptCall()
             else if (action === 'decline') fsm_declineCall()
             else if (action === 'start') {
@@ -102,13 +107,16 @@ export const UnifiedCallInterface = ({
         if (state === 'PRE_FLIGHT' && preflight) {
             preflight.onCancel()
         }
+        if ((state === 'INCOMING' || state === 'CALLING') && isIncoming && onDecline) {
+            onDecline()
+        }
         if (onHangup) {
             onHangup()
         }
         endCall()
         reset()
         onClose()
-    }, [state, preflight, onHangup, endCall, reset, onClose])
+    }, [state, preflight, onHangup, isIncoming, onDecline, endCall, reset, onClose])
 
     // Handle cleanup when finished
     useEffect(() => {
@@ -146,6 +154,9 @@ export const UnifiedCallInterface = ({
                                 handleClose()
                             }
                         } else {
+                            if (result.ready && state === 'CHECK_DEVICES' && isIncoming && onAcceptReady) {
+                                onAcceptReady()
+                            }
                             handleDeviceCheck(result)
                         }
                     }}
@@ -153,8 +164,8 @@ export const UnifiedCallInterface = ({
                 />
             )}
 
-            {/* Ringing Screen */}
-            {state === 'RINGING' && context && (
+            {/* Calling/Incoming Screen */}
+            {(state === 'CALLING' || state === 'INCOMING') && context && (
                 context.isIncoming ? (
                     <IncomingCallScreen
                         partnerInfo={context.partnerInfo}

@@ -42,9 +42,10 @@ const fsmReducer = (state: FSMState, event: FSMEvent): FSMState => {
             return initialState
 
         case 'START_CALL':
-            if (state.state !== 'IDLE') return state
+            // Allow starting from IDLE (traditional) or CALLING (staged call handshake)
+            if (state.state !== 'IDLE' && state.state !== 'CALLING') return state
             return {
-                state: 'CHECK_DEVICES',
+                state: state.state === 'CALLING' ? 'CONNECTING' : 'CHECK_DEVICES',
                 context: {
                     ...event.payload,
                     startTime: Date.now()
@@ -137,19 +138,32 @@ const fsmReducer = (state: FSMState, event: FSMEvent): FSMState => {
                 error: event.payload.error
             }
 
-        case 'SET_RINGING':
+        case 'SET_CALLING':
             if (state.state !== 'IDLE') return state
             return {
-                state: 'RINGING',
+                state: 'CALLING',
                 context: {
                     ...event.payload,
+                    isIncoming: false,
+                    startTime: Date.now()
+                },
+                error: undefined
+            }
+
+        case 'SET_INCOMING':
+            if (state.state !== 'IDLE') return state
+            return {
+                state: 'INCOMING',
+                context: {
+                    ...event.payload,
+                    isIncoming: true,
                     startTime: Date.now()
                 },
                 error: undefined
             }
 
         case 'ACCEPT_CALL':
-            if (state.state !== 'RINGING' || !state.context) return state
+            if (state.state !== 'INCOMING' || !state.context) return state
             return {
                 state: 'CHECK_DEVICES',
                 context: state.context,
@@ -157,7 +171,7 @@ const fsmReducer = (state: FSMState, event: FSMEvent): FSMState => {
             }
 
         case 'DECLINE_CALL':
-            if (state.state !== 'RINGING') return state
+            if (state.state !== 'INCOMING') return state
             return initialState
 
         default:
@@ -212,19 +226,19 @@ export const useCallFSM = (): UseCallFSMReturn => {
         dispatch({ type: 'CLEANUP_COMPLETE' })
     }, [])
 
-    // Ringing Timeout (15 seconds)
+    // Ringing/Calling Timeout (30 seconds)
     useEffect(() => {
-        if (fsmState.state !== 'RINGING') return
+        if (fsmState.state !== 'INCOMING' && fsmState.state !== 'CALLING') return
 
         const timer = setTimeout(() => {
             dispatch({ type: 'CLEANUP_COMPLETE' })
-        }, 15000)
+        }, 30000)
 
         return () => clearTimeout(timer)
     }, [fsmState.state])
 
     const isActive = useMemo(() => {
-        return ['PRE_FLIGHT', 'RINGING', 'CHECK_DEVICES', 'CONNECTING', 'STAGE_ACTIVE', 'INTERMISSION'].includes(fsmState.state)
+        return ['PRE_FLIGHT', 'INCOMING', 'CALLING', 'CHECK_DEVICES', 'CONNECTING', 'STAGE_ACTIVE', 'INTERMISSION'].includes(fsmState.state)
     }, [fsmState.state])
 
     return {
@@ -241,8 +255,11 @@ export const useCallFSM = (): UseCallFSMReturn => {
         endCall,
         reset,
         startPreflight,
-        ringCall: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>, isIncoming: boolean) => {
-            dispatch({ type: 'SET_RINGING', payload: { ...context, isIncoming } })
+        setCalling: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
+            dispatch({ type: 'SET_CALLING', payload: context })
+        },
+        setIncoming: (context: Omit<CallContext, 'deviceCheck' | 'startTime' | 'duration'>) => {
+            dispatch({ type: 'SET_INCOMING', payload: context })
         },
         acceptCall: () => {
             dispatch({ type: 'ACCEPT_CALL' })

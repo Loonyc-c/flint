@@ -87,6 +87,16 @@ export interface StagedCallInitiatePayload {
   stage: 1 | 2
 }
 
+export interface RequestCallPayload {
+  matchId: string
+  calleeId: string
+  stage: 1 | 2
+}
+
+export interface AcceptCallPayload {
+  matchId: string
+}
+
 export interface StagedCallRingingPayload {
   matchId: string
   callerId: string
@@ -126,3 +136,13 @@ export interface ContactExchangePayload {
   partnerContact: ContactInfoDisplay
   expiresAt: string // ISO string
 }
+
+export const STAGED_CALL_EVENTS_NEW = {
+  REQUEST_CALL: 'request-call',
+  ACCEPT_CALL: 'accept-call',
+  CALL_STARTED: 'call-started',
+  CALL_DECLINED: 'call-declined',
+  CALL_ENDED: 'call-ended',
+  CALL_TIMEOUT: 'call-timeout',
+  CALL_MISSED: 'call-missed'
+} as const

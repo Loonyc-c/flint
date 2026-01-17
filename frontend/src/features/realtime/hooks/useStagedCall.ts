@@ -88,7 +88,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     (matchId: string, calleeId: string, stage: 1 | 2) => {
       const currentSocket = socketRef.current
       if (currentSocket && isConnectedRef.current && callStatusRef.current === 'idle') {
-        currentSocket.emit('staged-call-initiate', { matchId, calleeId, stage })
+        currentSocket.emit('request-call', { matchId, calleeId, stage })
       }
     },
     []
@@ -98,7 +98,7 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     (matchId: string) => {
       const currentSocket = socketRef.current
       if (currentSocket && isConnectedRef.current) {
-        currentSocket.emit('staged-call-accept', { matchId })
+        currentSocket.emit('accept-call', { matchId })
       }
     },
     []

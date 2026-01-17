@@ -7,17 +7,10 @@ import {
 } from '@shared/types'
 import { profileService } from '@/features/profile/services/profile.service'
 import { agoraService } from '@/features/agora/services/agora.service'
-import { getMatchCollection } from '@/data/db/collection'
-import { DbMatch } from '@/data/db/types/match'
 import { randomUUID } from 'crypto'
 
 // In-memory queue for matching
 const queue = new Map<string, LiveCallQueueUser>()
-// Track ongoing calls to handle likes
-const ongoingCalls = new Map<
-  string,
-  { users: string[]; actions: Record<string, 'like' | 'pass' | null> }
->()
 
 export const liveCallService = {
   /**
@@ -50,6 +43,7 @@ export const liveCallService = {
    */
   findMatch: async (
     userId: string,
+    isPartnerAvailable?: (partnerId: string) => boolean,
   ): Promise<{
     matchId: string
     payload1: LiveCallMatchPayload
@@ -62,6 +56,12 @@ export const liveCallService = {
       if (otherId === userId) continue
 
       if (liveCallService.isCompatible(user, otherUser)) {
+        // Verify partner is still available (e.g. not disconnected or in another call)
+        if (isPartnerAvailable && !isPartnerAvailable(otherId)) {
+          console.log(`⚠️ [LiveCall] Partner ${otherId} no longer available, removing from queue`)
+          queue.delete(otherId)
+          continue
+        }
         // Remove both from queue
         queue.delete(userId)
         queue.delete(otherId)
@@ -114,11 +114,6 @@ export const liveCallService = {
           expiresAt,
         }
 
-        ongoingCalls.set(matchId, {
-          users: [userId, otherId],
-          actions: { [userId]: null, [otherId]: null },
-        })
-
         return { matchId, payload1, payload2 }
       }
     }
@@ -131,74 +126,27 @@ export const liveCallService = {
    */
   isCompatible: (user1: LiveCallQueueUser, user2: LiveCallQueueUser): boolean => {
     const checkGender = (u1: LiveCallQueueUser, u2: LiveCallQueueUser) => {
+      // u1's preference for u2's gender
       if (u1.preferences.lookingFor === LOOKING_FOR.ALL) return true
-      return u1.preferences.lookingFor.toString() === u2.preferences.gender.toString()
+      return u1.preferences.lookingFor.toString() === u2.gender.toString()
     }
 
     const checkAge = (u1: LiveCallQueueUser, u2: LiveCallQueueUser) => {
+      // u1's preference for u2's age
       return (
-        u2.preferences.age >= u1.preferences.minAge && u2.preferences.age <= u1.preferences.maxAge
+        u2.age >= u1.preferences.minAge && u2.age <= u1.preferences.maxAge
       )
     }
 
-    return (
-      checkGender(user1, user2) &&
+    const match = checkGender(user1, user2) &&
       checkGender(user2, user1) &&
       checkAge(user1, user2) &&
       checkAge(user2, user1)
-    )
-  },
 
-  /**
-   * Handle Like/Pass action
-   */
-  handleAction: async (
-    userId: string,
-    matchId: string,
-    action: 'like' | 'pass',
-  ): Promise<{
-    isComplete: boolean
-    isMatch: boolean
-    partnerId: string
-    newMatchId?: string
-  } | null> => {
-    const call = ongoingCalls.get(matchId)
-    if (!call) return null
-
-    call.actions[userId] = action
-    const partnerId = call.users.find((id) => id !== userId)!
-
-    const isComplete = call.actions[userId] !== null && call.actions[partnerId] !== null
-    if (isComplete) {
-      const isMatch = call.actions[userId] === 'like' && call.actions[partnerId] === 'like'
-      let newMatchId: string | undefined
-
-      if (isMatch) {
-        const matchCollection = await getMatchCollection()
-        const sortedUsers = [userId, partnerId].sort()
-
-        const existingMatch = await matchCollection.findOne({ users: { $all: sortedUsers } })
-        if (existingMatch) {
-          newMatchId = existingMatch._id.toHexString()
-        } else {
-          const newMatch: DbMatch = {
-            users: sortedUsers,
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            isDeleted: false as const,
-            createdBy: 'system:live-call',
-            updatedBy: 'system:live-call',
-            stage: 'fresh',
-          }
-          const result = await matchCollection.insertOne(newMatch)
-          newMatchId = result.insertedId.toHexString()
-        }
-      }
-
-      ongoingCalls.delete(matchId)
-      return { isComplete, isMatch, partnerId, newMatchId }
+    if (!match) {
+      console.log(`📡 [LiveCall] Incompatible: ${user1.userId} vs ${user2.userId}`)
     }
 
-    return { isComplete: false, isMatch: false, partnerId }
+    return match
   },
 }

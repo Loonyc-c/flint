@@ -22,16 +22,35 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
   const userId = socket.userId
 
   socket.on(
-    'staged-call-initiate',
+    'request-call',
     async (data: { matchId: string; calleeId: string; stage: 1 | 2 }) => {
       const { matchId, calleeId, stage } = data
 
-      if (
-        circuitBreaker.isOpen() ||
-        busyStateService.isUserBusy(userId) ||
-        busyStateService.isUserBusy(calleeId)
-      ) {
-        socket.emit('staged-call-error', { matchId, error: 'System busy or user unavailable' })
+      // ENTRY GATE 1: Circuit breaker check
+      if (circuitBreaker.isOpen()) {
+        socket.emit('staged-call-error', { matchId, error: 'System busy, try again later' })
+        return
+      }
+
+      // ENTRY GATE 2: Caller busy state check
+      const callerCheck = busyStateService.canUserStartCall(userId)
+      if (!callerCheck.allowed) {
+        socket.emit('staged-call-error', {
+          matchId,
+          error: `You cannot start a call: ${callerCheck.reason}`
+        })
+        console.log(`[StagedCall] Request blocked - Caller ${userId} is ${callerCheck.reason}`)
+        return
+      }
+
+      // ENTRY GATE 3: Callee busy state check
+      const calleeCheck = busyStateService.canUserStartCall(calleeId)
+      if (!calleeCheck.allowed) {
+        socket.emit('staged-call-error', {
+          matchId,
+          error: `User is currently busy: ${calleeCheck.reason}`
+        })
+        console.log(`[StagedCall] Request blocked - Callee ${calleeId} is ${calleeCheck.reason}`)
         return
       }
 
@@ -112,7 +131,7 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
         })
 
         // FIXED: Send credentials to BOTH immediately, but frontend waits for accept
-        io.to(`user:${calleeId}`).emit('staged-call-ringing', {
+        io.to(`user:${calleeId}`).emit('request-call', {
           matchId,
           callerId: userId,
           callerName: socket.user.firstName,
@@ -136,7 +155,7 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
     },
   )
 
-  socket.on('staged-call-accept', async (data: { matchId: string }) => {
+  socket.on('accept-call', async (data: { matchId: string }) => {
     const { matchId } = data
     const call = activeStagedCalls.get(matchId)
     if (!call || call.calleeId !== userId) return
@@ -165,8 +184,8 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
       )
       setTimeout(() => stagedCallLogic.triggerIcebreakers(io, matchId), 3000)
 
-      // FIXED: Single emit pattern - use 'staged-call-connected' for BOTH
-      io.to(`user:${call.callerId}`).emit('staged-call-connected', {
+      // FIXED: Single emit pattern - use 'call-started' for BOTH
+      io.to(`user:${call.callerId}`).emit('call-started', {
         // Changed from accepted
         matchId,
         channelName: call.channelName,
@@ -174,7 +193,7 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
         duration: call.duration,
       })
 
-      socket.emit('staged-call-connected', {
+      socket.emit('call-started', {
         matchId,
         channelName: call.channelName,
         stage: call.stage,
@@ -188,32 +207,16 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
   // Rest of handlers unchanged...
   socket.on('staged-call-decline', (data: { matchId: string }) => {
     const { matchId } = data
-    const call = activeStagedCalls.get(matchId)
+    const call = stagedCallLogic.clearCall(matchId)
     if (!call || call.calleeId !== userId) return
-
-    if (call.ringTimeoutId) clearTimeout(call.ringTimeoutId)
-
-    busyStateService.clearUserStatus(call.callerId)
-    busyStateService.clearUserStatus(call.calleeId)
-    activeStagedCalls.delete(matchId)
-    stagedCallService.endStagedCall(matchId)
 
     io.to(`user:${call.callerId}`).emit('staged-call-declined', { matchId })
   })
 
   socket.on('staged-call-end', (data: { matchId: string }) => {
     const { matchId } = data
-    const call = activeStagedCalls.get(matchId)
+    const call = stagedCallLogic.clearCall(matchId)
     if (!call || (call.callerId !== userId && call.calleeId !== userId)) return
-
-    if (call.ringTimeoutId) clearTimeout(call.ringTimeoutId)
-    if (call.timerId) clearTimeout(call.timerId)
-    if (call.icebreakerTimerId) clearTimeout(call.icebreakerTimerId)
-
-    busyStateService.clearUserStatus(call.callerId)
-    busyStateService.clearUserStatus(call.calleeId)
-    activeStagedCalls.delete(matchId)
-    stagedCallService.endStagedCall(matchId)
 
     const otherId = call.callerId === userId ? call.calleeId : call.callerId
     io.to(`user:${otherId}`).emit('staged-call-ended', {
@@ -248,24 +251,33 @@ export const registerStagedCallHandlers = (io: Server, socket: AuthenticatedSock
   })
 
   socket.on('disconnect', () => {
+    console.log(`[StagedCall] User ${userId} disconnected, checking for active calls...`)
+
+    // EXIT CLEANUP: Handle all active calls involving this user
     for (const [matchId, call] of activeStagedCalls.entries()) {
       if (call.callerId === userId || call.calleeId === userId) {
-        if (call.ringTimeoutId) clearTimeout(call.ringTimeoutId)
-        if (call.timerId) clearTimeout(call.timerId)
-        if (call.icebreakerTimerId) clearTimeout(call.icebreakerTimerId)
+        console.log(`[StagedCall] Cleaning up call ${matchId} due to disconnect`)
 
-        busyStateService.clearUserStatus(call.callerId)
-        busyStateService.clearUserStatus(call.calleeId)
-        activeStagedCalls.delete(matchId)
-        stagedCallService.endStagedCall(matchId)
+        // Clear the call (this also clears busy states)
+        stagedCallLogic.clearCall(matchId)
 
+        // Notify the partner
         const otherId = call.callerId === userId ? call.calleeId : call.callerId
         io.to(`user:${otherId}`).emit('staged-call-ended', {
           matchId,
           stage: call.stage,
           reason: 'disconnect',
         })
+
+        console.log(`[StagedCall] Notified partner ${otherId} of disconnect`)
       }
+    }
+
+    // Safety net: Always clear busy state on disconnect
+    const userStatus = busyStateService.getUserStatus(userId)
+    if (userStatus !== 'available') {
+      console.log(`[StagedCall] Force clearing busy state for ${userId} (was ${userStatus})`)
+      busyStateService.clearUserStatus(userId)
     }
   })
 }

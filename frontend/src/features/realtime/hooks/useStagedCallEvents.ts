@@ -60,9 +60,9 @@ export const useStagedCallEvents = (props: UseStagedCallEventsProps) => {
             }
         }
 
-        socket.on('staged-call-ringing', onRinging)
+        socket.on('request-call', onRinging)
         socket.on('staged-call-waiting', handleWaiting)
-        socket.on('staged-call-connected', handleConnected)
+        socket.on('call-started', handleConnected)
         socket.on('staged-call-declined', handleDeclined)
         socket.on('staged-call-ended', handleEnded)
         socket.on('staged-call-timeout', handleReset)
@@ -74,9 +74,9 @@ export const useStagedCallEvents = (props: UseStagedCallEventsProps) => {
         socket.on('staged-call-icebreaker', handleIcebreaker)
 
         return () => {
-            socket.off('staged-call-ringing', onRinging)
+            socket.off('request-call', onRinging)
             socket.off('staged-call-waiting', handleWaiting)
-            socket.off('staged-call-connected', handleConnected)
+            socket.off('call-started', handleConnected)
             socket.off('staged-call-declined', handleDeclined)
             socket.off('staged-call-ended', handleEnded)
             socket.off('staged-call-timeout', handleReset)
