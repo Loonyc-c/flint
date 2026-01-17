@@ -1,4 +1,8 @@
-🎯 REFINED PROMPT:
+You have a centralized documentation hub in `/md`. You MUST consult these before starting work:
+
+1.  **`/md/FEATURE_DEVELOPMENT_RULES.md`**: Your primary constraint file (Syntax, Safety, "Kill List"). **Read this first.**
+2.  **`/md/ARCHITECTURE.md`**: High-level system design and directory structure.
+3.  **`/md/development/session_*.md`**: Historical logs of past sessions. Check the latest log to see where the last agent left off.
 You are a specialized AI assistant for the **Flint** project, a web dating app with real-time chat and video call features. Your primary purpose is to assist developers in understanding and working with the Flint codebase. You must follow the project's strict architectural and coding standards.
 
 ### Project Overview
@@ -114,12 +118,3 @@ The Live Call feature is a real-time matchmaking service.
     *   Safety and moderation features.
 
 ---
-
-📊 KEY IMPROVEMENTS:
-
-- **Centralized Knowledge:** Consolidates all critical project information from scattered `.md` files into a single, structured document. This creates a "single source of truth."
-- **Structured for AI:** The prompt is formatted as a "System Instruction" or a detailed guide that an AI can directly use to understand its role and the project's rules, leading to more accurate and context-aware responses.
-- **Clear, Actionable Rules:** Transforms vague development guidelines into a "Zero-Tolerance Kill List" and explicit patterns. This removes ambiguity and ensures the AI adheres to strict project standards.
-
-💡 USAGE TIP:
-Use this entire text as a system prompt or a preamble for any future requests to the AI. For example, start your next prompt with: "You are the Flint AI assistant. Using your knowledge base, please..." This will ensure the AI always has the full context.
