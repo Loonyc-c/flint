@@ -1,9 +1,13 @@
-import AgoraRTC, { type IMicrophoneAudioTrack, type ICameraVideoTrack } from 'agora-rtc-sdk-ng'
+import type { IMicrophoneAudioTrack, ICameraVideoTrack } from 'agora-rtc-sdk-ng'
 
 /**
  * Create audio track with retry logic
  */
 export const createAudioTrackWithRetry = async (maxRetries = 3): Promise<IMicrophoneAudioTrack> => {
+    if (typeof window === 'undefined') {
+        throw new Error('Cannot create audio track on server-side')
+    }
+    const AgoraRTC = (await import('agora-rtc-sdk-ng')).default
     let lastError: Error | null = null
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
@@ -30,6 +34,10 @@ export const createAudioTrackWithRetry = async (maxRetries = 3): Promise<IMicrop
  * Create video track with retry logic
  */
 export const createVideoTrackWithRetry = async (maxRetries = 2): Promise<ICameraVideoTrack> => {
+    if (typeof window === 'undefined') {
+        throw new Error('Cannot create video track on server-side')
+    }
+    const AgoraRTC = (await import('agora-rtc-sdk-ng')).default
     let lastError: Error | null = null
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {

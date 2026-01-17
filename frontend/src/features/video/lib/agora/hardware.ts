@@ -1,9 +1,9 @@
-import AgoraRTC from 'agora-rtc-sdk-ng'
-
 /**
  * Get available audio playback devices
  */
 export const getAudioPlaybackDevices = async (): Promise<MediaDeviceInfo[]> => {
+    if (typeof window === 'undefined') return []
+    const AgoraRTC = (await import('agora-rtc-sdk-ng')).default
     return AgoraRTC.getPlaybackDevices()
 }
 
@@ -12,6 +12,8 @@ export const getAudioPlaybackDevices = async (): Promise<MediaDeviceInfo[]> => {
  * This handles cases where tracks might have leaked outside the class instance.
  */
 export const forceStopHardware = async (): Promise<void> => {
+    if (typeof window === 'undefined') return
+
     try {
         // 1. Try to get and stop all active media tracks
         try {

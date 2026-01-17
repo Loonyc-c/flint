@@ -1,69 +1,71 @@
 # Documentation: Live Call Matchmaking Feature
 
-The **Live Call** feature enables real-time, ephemeral audio pairings between users based on mutual preferences. Unlike the "Swipe" feature, users are not matched in the database initially; the connection is established first, and a formal match is only created if both parties agree to "Connect" after the call.
+The **Live Call** feature enables real-time, ephemeral pairings between users based on mutual preferences. This feature has been refactored to use the **Unified Call Engine**, separating matchmaking logic from media orchestration.
 
 ---
 
 ## 🛠 Tech Stack
-- **Real-time Communication**: Socket.io (Events), Agora RTC (Audio)
+- **Real-time Communication**: Socket.io (Signaling), Agora RTC (Media)
+- **Engine**: Unified Call FSM (Frontend Orchestration)
 - **Backend Logic**: Node.js (In-memory Queue Service)
 - **Database**: MongoDB (Formal Match Promotion)
-- **Frontend**: Next.js, Framer Motion (Animations), Tailwind CSS
+- **Frontend**: Next.js, Framer Motion, Tailwind CSS
 
 ---
 
 ## ⚙️ Working Logic
 
 ### 1. Matchmaking Engine (`LiveCallQueueService`)
-- **Queueing**: Users are added to an in-memory `Map` with their profile data (age, gender) and preferences (`lookingFor`, `ageRange`).
-- **Filtering**: When a new user joins, the engine iterates through the queue to find a bi-directional match:
-  - **Gender**: `User A`'s gender must match `User B`'s `lookingFor`, and vice-versa.
-  - **Age**: `User A`'s age must be $\le$ `User B`'s `ageRange`, and vice-versa.
-- **Efficiency**: Matches are removed from the queue immediately upon pairing to prevent double-matching.
+- **Queueing**: Users enter an in-memory queue with profile data (age, gender) and preferences (`lookingFor`, `ageRange`).
+- **Filtering**: The engine performs bi-directional matching:
+  - **Gender**: `User A`'s gender matches `User B`'s `lookingFor`, and vice-versa.
+  - **Age**: `User A`'s age is within `User B`'s `ageRange`, and vice-versa.
+- **Pairing**: Matches are immediately removed from the queue and assigned a unique `matchId`.
 
-### 2. Connection Flow
-1. **Queueing**: User clicks "Start Call" $\rightarrow$ `live-call-join` (Socket) $\rightarrow$ UI shows "Finding your match...".
-2. **Pairing**: Match found $\rightarrow$ Backend generates an **ephemeral Match ID** (`live_uuid`) and an Agora **Channel Name**.
-3. **Signaling**: Both users receive `live-match-found`. The frontend transitions to `in-call` status.
-4. **The Call**: A 90-second (Stage 1) audio call begins via Agora. 
-5. **Decision**: When the timer hits 0, the `StagePromptModal` appears.
-6. **Promotion**: If **both** users click "Let's Go!", the client emits `live-call-promote-match`. The backend then creates a permanent `Match` record in MongoDB with `stage: 'unlocked'`.
-
-### 3. State Management (`useLiveCall`)
-- Uses a state machine: `idle` $\rightarrow$ `queueing` $\rightarrow$ `connecting` $\rightarrow$ `in-call` $\rightarrow$ `error`.
-- Cleans up (leaves queue) automatically on component unmount or socket disconnection.
+### 2. Connection Flow (Refactored)
+1. **Queueing**: User joins via `live-call-join` socket event. UI enters the `queueing` state.
+2. **Signal**: Backend emits `live-call-match-found` with an ephemeral `matchId` and Agora credentials.
+3. **Orchestration Delegation**: The `useLiveCall` hook invokes the **Unified Call Engine** via `startCall()`.
+4. **Media Session**: 
+   - The engine handles **Device Checks** (Camera/Mic permissions).
+   - The engine establishes the **Agora Connection**.
+   - The engine renders the **Active Call UI** with a 90-second countdown.
+5. **Stage Transition**: When the timer ends, the engine enters the `INTERMISSION` state, muting streams in-place.
+6. **Promotion**: If both users "Connect", a permanent match is created in MongoDB.
 
 ---
 
-## 🚀 Future Implementations & Improvements
+## 🏗 Modular Architecture
 
-### 1. Scalability (Critical for Growth)
-- **🔴 Problem**: Current queue is in-memory on a single Node.js process.
-- **✅ Solution**: Move the `WaitingQueue` to **Redis**. This allows the matchmaking to work across multiple backend instances (load balancers) and prevents queue loss during server restarts.
+### Separation of Concerns
+| Responsibility | Layer | Component/Hook |
+| :--- | :--- | :--- |
+| **Matchmaking** | Backend Service | `LiveCallQueueService.ts` |
+| **Signaling** | Socket Handler | `live-call.handler.ts` |
+| **Queue State** | Frontend Hook | `useLiveCall.ts` |
+| **Media/UI** | Unified Engine | `UnifiedCallInterface.tsx` |
+| **State Machine** | Orchestrator | `useCallFSM.ts` |
 
-### 2. Advanced Filtering
-- **Distance**: Integrate geolocation to filter matches within a specific radius (e.g., 50km).
-- **Interests**: Weight the matching algorithm to pair users with similar `INTERESTS[]` tags.
-- **Karma/Rating**: Implement a post-call rating system to prioritize users with high "Good Vibes" scores.
+### Benefits of Refactor
+- **Consistency**: Live calls use the exact same pre-flight (device check) and active call components as Staged calls.
+- **Reliability**: All Agora logic is centralized in one place (`ActiveCallContainer.tsx`).
+- **Performance**: No navigation required; transitions occur as state changes within the same viewport.
 
-### 3. User Experience (UX)
-- **AI Icebreakers**: During the 90s call, display "Icebreaker Questions" on screen generated by the AI Wingman based on mutual interests.
-- **Visual Feedback**: Add real-time audio wave visualization to show that the partner is speaking.
-- **Blur-to-Clear Video**: Implement a "Stage 2" live call where video starts heavily blurred and gradually clears as the 90s timer progresses.
+---
 
-### 4. Monetization (VIP Features)
-- **Priority Queue**: Premium users jump to the front of the `LiveCallQueue`.
-- **Global Roaming**: Allow users to change their location to match with people in different cities/countries.
-- **Extended Time**: Allow users to use "Flint Coins" to add an extra 60 seconds to a call before the final decision.
+## 🚀 Future Implementations
 
-### 5. Safety & Moderation
-- **Report Button**: Immediate "Report & Block" button inside the `LiveCallOverlay`.
-- **Audio Analysis**: Use machine learning (optional) to detect and flag abusive language or harassment in real-time.
+### 1. Scalability
+- **Redis Queue**: Move the `WaitingQueue` to Redis to support horizontally scaled backend instances.
+
+### 2. User Experience (UX)
+- **Blur-to-Clear Video**: Implement a video stage where the stream starts heavily blurred and gradually clears as the timer progresses.
+- **AI Icebreakers**: Display real-time conversation starters based on mutual interest tags.
 
 ---
 
 ## 📂 File Reference
 - **Backend Service**: `backend/src/features/realtime/services/live-call-queue.service.ts`
 - **Socket Handler**: `backend/src/features/realtime/handlers/live-call.handler.ts`
-- **Frontend Hook**: `frontend/src/features/home/hooks/useLiveCall.ts`
-- **UI Components**: `frontend/src/features/home/components/LiveCallOverlay.tsx`
+- **Frontend Hook**: `frontend/src/features/live-call/hooks/useLiveCall.ts`
+- **UI Components**: `frontend/src/features/call-system/components/UnifiedCallInterface.tsx`

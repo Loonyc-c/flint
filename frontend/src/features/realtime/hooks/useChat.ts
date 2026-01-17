@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useCallback, useState, useRef } from 'react'
-import { useSocket } from '../context/SocketContext'
+import { useSocket } from '../index'
 
 // =============================================================================
 // Types
@@ -147,7 +147,7 @@ export const useChat = ({
   const startTyping = useCallback(() => {
     if (socket && matchId) {
       socket.emit('typing', matchId)
-      
+
       // Auto-stop typing after 3 seconds
       if (typingTimeoutRef.current) {
         clearTimeout(typingTimeoutRef.current)
