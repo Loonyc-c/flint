@@ -4,6 +4,7 @@ import { useEffect, useCallback, useRef } from 'react'
 import { AnimatePresence } from 'framer-motion'
 import { useCallFSM } from '../hooks/useCallFSM'
 import { DeviceCheckScreen } from './DeviceCheckScreen'
+import { IncomingCallScreen } from './IncomingCallScreen'
 import { ConnectingScreen } from './ConnectingScreen'
 import { ActiveCallContainer, type AgoraControls } from './ActiveCallContainer'
 import { IntermissionOverlay } from './IntermissionOverlay'
@@ -22,6 +23,9 @@ interface UnifiedCallInterfaceProps {
     partnerInfo: PartnerInfo
     currentStage?: 1 | 2 | 3
     remainingTime?: number
+    isIncoming?: boolean
+    action?: 'accept' | 'decline'
+    onHangup?: () => void
     onClose: () => void
 }
 
@@ -37,7 +41,10 @@ export const UnifiedCallInterface = ({
     partnerInfo,
     currentStage = 1,
     remainingTime = 0,
+    isIncoming = false,
+    action,
     preflight,
+    onHangup,
     onClose
 }: UnifiedCallInterfaceProps & { preflight?: { requireVideo: boolean, onReady: () => void, onCancel: () => void } }) => {
     const {
@@ -49,6 +56,9 @@ export const UnifiedCallInterface = ({
         handleStageEnded,
         handleNextStageResponse,
         endCall,
+        acceptCall: fsm_acceptCall,
+        declineCall: fsm_declineCall,
+        receiveCall,
         reset,
         startCall,
         startPreflight
@@ -67,25 +77,34 @@ export const UnifiedCallInterface = ({
                 onReady: preflight.onReady
             })
         } else if (matchId && channelName && partnerInfo) {
-            startCall({
-                callType,
-                matchId,
-                channelName,
-                partnerInfo,
-                currentStage
-            })
+            if (isIncoming) {
+                receiveCall({ callType, matchId, channelName, partnerInfo, currentStage, remainingTime })
+            } else {
+                startCall({ callType, matchId, channelName, partnerInfo, currentStage, remainingTime })
+            }
         }
-    }, [isOpen, state, callType, matchId, channelName, partnerInfo, currentStage, preflight, startCall, startPreflight])
+    }, [isOpen, state, callType, matchId, channelName, partnerInfo, currentStage, remainingTime, preflight, isIncoming, startCall, receiveCall, startPreflight])
+
+    // Handle incoming actions from provider signals
+    useEffect(() => {
+        if (state === 'RINGING') {
+            if (action === 'accept') fsm_acceptCall()
+            else if (action === 'decline') fsm_declineCall()
+        }
+    }, [state, action, fsm_acceptCall, fsm_declineCall])
 
     // Handle close
     const handleClose = useCallback(() => {
         if (state === 'PRE_FLIGHT' && preflight) {
             preflight.onCancel()
         }
+        if (onHangup) {
+            onHangup()
+        }
         endCall()
         reset()
         onClose()
-    }, [state, preflight, endCall, reset, onClose])
+    }, [state, preflight, onHangup, endCall, reset, onClose])
 
     // Handle cleanup when finished
     useEffect(() => {
@@ -123,6 +142,14 @@ export const UnifiedCallInterface = ({
                 />
             )}
 
+            {state === 'RINGING' && context && (
+                <IncomingCallScreen
+                    partnerInfo={context.partnerInfo}
+                    onAccept={fsm_acceptCall}
+                    onDecline={handleClose}
+                />
+            )}
+
             {(state === 'CONNECTING' || state === 'STAGE_ACTIVE') && context && (
                 <>
                     <ActiveCallContainer
@@ -139,6 +166,7 @@ export const UnifiedCallInterface = ({
                     {state === 'CONNECTING' && (
                         <ConnectingScreen
                             partnerInfo={context.partnerInfo}
+                            isRequester={!isIncoming}
                             onTimeout={handleClose}
                         />
                     )}

@@ -393,8 +393,16 @@
     "connecting": {
       "connecting": "Холбогдож байна...",
       "connectingTo": "{name}-тэй холбогдож байна",
+      "calling": "Залгаж байна...",
+      "callingTo": "{name} рүү залгаж байна...",
       "timeout": "Холболт амжилтгүй",
       "timeoutMessage": "Холбогдож чадсангүй. Дахин оролдоно уу."
+    },
+    "incoming": {
+      "title": "Дуудлага ирж байна",
+      "subtitle": "{name} танд залгаж байна",
+      "accept": "Зөвшөөрөх",
+      "decline": "Татгалзах"
     },
     "active": {
       "you": "Та",

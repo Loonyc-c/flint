@@ -396,8 +396,16 @@
     "connecting": {
       "connecting": "Connecting...",
       "connectingTo": "Connecting to {name}",
+      "calling": "Calling...",
+      "callingTo": "Calling {name}...",
       "timeout": "Connection Timeout",
       "timeoutMessage": "Unable to connect. Please try again."
+    },
+    "incoming": {
+      "title": "Incoming Call",
+      "subtitle": "{name} is calling you",
+      "accept": "Accept",
+      "decline": "Decline"
     },
     "active": {
       "you": "You",

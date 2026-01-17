@@ -15,11 +15,15 @@ interface StartCallParams {
     partnerInfo: PartnerInfo
     currentStage?: 1 | 2 | 3
     remainingTime?: number
+    onHangup?: () => void
 }
 
 interface CallSystemContextValue {
     startCall: (params: StartCallParams) => void
+    receiveCall: (params: StartCallParams) => void
     startPreflight: (options: { requireVideo: boolean, onReady: () => void, onCancel: () => void }) => void
+    acceptCall: () => void
+    declineCall: () => void
     closeCall: () => void
     isCallActive: boolean
 }
@@ -42,6 +46,9 @@ interface CallParams {
     partnerInfo?: PartnerInfo
     currentStage?: 1 | 2 | 3
     remainingTime?: number
+    isIncoming?: boolean
+    action?: 'accept' | 'decline'
+    onHangup?: () => void
     preflight?: {
         requireVideo: boolean
         onReady: () => void
@@ -56,8 +63,18 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
         setCallParams({
             ...params,
             isOpen: true,
-            currentStage: params.currentStage || 1, // Ensure default if not provided
-            remainingTime: params.remainingTime || 0 // Ensure default if not provided
+            currentStage: params.currentStage || 1,
+            remainingTime: params.remainingTime || 0
+        })
+    }, [])
+
+    const receiveCall = useCallback((params: StartCallParams) => {
+        setCallParams({
+            ...params,
+            isOpen: true,
+            isIncoming: true,
+            currentStage: params.currentStage || 1,
+            remainingTime: params.remainingTime || 0
         })
     }, [])
 
@@ -68,6 +85,14 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
         })
     }, [])
 
+    const acceptCall = useCallback(() => {
+        setCallParams(prev => prev ? { ...prev, action: 'accept' } : null)
+    }, [])
+
+    const declineCall = useCallback(() => {
+        setCallParams(prev => prev ? { ...prev, action: 'decline' } : null)
+    }, [])
+
     const closeCall = useCallback(() => {
         setCallParams((prev) => (prev ? { ...prev, isOpen: false } : null))
     }, [])
@@ -75,7 +100,7 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
     const isCallActive = !!(callParams?.isOpen)
 
     return (
-        <CallSystemContext.Provider value={{ startCall, startPreflight, closeCall, isCallActive }}>
+        <CallSystemContext.Provider value={{ startCall, receiveCall, startPreflight, acceptCall, declineCall, closeCall, isCallActive }}>
             {children}
             {callParams?.isOpen && (
                 <UnifiedCallInterface
@@ -87,6 +112,9 @@ export const CallSystemProvider = ({ children }: { children: ReactNode }) => {
                     currentStage={callParams.currentStage}
                     remainingTime={callParams.remainingTime}
                     preflight={callParams.preflight}
+                    isIncoming={callParams.isIncoming}
+                    action={callParams.action}
+                    onHangup={callParams.onHangup}
                     onClose={closeCall}
                 />
             )}

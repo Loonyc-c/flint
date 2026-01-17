@@ -49,7 +49,7 @@ export const StagedCallProvider = ({
   activeMatchId,
   onStageComplete,
 }: StagedCallProviderProps) => {
-  const { startCall, closeCall } = useCallSystem()
+  const { startCall, receiveCall, closeCall } = useCallSystem()
 
   // Find info for the active conversation
   const activeMatch = useMemo(() =>
@@ -107,7 +107,7 @@ export const StagedCallProvider = ({
     initiateCall,
     acceptCall: _acceptCall,
     declineCall: _declineCall,
-    endCall: _endCall,
+    endCall,
     respondToPrompt: _respondToPrompt,
   } = useStagedCall(stagedCallCallbacks)
 
@@ -126,7 +126,7 @@ export const StagedCallProvider = ({
     // Receiver Side: Ringing
     if (incomingCall && callStatus === 'ringing') {
       const match = matches.find(m => m.matchId === incomingCall.matchId)
-      startCall({
+      receiveCall({
         callType: 'staged',
         matchId: incomingCall.matchId,
         channelName: incomingCall.channelName,
@@ -135,7 +135,8 @@ export const StagedCallProvider = ({
           name: incomingCall.callerName,
           avatar: match?.otherUser.avatar
         },
-        currentStage: incomingCall.stage as 1 | 2 | 3
+        currentStage: incomingCall.stage as 1 | 2 | 3,
+        onHangup: () => endCall(incomingCall.matchId)
       })
     }
 
@@ -152,11 +153,12 @@ export const StagedCallProvider = ({
             name: match.otherUser.name,
             avatar: match.otherUser.avatar
           },
-          currentStage: currentCall.stage as 1 | 2 | 3
+          currentStage: currentCall.stage as 1 | 2 | 3,
+          onHangup: () => endCall(currentCall.matchId)
         })
       }
     }
-  }, [incomingCall, currentCall, callStatus, matches, startCall])
+  }, [incomingCall, currentCall, callStatus, matches, startCall, receiveCall, endCall])
 
   const contextValue: StagedCallContextValue = useMemo(() => ({
     initiateCall,

@@ -13,6 +13,7 @@ import type { PartnerInfo } from '../types/call-fsm'
 
 interface ConnectingScreenProps {
     partnerInfo: PartnerInfo
+    isRequester?: boolean
     onTimeout?: () => void
     timeoutMs?: number
 }
@@ -23,6 +24,7 @@ interface ConnectingScreenProps {
 
 export const ConnectingScreen = ({
     partnerInfo,
+    isRequester = false,
     onTimeout,
     timeoutMs = 15000
 }: ConnectingScreenProps) => {
@@ -61,10 +63,10 @@ export const ConnectingScreen = ({
 
                 {/* Connecting Text */}
                 <h3 className="text-2xl font-bold text-white mb-2">
-                    {timedOut ? t('timeout') : t('connecting')}
+                    {timedOut ? t('timeout') : (isRequester ? t('calling') : t('connecting'))}
                 </h3>
                 <p className="text-white/60 mb-8">
-                    {timedOut ? t('timeoutMessage') : t('connectingTo', { name: partnerInfo.name })}
+                    {timedOut ? t('timeoutMessage') : (isRequester ? t('callingTo', { name: partnerInfo.name }) : t('connectingTo', { name: partnerInfo.name }))}
                 </p>
 
                 {/* Spinner */}
