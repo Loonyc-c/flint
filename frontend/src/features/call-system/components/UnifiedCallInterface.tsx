@@ -43,7 +43,7 @@ export const UnifiedCallInterface = ({
     partnerInfo,
     currentStage = 1,
     remainingTime = 0,
-    isIncoming = false,
+    isIncoming: isIncomingProp = false,
     action,
     preflight,
     onHangup,
@@ -72,28 +72,38 @@ export const UnifiedCallInterface = ({
     // Store Agora controls for mute/unmute during intermission
     const agoraControlsRef = useRef<AgoraControls | null>(null)
 
+
+
+    // Track if we are in the process of starting a call to prevent race condition with auto-close
+    const isStartingRef = useRef(false)
+
     // Start call or preflight when opened
     useEffect(() => {
         if (!isOpen || state !== 'IDLE') return
 
         if (preflight) {
+            isStartingRef.current = true
             startPreflight({
                 requireVideo: preflight.requireVideo,
                 onReady: preflight.onReady
             })
         } else if (matchId && channelName && partnerInfo) {
+            isStartingRef.current = true
             const callData = { callType, matchId, channelName, partnerInfo, currentStage, remainingTime, onHangup }
-            if (isIncoming) {
+            if (isIncomingProp) {
                 setIncoming(callData)
             } else {
                 setCalling(callData)
             }
         }
-    }, [isOpen, state, callType, matchId, channelName, partnerInfo, currentStage, remainingTime, preflight, isIncoming, setCalling, setIncoming, startCall, startPreflight, onHangup])
+    }, [isOpen, state, callType, matchId, channelName, partnerInfo, currentStage, remainingTime, preflight, isIncomingProp, setCalling, setIncoming, startCall, startPreflight, onHangup])
 
     // Handle incoming actions from provider signals
     useEffect(() => {
         if (state === 'INCOMING' || state === 'CALLING') {
+            // Reset starting flag as we are now active
+            isStartingRef.current = false
+
             if (action === 'accept') fsm_acceptCall()
             else if (action === 'decline') fsm_declineCall()
             else if (action === 'start') {
@@ -103,20 +113,20 @@ export const UnifiedCallInterface = ({
     }, [state, action, fsm_acceptCall, fsm_declineCall, startCall, callType, matchId, channelName, partnerInfo, currentStage, remainingTime, onHangup])
 
     // Handle close
-    const handleClose = useCallback(() => {
-        if (state === 'PRE_FLIGHT' && preflight) {
+    const handleClose = useCallback((wasSuccess = false) => {
+        if (state === 'PRE_FLIGHT' && preflight && !wasSuccess) {
             preflight.onCancel()
         }
-        if ((state === 'INCOMING' || state === 'CALLING') && isIncoming && onDecline) {
+        if ((state === 'INCOMING' || state === 'CALLING') && isIncomingProp && onDecline && !wasSuccess) {
             onDecline()
         }
-        if (onHangup) {
+        if (onHangup && !wasSuccess) {
             onHangup()
         }
         endCall()
         reset()
         onClose()
-    }, [state, preflight, onHangup, isIncoming, onDecline, endCall, reset, onClose])
+    }, [state, preflight, onHangup, isIncomingProp, onDecline, endCall, reset, onClose])
 
     // Handle cleanup when finished
     useEffect(() => {
@@ -130,6 +140,9 @@ export const UnifiedCallInterface = ({
 
     // Effect to close the interface if the FSM resets to IDLE (e.g. on timeout)
     useEffect(() => {
+        // Prevent closing if we are currently starting up (race condition fix)
+        if (isStartingRef.current) return
+
         if (state === 'IDLE' && isOpen && !preflight) {
             onClose()
         }
@@ -152,19 +165,21 @@ export const UnifiedCallInterface = ({
                     }
                     requireAudio={true}
                     onResult={(result) => {
+
                         if (state === 'PRE_FLIGHT') {
                             if (result.ready) {
+
                                 fsm_preflight?.onReady()
-                                handleClose()
+                                handleClose(true)
                             }
                         } else {
-                            if (result.ready && state === 'CHECK_DEVICES' && isIncoming && onAcceptReady) {
+                            if (result.ready && state === 'CHECK_DEVICES' && isIncomingProp && onAcceptReady) {
                                 onAcceptReady()
                             }
                             handleDeviceCheck(result)
                         }
                     }}
-                    onCancel={handleClose}
+                    onCancel={() => handleClose(false)}
                 />
             )}
 

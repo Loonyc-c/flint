@@ -49,5 +49,6 @@ export const LIVE_CALL_EVENTS = {
   CALL_RESULT: 'live-call-result',
   ERROR: 'live-call-error',
   QUEUE_HEARTBEAT: 'live-call:queue-heartbeat',
-  QUEUE_STATUS: 'live-call:queue-status'
+  QUEUE_STATUS: 'live-call:queue-status',
+  END_CALL: 'live-call-end'
 } as const

@@ -42,7 +42,7 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
 
         const onConnect = () => {
             if (queueStateRef.current.inQueue) {
-                console.log('🔄 [LiveCall] Socket reconnected - restoring queue state...')
+                // console.log('🔄 [LiveCall] Socket reconnected - restoring queue state...')
                 socket.emit(LIVE_CALL_EVENTS.JOIN_QUEUE, queueStateRef.current.preferences)
                 // We keep status as 'queueing' (it likely didn't change in UI)
             }
@@ -59,7 +59,7 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
 
         // UX-01: Prevent rage-clicking / race conditions
         if (isJoining || status !== 'idle') {
-            console.log('🛡️ [LiveCall] Join ignored - already joining or busy')
+
             return
         }
 
@@ -68,7 +68,7 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
         startPreflight({
             requireVideo: true, // Live calls require video
             onReady: () => {
-                console.log('🔍 [LiveCall] Hardware ready, joining queue...')
+
 
                 // Set persistence ref
                 queueStateRef.current = { inQueue: true, preferences }
@@ -79,10 +79,11 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
                 setIsJoining(false)
             },
             onCancel: () => {
-                console.log('❌ [LiveCall] Join queue cancelled or hardware failed')
+
                 // CRITICAL: Reset state to prevent queue UI from showing
                 setStatus('idle')
                 setError('Hardware check failed or cancelled')
+                queueStateRef.current = { inQueue: false }
                 setIsJoining(false)
             }
         })
@@ -90,7 +91,7 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
 
     const leaveQueue = useCallback(() => {
         if (!socket || !isConnected) return
-        console.log('👋 [LiveCall] Leaving queue...')
+
 
         // Clear Persistence
         queueStateRef.current = { inQueue: false }
@@ -100,12 +101,18 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
     }, [socket, isConnected])
 
     const reset = useCallback(() => {
-        console.log('🔄 [LiveCall] Resetting...')
+
+
+        // EXIT CLEANUP: Tell backend we ended the call
+        if (status === 'in-call' || status === 'connecting') {
+            socket?.emit(LIVE_CALL_EVENTS.END_CALL)
+        }
+
         setStatus('idle')
         setMatchData(null)
         setError(null)
         closeCall()
-    }, [closeCall])
+    }, [closeCall, socket, status])
 
     useEffect(() => {
         if (!socket) return
@@ -114,24 +121,36 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
             data: LiveCallMatchPayload & { agoraToken?: string; agoraUid?: number }
         ) => {
             // HW-01: Re-check hardware before accepting match
-            try {
-                const devices = await navigator.mediaDevices.enumerateDevices()
-                const hasAudio = devices.some(d => d.kind === 'audioinput')
-                const hasVideo = devices.some(d => d.kind === 'videoinput')
+            // HW-01: Re-check hardware before accepting match
+            let isHardwareReady = true
 
-                if (!hasAudio || !hasVideo) {
-                    console.error('[LiveCall] Hardware lost at match time!')
-                    socket.emit(LIVE_CALL_EVENTS.LEAVE_QUEUE)
-                    setStatus('idle')
-                    setError('Camera or microphone disconnected')
-                    queueStateRef.current = { inQueue: false }
-                    return
+            try {
+                // SKIP Check if Mock Hardware logic is enabled
+                if (process.env.NEXT_PUBLIC_MOCK_HARDWARE === 'true') {
+                    // console.log('⚠️ [LiveCall] Skipping match hardware check (Mock Mode)')
+                } else {
+                    const devices = await navigator.mediaDevices.enumerateDevices()
+                    const hasAudio = devices.some(d => d.kind === 'audioinput')
+                    const hasVideo = devices.some(d => d.kind === 'videoinput')
+
+                    if (!hasAudio || !hasVideo) {
+                        console.error('[LiveCall] Hardware lost at match time!')
+                        isHardwareReady = false
+                    }
                 }
             } catch (err) {
                 console.warn('[LiveCall] Hardware check warning', err)
             }
 
-            console.log('🎤 [LiveCall] Match found, triggering connecting state...', data)
+            if (!isHardwareReady) {
+                socket.emit(LIVE_CALL_EVENTS.LEAVE_QUEUE)
+                setStatus('idle')
+                setError('Camera or microphone disconnected')
+                queueStateRef.current = { inQueue: false }
+                return
+            }
+
+
             setMatchData(data)
             setStatus('connecting')
 
@@ -149,7 +168,12 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
                     name: data.partner.nickName,
                     avatar: data.partner.photo
                 },
-                remainingTime: Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000)
+                remainingTime: Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000),
+                onHangup: () => {
+
+                    // Defer reset slightly to ensure UI cleanup happens first
+                    setTimeout(reset, 100)
+                }
             })
         }
 
@@ -162,11 +186,18 @@ export const LiveCallProvider = ({ children }: { children: ReactNode }) => {
         socket.on(LIVE_CALL_EVENTS.MATCH_FOUND, onMatchFound)
         socket.on(LIVE_CALL_EVENTS.ERROR, onError)
 
+        // Handle remote hangup
+        socket.on(LIVE_CALL_EVENTS.END_CALL, () => {
+
+            reset()
+        })
+
         return () => {
             socket.off(LIVE_CALL_EVENTS.MATCH_FOUND, onMatchFound)
             socket.off(LIVE_CALL_EVENTS.ERROR, onError)
+            socket.off(LIVE_CALL_EVENTS.END_CALL)
         }
-    }, [socket, startCall])
+    }, [socket, startCall, reset])
 
     // Heartbeat: Check if we are still in queue (Fixes STATE-01)
     useEffect(() => {

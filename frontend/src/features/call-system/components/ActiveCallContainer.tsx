@@ -9,6 +9,7 @@ import { CallControls } from '@/features/video/components/CallControls'
 import { CallHeader } from '@/features/video/components/modal/CallHeader'
 import { useGlobalSocket } from '@/features/realtime'
 import type { CallContext } from '../types/call-fsm'
+import { LIVE_CALL_EVENTS } from '@/shared-types/types/live-call'
 
 // =============================================================================
 // Types
@@ -59,15 +60,39 @@ export const ActiveCallContainer = ({
         error
     } = useAgora({
         channelName: context.channelName,
-        enableVideo: context.callType === 'staged' && (context.currentStage === 2 || context.currentStage === 3)
+        enableVideo: context.callType === 'staged' && (context.currentStage === 2 || context.currentStage === 3),
+        onUserLeft: () => {
+
+            handleEndCall()
+        }
     })
 
-    // Auto-join on mount
+
+    // Handle end call
+    const handleEndCall = useCallback(async () => {
+
+
+        // CRITICAL: Tell backend we ended the call BEFORE disconnecting Agora/Local state
+        if (socket && context?.matchId) {
+            if (context.callType === 'staged') {
+
+                socket.emit('staged-call-end', { matchId: context.matchId })
+            } else if (context.callType === 'live') {
+
+                socket.emit(LIVE_CALL_EVENTS.END_CALL)
+            }
+        }
+
+        await leave()
+        onCallEnded()
+    }, [leave, onCallEnded, socket, context])
+
+    // Auto-join on mount (only if not error)
     useEffect(() => {
-        if (!isConnected && !isConnecting) {
+        if (!isConnected && !isConnecting && !error) {
             join()
         }
-    }, [isConnected, isConnecting, join])
+    }, [isConnected, isConnecting, join, error])
 
     // Notify parent when connected and expose Agora controls
     useEffect(() => {
@@ -77,33 +102,45 @@ export const ActiveCallContainer = ({
         }
     }, [isConnected, onConnected, onAgoraReady, muteAll, unmuteAll])
 
-    // Listen for stage-ended event (for staged calls)
+    // Listen for staged call events (Next Stage or Hangup)
     useEffect(() => {
         if (!socket || context.callType !== 'staged') return
 
-        const handleStageEnded = () => {
-            onStageEnded?.()
+        const handleStagedCallEnded = (data: { matchId: string; stage: number; promptNextStage?: boolean }) => {
+            // Verify matchId matches current context
+            if (data.matchId !== context.matchId) return
+
+
+
+            if (data.promptNextStage) {
+                // Timer ended, move to prompt (Intermission)
+                onStageEnded?.()
+            } else {
+                // Partner hung up (or disconnected)
+                // We must end the call locally
+
+                handleEndCall()
+            }
         }
 
-        socket.on('stage-ended', handleStageEnded)
+        socket.on('staged-call-ended', handleStagedCallEnded)
         return () => {
-            socket.off('stage-ended', handleStageEnded)
+            socket.off('staged-call-ended', handleStagedCallEnded)
         }
-    }, [socket, context.callType, onStageEnded])
+    }, [socket, context.callType, context.matchId, onStageEnded, handleEndCall])
 
-    // Handle end call
-    const handleEndCall = useCallback(async () => {
-        await leave()
-        onCallEnded()
-    }, [leave, onCallEnded])
+
 
     // EXIT CLEANUP: Handle browser close, refresh, and navigation
     useEffect(() => {
         const emitDisconnect = () => {
             // Synchronous socket emit (no async) - works in beforeunload
             if (socket && context?.matchId) {
-                socket.emit('staged-call-end', { matchId: context.matchId })
-                console.log('[ActiveCall] Emitted staged-call-end due to disconnect')
+                if (context.callType === 'staged') {
+                    socket.emit('staged-call-end', { matchId: context.matchId })
+                } else if (context.callType === 'live') {
+                    socket.emit(LIVE_CALL_EVENTS.END_CALL)
+                }
             }
         }
 
@@ -124,7 +161,7 @@ export const ActiveCallContainer = ({
                 leave()
             }
         }
-    }, [socket, isConnected, context?.matchId, leave])
+    }, [socket, isConnected, context?.matchId, leave, context?.callType])
 
     return (
         <div className="fixed inset-0 z-[100] bg-black">

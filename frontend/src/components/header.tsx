@@ -32,6 +32,7 @@ const MainHeader = () => {
           width={100}
           height={60}
           className="h-15 w-auto"
+          style={{ width: 'auto', height: 'auto' }}
         />
       </Link>
 
@@ -42,9 +43,9 @@ const MainHeader = () => {
               href="/profile"
               className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
             >
-              <UserAvatar 
-                src={user?.profile?.photo} 
-                name={user?.name || user?.firstName} 
+              <UserAvatar
+                src={user?.profile?.photo}
+                name={user?.name || user?.firstName}
                 size="md"
                 border
               />

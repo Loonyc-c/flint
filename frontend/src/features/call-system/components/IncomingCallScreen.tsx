@@ -5,7 +5,7 @@ import { motion } from 'framer-motion'
 import { Phone, PhoneOff, Loader2 } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { UserAvatar } from '@/components/ui/UserAvatar'
-import { Button } from '@/components/ui/button'
+
 import { useCallSounds } from '../hooks/useCallSounds'
 import type { PartnerInfo } from '../types/call-fsm'
 
@@ -48,74 +48,85 @@ export const IncomingCallScreen = ({
     }, [timeoutMs, onTimeout, timedOut, playRingtone, stopRingtone])
 
     return (
-        <div className="fixed inset-0 z-[100] bg-black flex flex-col items-center justify-center p-6">
-            <div className="w-full max-w-sm text-center">
-                {/* Ringing Avatar Effect */}
-                <div className="relative mb-12 flex justify-center">
-                    <motion.div
-                        animate={{ scale: [1, 1.4, 1], opacity: [0.5, 0, 0.5] }}
-                        transition={{ duration: 2, repeat: Infinity }}
-                        className="absolute inset-0 bg-brand/20 rounded-full"
-                    />
-                    <motion.div
-                        animate={{ scale: [1, 1.2, 1] }}
-                        transition={{ duration: 1.5, repeat: Infinity }}
-                        className="relative z-10"
-                    >
-                        <UserAvatar
-                            src={partnerInfo.avatar}
-                            name={partnerInfo.name}
-                            size="xl"
-                            className="ring-4 ring-brand/50"
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+            <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className="w-full max-w-sm bg-card rounded-3xl shadow-2xl p-8 border border-border/50 relative overflow-hidden"
+            >
+                {/* Background decorative elements */}
+                <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-b from-brand/10 to-transparent pointer-events-none" />
+
+                <div className="relative z-10 flex flex-col items-center text-center">
+                    {/* Ringing Avatar Effect */}
+                    <div className="relative mb-8 flex justify-center">
+                        <motion.div
+                            animate={{ scale: [1, 1.5, 1], opacity: [0.3, 0, 0.3] }}
+                            transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
+                            className="absolute inset-0 bg-brand/30 rounded-full"
                         />
-                    </motion.div>
-                </div>
-
-                {/* Text */}
-                <h2 className="text-3xl font-bold text-white mb-2">
-                    {timedOut ? t('timeout') : t('title')}
-                </h2>
-                <p className="text-white/60 text-lg mb-16">
-                    {timedOut ? t('timeoutMessage') : t('subtitle', { name: partnerInfo.name })}
-                </p>
-
-                {/* Actions */}
-                {!timedOut ? (
-                    <div className="flex items-center justify-center gap-12">
-                        <div className="flex flex-col items-center gap-3">
-                            <Button
-                                onClick={onDecline}
-                                variant="outline"
-                                size="icon"
-                                className="w-16 h-16 rounded-full bg-red-500/10 border-red-500/50 hover:bg-red-500 hover:text-white transition-all text-red-500"
-                            >
-                                <PhoneOff className="w-8 h-8" />
-                            </Button>
-                            <span className="text-white/40 text-sm font-medium">{t('decline')}</span>
-                        </div>
-
-                        <div className="flex flex-col items-center gap-3">
-                            <Button
-                                onClick={onAccept}
-                                variant="default"
-                                size="icon"
-                                className="w-20 h-20 rounded-full bg-brand hover:bg-brand/90 transition-all shadow-lg shadow-brand/20"
-                            >
-                                <Phone className="w-10 h-10 text-white animate-pulse" />
-                            </Button>
-                            <span className="text-brand text-sm font-bold uppercase tracking-wider">{t('accept')}</span>
-                        </div>
+                        <motion.div
+                            animate={{ scale: [1, 1.2, 1] }}
+                            transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
+                            className="relative z-10"
+                        >
+                            <UserAvatar
+                                src={partnerInfo.avatar}
+                                name={partnerInfo.name}
+                                size="xl"
+                                className="ring-4 ring-brand shadow-lg"
+                            />
+                        </motion.div>
                     </div>
-                ) : (
-                    <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        className="flex flex-center justify-center"
-                    >
-                        <Loader2 className="w-8 h-8 text-white/20 animate-spin" />
-                    </motion.div>
-                )}
-            </div>
+
+                    {/* Text */}
+                    <h2 className="text-2xl font-bold text-foreground mb-2">
+                        {timedOut ? t('timeout') : t('title')}
+                    </h2>
+                    <p className="text-muted-foreground text-base mb-10">
+                        {timedOut ? t('timeoutMessage') : t('subtitle', { name: partnerInfo.name })}
+                    </p>
+
+                    {/* Actions */}
+                    {!timedOut ? (
+                        <div className="flex items-center justify-center gap-10 w-full">
+                            <div className="flex flex-col items-center gap-2">
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={onDecline}
+                                    className="w-16 h-16 rounded-full bg-destructive/10 border border-destructive/20 text-destructive flex items-center justify-center hover:bg-destructive hover:text-white transition-colors"
+                                >
+                                    <PhoneOff className="w-7 h-7" />
+                                </motion.button>
+                                <span className="text-xs font-semibold text-muted-foreground">{t('decline')}</span>
+                            </div>
+
+                            <div className="flex flex-col items-center gap-2">
+                                <motion.button
+                                    whileHover={{ scale: 1.1 }}
+                                    whileTap={{ scale: 0.9 }}
+                                    onClick={onAccept}
+                                    className="w-20 h-20 rounded-full bg-green-500 text-white flex items-center justify-center shadow-lg shadow-green-500/30 hover:bg-green-600 transition-colors relative"
+                                >
+                                    <div className="absolute inset-0 rounded-full animate-ping bg-green-500/50" />
+                                    <Phone className="w-8 h-8 relative z-10" />
+                                </motion.button>
+                                <span className="text-xs font-bold text-green-500 uppercase tracking-wide">{t('accept')}</span>
+                            </div>
+                        </div>
+                    ) : (
+                        <motion.div
+                            initial={{ opacity: 0 }}
+                            animate={{ opacity: 1 }}
+                            className="flex flex-center justify-center"
+                        >
+                            <Loader2 className="w-8 h-8 text-muted-foreground animate-spin" />
+                        </motion.div>
+                    )}
+                </div>
+            </motion.div>
         </div>
     )
 }

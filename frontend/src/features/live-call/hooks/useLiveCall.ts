@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useCallback, useState, useRef } from 'react'
+import { useEffect, useCallback, useState } from 'react'
 import { useSocket } from '@/features/realtime'
 import { LIVE_CALL_EVENTS } from '@shared/types'
 import type { LiveCallMatchPayload, LiveCallPreferences } from '@shared/types'
@@ -59,7 +59,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const performAction = useCallback(
     (action: 'like' | 'pass') => {
       if (!socket || !isConnected || !matchData) return
-      console.log(`👍 [LiveCall] Performing action: ${action}`)
+
       socket.emit(LIVE_CALL_EVENTS.CALL_ACTION, {
         matchId: matchData.matchId,
         action

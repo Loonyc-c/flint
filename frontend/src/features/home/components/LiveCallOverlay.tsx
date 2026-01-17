@@ -3,9 +3,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
-import {
-  useLiveCall
-} from '@/features/live-call/hooks/useLiveCall'
+
 import { useProfileReadiness } from '@/features/profile/hooks/useProfileReadiness'
 import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
 
@@ -22,8 +20,7 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
     status,
     joinQueue,
     leaveQueue,
-    reset,
-    setStatus
+    reset
   } = useLiveCallContext()
 
   const { score, missingFields, isReady, isLoading: isCheckingReadiness } = useProfileReadiness()

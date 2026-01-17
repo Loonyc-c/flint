@@ -73,15 +73,16 @@ export const useStagedCallHandlers = ({
         setIncoming({
             callType: 'staged',
             matchId: data.matchId,
-            channelName: '', // Channel not ready yet for receiver
+            channelName: data.channelName,
             partnerInfo: {
                 id: data.callerId,
                 name: data.callerName,
-                avatar: '' // Payload doesn't include avatar yet
+                avatar: data.callerAvatar || '' // Payload now includes avatar
             },
             currentStage: 1,
             remainingTime: 0
         })
+
     }, [user, busyStates, callStatusRef, setIncomingCall, setCallStatus, options, setIncoming])
 
     const handleConnected = useCallback((data: StagedCallAcceptedPayload) => {
@@ -124,6 +125,7 @@ export const useStagedCallHandlers = ({
     }, [cleanupCall, setCallStatus, callStatusRef, options, closeCall])
 
     const handleWaiting = useCallback((data: { matchId: string; channelName: string; stage: 1 | 2; calleeId: string; calleeName?: string; calleeAvatar?: string }) => {
+
         setCallStatus('calling')
         callStatusRef.current = 'calling'
         setCurrentCall({ ...data, duration: 0 })

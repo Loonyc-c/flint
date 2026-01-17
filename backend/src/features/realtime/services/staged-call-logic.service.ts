@@ -40,6 +40,7 @@ export const stagedCallLogic = {
 
     busyStateService.clearUserStatus(call.callerId)
     busyStateService.clearUserStatus(call.calleeId)
+    console.log(`[DEBUG-HANGUP] Cleared busy status for Caller: ${call.callerId} and Callee: ${call.calleeId}`)
     activeStagedCalls.delete(matchId)
     stagedCallService.endStagedCall(matchId)
 
