@@ -14,6 +14,7 @@ import type {
 } from '../types/staged-call'
 import { useStagedCallHandlers } from './useStagedCallHandlers'
 import type { MutableRefObject, Dispatch, SetStateAction } from 'react'
+import type { StartCallParams } from '@/features/call-system/context/CallSystemContext'
 
 interface UseStagedCallEventsProps {
     socket: Socket | null
@@ -32,6 +33,11 @@ interface UseStagedCallEventsProps {
     // Refs
     callStatusRef: MutableRefObject<StagedCallStatus>
     joiningRef: MutableRefObject<boolean>
+    // Call System
+    setCalling: (params: StartCallParams) => void
+    setIncoming: (params: StartCallParams) => void
+    closeCall: () => void
+    isCallActive: boolean
 }
 
 export const useStagedCallEvents = (props: UseStagedCallEventsProps) => {

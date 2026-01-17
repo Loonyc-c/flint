@@ -2,7 +2,6 @@
 
 import { useReducer, useCallback, useMemo, useEffect } from 'react'
 import type {
-    CallState,
     FSMState,
     FSMEvent,
     CallContext,

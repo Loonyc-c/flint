@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { motion } from 'framer-motion'
 import { Video, Mic, AlertCircle } from 'lucide-react'
 import { useTranslations } from 'next-intl'
@@ -31,9 +31,15 @@ export const DeviceCheckScreen = ({
     const t = useTranslations('call.deviceCheck')
     const { checking, result, checkDevices } = useHardwareGate({ requireVideo, requireAudio })
 
+    // Loop Protection: Ensure we only check once per mount
+    const hasChecked = useRef(false)
+
     // Auto-check on mount
     useEffect(() => {
-        checkDevices()
+        if (!hasChecked.current) {
+            hasChecked.current = true
+            checkDevices()
+        }
     }, [checkDevices])
 
     // Report result to parent ONLY if successful. 

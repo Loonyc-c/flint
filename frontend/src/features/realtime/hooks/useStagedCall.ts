@@ -2,6 +2,7 @@
 
 import { useCallback, useState, useRef } from 'react'
 import { useSocket } from '../index'
+import { useCallSystem } from '@/features/call-system'
 import { useUser } from '@/features/auth/context/UserContext'
 import type {
   StagePromptPayload,
@@ -46,6 +47,9 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
   // Timer Hook
   const { remainingTime, startTimer, setRemainingTime } = useCallTimer()
 
+  // Call System Hook (Global Overlay)
+  const { setCalling, setIncoming, closeCall, isCallActive } = useCallSystem()
+
   // Refs for immediate checks and stable actions
   const socketRef = useRef(socket)
   socketRef.current = socket
@@ -63,6 +67,10 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     setIncomingCall(null)
     setIcebreaker(null)
     setStagePrompt(null)
+    // Ensure global overlay is closed when local state cleans up
+    // But only if we are the ones managing it (staged call)
+    // We'll let the handlers decide when to close explicitely, 
+    // or if this cleanup is called from unmount.
   }, [setRemainingTime])
 
   // Event Listeners
@@ -80,7 +88,12 @@ export const useStagedCall = (options: UseStagedCallOptions = {}): UseStagedCall
     setPartnerContact,
     setIcebreaker,
     callStatusRef,
-    joiningRef
+    joiningRef,
+    // Call System Integration
+    setCalling,
+    setIncoming,
+    closeCall,
+    isCallActive
   })
 
   // Actions - Made stable with refs to prevent stale closure issues

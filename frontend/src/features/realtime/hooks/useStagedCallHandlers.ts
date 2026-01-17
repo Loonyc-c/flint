@@ -1,4 +1,5 @@
 import { useCallback, type MutableRefObject, type Dispatch, type SetStateAction } from 'react'
+import type { StartCallParams } from '@/features/call-system/context/CallSystemContext'
 import type {
     StagedCallRingingPayload,
     StagedCallAcceptedPayload,
@@ -28,8 +29,13 @@ interface UseStagedCallHandlersProps {
     setStagePrompt: Dispatch<SetStateAction<StagePromptPayload | null>>
     setPartnerContact: Dispatch<SetStateAction<ContactInfoDisplay | null>>
     setIcebreaker: Dispatch<SetStateAction<IcebreakerPayload | null>>
+    // Refs
     callStatusRef: MutableRefObject<StagedCallStatus>
     joiningRef: MutableRefObject<boolean>
+    // Call System
+    setCalling: (params: StartCallParams) => void
+    setIncoming: (params: StartCallParams) => void
+    closeCall: () => void
 }
 
 export const useStagedCallHandlers = ({
@@ -45,18 +51,16 @@ export const useStagedCallHandlers = ({
     setPartnerContact,
     setIcebreaker,
     callStatusRef,
-    joiningRef
+    joiningRef,
+    setCalling,
+    setIncoming,
+    closeCall
 }: UseStagedCallHandlersProps) => {
 
     const handleRinging = useCallback((data: StagedCallRingingPayload) => {
         const isActuallyBusy = user?.id ? busyStates[user.id] === 'in-call' : false
 
         if (callStatusRef.current === 'active' || isActuallyBusy) {
-            // Note: socket emission usually happens in the event listener, 
-            // but for separation we might need to return a signal or pass socket here.
-            // Ideally handlers just update state. The decline emit for busy state 
-            // is a side effect. We'll return 'BUSY' to let the caller handle emit?
-            // Or just pass a decline callback?
             return 'BUSY'
         }
 
@@ -64,7 +68,21 @@ export const useStagedCallHandlers = ({
         setCallStatus('ringing')
         callStatusRef.current = 'ringing'
         options.onIncomingCall?.(data)
-    }, [user, busyStates, callStatusRef, setIncomingCall, setCallStatus, options])
+
+        // Trigger Global UI
+        setIncoming({
+            callType: 'staged',
+            matchId: data.matchId,
+            channelName: '', // Channel not ready yet for receiver
+            partnerInfo: {
+                id: data.callerId,
+                name: data.callerName,
+                avatar: '' // Payload doesn't include avatar yet
+            },
+            currentStage: 1,
+            remainingTime: 0
+        })
+    }, [user, busyStates, callStatusRef, setIncomingCall, setCallStatus, options, setIncoming])
 
     const handleConnected = useCallback((data: StagedCallAcceptedPayload) => {
         if (joiningRef.current || callStatusRef.current === 'active') {
@@ -90,22 +108,40 @@ export const useStagedCallHandlers = ({
         cleanupCall()
         setCallStatus('idle')
         callStatusRef.current = 'idle'
+        closeCall()
         options.onCallDeclined?.(data)
-    }, [cleanupCall, setCallStatus, callStatusRef, options])
+    }, [cleanupCall, setCallStatus, callStatusRef, options, closeCall])
 
     const handleEnded = useCallback((data: StagedCallEndedPayload) => {
         cleanupCall()
         const newStatus = data.promptNextStage ? 'prompt' : 'idle'
         setCallStatus(newStatus)
         callStatusRef.current = newStatus
+        if (!data.promptNextStage) {
+            closeCall()
+        }
         options.onCallEnded?.(data)
-    }, [cleanupCall, setCallStatus, callStatusRef, options])
+    }, [cleanupCall, setCallStatus, callStatusRef, options, closeCall])
 
-    const handleWaiting = useCallback((data: { matchId: string; channelName: string; stage: 1 | 2 }) => {
+    const handleWaiting = useCallback((data: { matchId: string; channelName: string; stage: 1 | 2; calleeId: string; calleeName?: string; calleeAvatar?: string }) => {
         setCallStatus('calling')
         callStatusRef.current = 'calling'
         setCurrentCall({ ...data, duration: 0 })
-    }, [setCallStatus, callStatusRef, setCurrentCall])
+
+        // Trigger Global UI
+        setCalling({
+            callType: 'staged',
+            matchId: data.matchId,
+            channelName: data.channelName,
+            partnerInfo: {
+                id: data.calleeId,
+                name: data.calleeName || 'User',
+                avatar: data.calleeAvatar
+            },
+            currentStage: data.stage,
+            remainingTime: 0
+        })
+    }, [setCallStatus, callStatusRef, setCurrentCall, setCalling])
 
     const handlePrompt = useCallback((data: StagePromptPayload) => {
         setStagePrompt(data)
@@ -138,7 +174,8 @@ export const useStagedCallHandlers = ({
         cleanupCall()
         setCallStatus('idle')
         callStatusRef.current = 'idle'
-    }, [cleanupCall, setCallStatus, callStatusRef])
+        closeCall()
+    }, [cleanupCall, setCallStatus, callStatusRef, closeCall])
 
     return {
         handleRinging,

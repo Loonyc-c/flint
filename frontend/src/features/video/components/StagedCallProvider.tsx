@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useMemo, createContext, useContext, type ReactNode } from 'react'
+import { useState, useEffect, useMemo, useRef, createContext, useContext, type ReactNode } from 'react'
 import { useStagedCall, type StagedCallStatus } from '@/features/realtime'
 import { ContactExchangeModal } from './staged'
 import { toast } from 'react-toastify'
@@ -57,6 +57,9 @@ export const StagedCallProvider = ({
     [matches, activeMatchId]
   )
 
+  // Ref to hold endCall function to break circular dependency
+  const endCallRef = useRef<((matchId: string) => void) | null>(null)
+
   const stagedCallCallbacks = useMemo(() => ({
     onCallAccepted: (data: StagedCallAcceptedPayload) => {
       // Find partner info
@@ -72,7 +75,7 @@ export const StagedCallProvider = ({
             avatar: match.otherUser.avatar
           },
           currentStage: data.stage as 1 | 2 | 3,
-          onHangup: () => endCall(data.matchId)
+          onHangup: () => endCallRef.current?.(data.matchId)
         })
       }
     },
@@ -111,6 +114,11 @@ export const StagedCallProvider = ({
     endCall,
     respondToPrompt: _respondToPrompt,
   } = useStagedCall(stagedCallCallbacks)
+
+  // Update ref when endCall changes
+  useEffect(() => {
+    endCallRef.current = endCall
+  }, [endCall])
 
   // Use currentCall and incomingCall in something to avoid unused warnings
   // but they are already used in the useMemo and handlers.
