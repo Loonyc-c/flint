@@ -76,7 +76,7 @@ export const ContactExchangeModal = ({
           >
             {/* Reveal Sparkles */}
             {isRevealed && (
-              <motion.div 
+              <motion.div
                 initial={{ opacity: 0 }}
                 animate={{ opacity: [0, 1, 0] }}
                 className="absolute inset-0 pointer-events-none"
@@ -122,18 +122,18 @@ export const ContactExchangeModal = ({
             </div>
 
             {/* Contact Card */}
-            <div className="bg-white/5 backdrop-blur rounded-2xl p-4 space-y-3 mb-6 min-h-[100px] flex flex-col justify-center">
-              <ContactRevealCard 
-                isRevealed={isRevealed} 
-                hasInstagram={hasInstagram} 
-                contactInfo={contactInfo} 
+            <div className="bg-white/5 backdrop-blur rounded-2xl p-4 space-y-3 mb-6 min-h-24 flex flex-col justify-center">
+              <ContactRevealCard
+                isRevealed={isRevealed}
+                hasInstagram={hasInstagram}
+                contactInfo={contactInfo}
               />
             </div>
 
             {/* Close Button */}
-            <motion.button 
-              whileHover={{ scale: 1.02 }} 
-              whileTap={{ scale: 0.98 }} 
+            <motion.button
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
               onClick={onClose}
               className="w-full py-3 px-6 rounded-xl bg-neutral-700 hover:bg-neutral-600 text-white font-semibold flex items-center justify-center gap-2 transition-colors"
             >

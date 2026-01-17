@@ -4,8 +4,7 @@ import '@/app/globals.css'
 import { Providers } from '@/app/providers'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
-import { notFound } from 'next/navigation'
-import { isValidLocale, type Locale } from '@/i18n/routing'
+import { notFound, isValidLocale, type Locale } from '@/i18n/routing'
 
 const geistSans = Geist({
   variable: '--font-geist-sans',

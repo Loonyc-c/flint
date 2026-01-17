@@ -1,57 +1,23 @@
 'use client'
 
-import { useState, useEffect } from 'react'
-import { useForm, type SubmitHandler } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
-import { toast } from 'react-toastify'
-import { calculateProfileCompleteness } from '@shared/lib'
-import { uploadImageToCloudinary, uploadAudioToCloudinary } from '@/lib/cloudinary'
 import {
-  profileUpdateSchema,
-  type ProfileCreationFormData,
-  contactInfoSchema
-} from '@/shared-types/validations'
-import { z } from 'zod'
-import { useProfileSync } from './useProfileSync'
-import { QUESTION_POOL } from '@/shared-types/types'
+  formSchema,
+  type ProfileAndContactFormData
+} from '../schemas/profile-form'
+import { useProfileInit } from './useProfileInit'
+import { useProfileCompleteness } from './useProfileCompleteness'
+import { useProfileSave } from './useProfileSave'
+import { onInvalid } from '../utils/form-errors'
 
-// Relaxed question schema for form state (allows local recordings without uploaded URLs)
-const questionAnswerFormSchema = z.object({
-  questionId: z
-    .string()
-    .min(1, 'Question ID is required')
-    .refine(id => !id || QUESTION_POOL.some(q => q.id === id), {
-      message: 'Question ID not found in the QUESTION_POOL'
-    }),
-  audioUrl: z.string().optional(),
-  uploadId: z.string().optional(),
-  audioFile: z.union([z.instanceof(Blob), z.string()]).optional()
-})
-
-// Combine schemas for the form - relax questions validation for form state
-const formSchema = profileUpdateSchema
-  .omit({ questions: true })
-  .extend({
-    voiceIntro: z.string().optional(), // Make optional in form because it might be in voiceIntroFile
-    instagram: contactInfoSchema.shape.instagram,
-    voiceIntroFile: z.union([z.instanceof(Blob), z.string()]).optional(),
-    questions: z.array(questionAnswerFormSchema).length(3, 'Please complete all 3 questions')
-  })
-  .refine(data => data.voiceIntro || data.voiceIntroFile, {
-    message: 'Please record a voice introduction',
-    path: ['voiceIntro']
-  })
-export type ProfileAndContactFormData = z.infer<typeof formSchema>
+export type { ProfileAndContactFormData }
 
 export const useProfileForm = (
   userId: string,
   pendingPhotoFile: File | null,
   clearPendingPhoto: () => void
 ) => {
-  const [completeness, setCompleteness] = useState(0)
-  const [isSaving, setIsSaving] = useState(false)
-  const { fetchProfileData, saveProfileData } = useProfileSync(userId)
-
   const form = useForm<ProfileAndContactFormData>({
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     resolver: zodResolver(formSchema) as any,
@@ -73,242 +39,16 @@ export const useProfileForm = (
   const { reset, watch, setValue, handleSubmit } = form
   const formData = watch()
 
-  // Fetch profile and contact info on mount
-  useEffect(() => {
-    const init = async () => {
-      const data = await fetchProfileData()
-      if (data) {
-        const { profileRes, contactRes } = data
-        let combinedData: Partial<ProfileAndContactFormData> = {}
+  // Hooks
+  useProfileInit(userId, reset)
+  const completeness = useProfileCompleteness(formData, pendingPhotoFile)
+  const { isSaving, onManualSave } = useProfileSave(userId, setValue, pendingPhotoFile, clearPendingPhoto)
 
-        if (profileRes.isComplete && profileRes.profile) {
-          const questionsWithDefaults = (profileRes.profile.questions || []).map(q => ({
-            ...q,
-            audioFile: undefined
-          }))
-          while (questionsWithDefaults.length < 3) {
-            questionsWithDefaults.push({
-              questionId: '',
-              audioUrl: '',
-              uploadId: '',
-              audioFile: undefined
-            })
-          }
-          if (questionsWithDefaults.length > 3) questionsWithDefaults.splice(3)
-
-          combinedData = {
-            ...profileRes.profile,
-            photo: profileRes.profile.photo || '',
-            voiceIntro: profileRes.profile.voiceIntro || '',
-            questions: questionsWithDefaults,
-            voiceIntroFile: undefined
-          }
-        }
-
-        if (contactRes.contactInfo) {
-          combinedData.instagram = contactRes.contactInfo.instagram || ''
-        }
-        reset(combinedData)
-      } else {
-        // Reset to default if fetch failed or empty
-        reset({
-          nickName: '',
-          age: 18,
-          bio: '',
-          interests: [],
-          photo: '',
-          voiceIntro: '',
-          questions: Array(3).fill({
-            questionId: '',
-            audioUrl: '',
-            uploadId: '',
-            audioFile: undefined
-          }),
-          instagram: ''
-        })
-      }
-    }
-    init()
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [reset, userId])
-
-  // Update completeness score
-  useEffect(() => {
-    const timer = setTimeout(() => {
-      const dataForCalculation = pendingPhotoFile ? { ...formData, photo: 'pending' } : formData
-      const { instagram, ...profileData } = dataForCalculation
-      // Pass form data with optional audioUrl/uploadId (local recordings)
-      // Calculator accepts QuestionAnswerWithFile which includes audioFile
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const { score } = calculateProfileCompleteness(profileData as any, {
-        instagram: instagram || undefined
-      })
-      setCompleteness(score)
-    }, 500)
-    return () => clearTimeout(timer)
-  }, [formData, pendingPhotoFile])
-
-  const onManualSave: SubmitHandler<ProfileAndContactFormData> = async data => {
-    setIsSaving(true)
-    try {
-      // PRE-SAVE VALIDATION: Ensure all 3 questions have valid audio
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const questionsWithAudio = data.questions.filter((q: any) => {
-        const hasAudioFile = q.audioFile instanceof Blob
-        const hasExistingAudio = q.audioUrl && q.uploadId
-        return q.questionId && (hasAudioFile || hasExistingAudio)
-      })
-
-      if (questionsWithAudio.length !== 3) {
-        const missingQuestions: number[] = []
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data.questions.forEach((q: any, index: number) => {
-          const hasAudioFile = q.audioFile instanceof Blob
-          const hasExistingAudio = q.audioUrl && q.uploadId
-          if (!q.questionId || (!hasAudioFile && !hasExistingAudio)) {
-            missingQuestions.push(index + 1)
-          }
-        })
-        toast.error(
-          `Please complete all 3 questions with audio recordings. Missing or incomplete: Question ${missingQuestions.join(', ')}`
-        )
-        return
-      }
-
-      let finalPhotoUrl = data.photo
-      if (pendingPhotoFile) {
-        const result = await uploadImageToCloudinary(pendingPhotoFile, {
-          folder: 'flint/profile-photos',
-          maxFileSize: 5 * 1024 * 1024,
-          allowedFormats: ['image/jpeg', 'image/png', 'image/webp']
-        })
-        finalPhotoUrl = result.url
-        clearPendingPhoto()
-        setValue('photo', finalPhotoUrl, { shouldValidate: true })
-      }
-
-      let finalVoiceIntroUrl = data.voiceIntro
-      if (data.voiceIntroFile instanceof Blob) {
-        const result = await uploadAudioToCloudinary(data.voiceIntroFile, {
-          folder: 'flint/voice-intros'
-        })
-        finalVoiceIntroUrl = result.url
-        setValue('voiceIntro', finalVoiceIntroUrl, { shouldValidate: true })
-        setValue('voiceIntroFile', undefined)
-      }
-
-      const questionsToSave = await Promise.all(
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        data.questions.map(async (qa, index: number) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const question = qa as any
-          if (question.audioFile instanceof Blob) {
-            const result = await uploadAudioToCloudinary(question.audioFile, {
-              folder: 'flint/profile-questions'
-            })
-            const updated = {
-              questionId: question.questionId,
-              audioUrl: result.url,
-              uploadId: result.publicId
-            }
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setValue(`questions.${index}.audioUrl` as any, updated.audioUrl)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setValue(`questions.${index}.uploadId` as any, updated.uploadId)
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            setValue(`questions.${index}.audioFile` as any, undefined)
-            return updated
-          }
-          // FIX: Only use existing URLs if they are valid (not empty strings)
-          // This should always be true due to pre-save validation above
-          return {
-            questionId: question.questionId,
-            audioUrl: question.audioUrl,
-            uploadId: question.uploadId
-          }
-        })
-      )
-
-      // DEBUG LOGGING: Log the payload before submission
-      // eslint-disable-next-line no-console
-      console.log('=== PROFILE SAVE DEBUG ===')
-      // eslint-disable-next-line no-console
-      console.log('Questions to save:', JSON.stringify(questionsToSave, null, 2))
-      // eslint-disable-next-line no-console
-      console.log(
-        'Questions breakdown:',
-        questionsToSave.map((q, idx) => ({
-          index: idx + 1,
-          questionId: q.questionId,
-          hasAudioUrl: !!q.audioUrl,
-          hasUploadId: !!q.uploadId
-        }))
-      )
-
-      const { instagram, voiceIntroFile: _voiceIntroFile, ...profilePayload } = data
-      const profileToUpdate: ProfileCreationFormData = {
-        ...profilePayload,
-        photo: finalPhotoUrl || data.photo,
-        questions: questionsToSave,
-        voiceIntro: finalVoiceIntroUrl || data.voiceIntro || ''
-      } as ProfileCreationFormData
-
-      await saveProfileData(profileToUpdate, instagram)
-    } finally {
-      setIsSaving(false)
-    }
+  return {
+    form,
+    formData,
+    completeness,
+    isSaving,
+    onSave: handleSubmit(onManualSave, onInvalid)
   }
-
-  const onInvalid = (errors: unknown) => {
-    console.error('=== FORM VALIDATION ERRORS ===')
-    console.error(JSON.stringify(errors, null, 2))
-
-    if (errors && typeof errors === 'object') {
-      // Special handling for questions array errors
-      if ('questions' in errors) {
-        const questionsError = (errors as Record<string, unknown>).questions
-        if (questionsError && typeof questionsError === 'object' && 'message' in questionsError) {
-          toast.error(String(questionsError.message))
-          return
-        }
-        // Check for individual question errors
-        if (Array.isArray(questionsError)) {
-          const questionErrors = questionsError
-            .map((qErr, idx) => {
-              if (qErr && typeof qErr === 'object') {
-                const errorFields = Object.entries(qErr)
-                  .filter(([_, val]) => val && typeof val === 'object' && 'message' in val)
-                  .map(([field, val]) => `${field}: ${(val as { message: string }).message}`)
-                if (errorFields.length > 0) {
-                  return `Question ${idx + 1} - ${errorFields.join(', ')}`
-                }
-              }
-              return null
-            })
-            .filter(Boolean)
-          if (questionErrors.length > 0) {
-            toast.error(`Question validation failed: ${questionErrors.join('; ')}`)
-            return
-          }
-        }
-        toast.error('Please complete all 3 questions with audio recordings')
-        return
-      }
-
-      const errorMessages = Object.entries(errors)
-        .map(([field, err]) => {
-          const errorMsg =
-            typeof err === 'object' && err !== null && 'message' in err
-              ? String(err.message)
-              : 'Invalid'
-          return `${field}: ${errorMsg}`
-        })
-        .join(', ')
-      toast.error(`Validation failed: ${errorMessages}`)
-    } else {
-      toast.error('Please fix the errors in your profile')
-    }
-  }
-
-  return { form, formData, completeness, isSaving, onSave: handleSubmit(onManualSave, onInvalid) }
 }

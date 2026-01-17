@@ -3,6 +3,7 @@
 import { motion } from 'framer-motion'
 import { CheckCircle2, Circle, AlertTriangle, ArrowRight, Loader2 } from 'lucide-react'
 import { useRouter } from '@/i18n/routing'
+import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 import { type MissingField } from '@shared/lib/profile/calculator'
 
@@ -19,13 +20,14 @@ export const ProfileGuidance = ({
   isLoading,
   onClose,
 }: ProfileGuidanceProps) => {
+  const t = useTranslations('profile')
   const router = useRouter()
 
   if (isLoading) {
     return (
       <div className="p-8 flex flex-col items-center justify-center bg-card rounded-3xl border border-border shadow-xl">
         <Loader2 className="w-10 h-10 animate-spin text-brand mb-4" />
-        <p className="text-muted-foreground animate-pulse font-medium">Checking profile readiness...</p>
+        <p className="text-muted-foreground animate-pulse font-medium">{t('guidance.checking')}</p>
       </div>
     )
   }
@@ -62,7 +64,7 @@ export const ProfileGuidance = ({
           {isReady ? "Profile is Ready!" : "Profile Readiness"}
         </h3>
         <p className="text-sm text-muted-foreground">
-          {isReady 
+          {isReady
             ? "Your profile meets our safety standards. Happy matching!"
             : "Complete your profile to unlock Live Calls and better matches."}
         </p>
@@ -73,9 +75,9 @@ export const ProfileGuidance = ({
         <p className="text-[10px] font-black uppercase tracking-widest text-muted-foreground mb-4">
           What&apos;s Missing?
         </p>
-        
+
         {missingFields.length > 0 ? (
-          <div className="space-y-2 max-h-[200px] overflow-y-auto pr-2 custom-scrollbar">
+          <div className="space-y-2 max-h-52 overflow-y-auto pr-2 custom-scrollbar">
             {missingFields.map((field) => (
               <div key={field.key} className="flex items-center justify-between p-3 bg-muted/30 rounded-xl border border-border/50">
                 <div className="flex items-center gap-3">
@@ -89,7 +91,7 @@ export const ProfileGuidance = ({
         ) : (
           <div className="flex items-center gap-3 p-4 bg-success/10 rounded-xl border border-success/20">
             <CheckCircle2 className="w-5 h-5 text-success" />
-            <span className="text-sm font-bold text-success">Everything looks great!</span>
+            <span className="text-sm font-bold text-success">{t('guidance.allGood')}</span>
           </div>
         )}
       </div>
@@ -114,7 +116,7 @@ export const ProfileGuidance = ({
             Continue
           </button>
         ) : null}
-        
+
         {!isReady && (
           <div className="mt-4 flex items-start gap-2 p-3 bg-amber-500/5 rounded-xl border border-amber-500/10">
             <AlertTriangle className="w-4 h-4 text-amber-500 mt-0.5 shrink-0" />

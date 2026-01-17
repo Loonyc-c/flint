@@ -30,8 +30,8 @@ export const ContactRevealCard = ({ isRevealed, hasInstagram, contactInfo }: Con
   }
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, x: -20, scale: 0.8 }} 
+    <motion.div
+      initial={{ opacity: 0, x: -20, scale: 0.8 }}
       animate={{ opacity: 1, x: 0, scale: 1 }}
       transition={{ delay: 0.5 }}
       className="flex items-center gap-3 p-3 bg-white/5 rounded-xl hover:bg-white/10 transition-colors group cursor-pointer"
@@ -50,7 +50,7 @@ export const ContactRevealCard = ({ isRevealed, hasInstagram, contactInfo }: Con
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center justify-between">
-          <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">Instagram</p>
+          <p className="text-[10px] text-neutral-400 font-bold uppercase tracking-wider">{t('labels.instagram')}</p>
           {verifiedPlatforms.includes('instagram') && (
             <span className="text-[8px] font-bold text-success uppercase tracking-tighter">
               {t('verified')}

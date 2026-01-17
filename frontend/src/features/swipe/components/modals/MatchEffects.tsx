@@ -3,10 +3,11 @@
 import { motion } from 'framer-motion'
 import { Heart } from 'lucide-react'
 
+const CONFETTI_COLORS = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#FF8B94', '#A8E6CF']
+
 // Confetti particle component
 export const Confetti = ({ delay }: { delay: number }) => {
-  const colors = ['#FF6B6B', '#4ECDC4', '#FFE66D', '#95E1D3', '#FF8B94', '#A8E6CF']
-  const color = colors[Math.floor(Math.random() * colors.length)]
+  const color = CONFETTI_COLORS[Math.floor(Math.random() * CONFETTI_COLORS.length)]
   const size = Math.random() * 8 + 4
   const startX = Math.random() * 100
 

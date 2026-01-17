@@ -1,11 +1,10 @@
 "use client";
 
 import { useMemo, useCallback } from "react";
-import { useParams } from "next/navigation";
+import { useRouter, useParams } from "@/i18n/routing";
 import { motion } from "framer-motion";
 import { ChatThread } from "@/features/chat/components/ChatThread";
 import { useMatches } from "@/features/swipe/hooks/useMatches";
-import { useRouter } from "@/i18n/routing";
 import { useStagedCallContext } from "@/features/video";
 import { useTranslations } from "next-intl";
 
@@ -44,7 +43,7 @@ const ChatPage = () => {
       <div className="flex-1 flex items-center justify-center p-8 text-center">
         <div className="space-y-4">
           <p className="text-neutral-500">{t('notFound')}</p>
-          <button 
+          <button
             onClick={() => router.push("/swipe")}
             className="text-brand font-bold"
           >

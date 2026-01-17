@@ -1,0 +1,58 @@
+
+> frontend@0.1.0 lint
+> ESLINT_USE_FLAT_CONFIG=false eslint .
+
+
+/home/battulga/Desktop/flint/frontend/src/features/auth/components/AuthButton.tsx
+  4:10  warning  'Loader2' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/battulga/Desktop/flint/frontend/src/features/home/components/LiveCallOverlay.tsx
+  34:5  warning  'endCall' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/battulga/Desktop/flint/frontend/src/features/live-call/hooks/useLiveCall.ts
+    5:1  warning  Imports "LiveCallMatchPayload" and "LiveCallPreferences" are only used as type     @typescript-eslint/consistent-type-imports
+   54:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+   80:9  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  104:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  131:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  141:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  149:7  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+  161:5  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+/home/battulga/Desktop/flint/frontend/src/features/profile/hooks/useProfileSave.ts
+  3:1  warning  All imports in the declaration are only used as types. Use `import type`  @typescript-eslint/consistent-type-imports
+
+/home/battulga/Desktop/flint/frontend/src/features/realtime/hooks/useStagedCallHandlers.ts
+  71:13  warning  Unexpected console statement. Only these console methods are allowed: warn, error  no-console
+
+/home/battulga/Desktop/flint/frontend/src/features/realtime/types/staged-call.ts
+  2:5  warning  'StagedCallRingingPayload' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/battulga/Desktop/flint/frontend/src/features/video/hooks/useAgora.ts
+  3:20  warning  'useEffect' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  5:1   warning  All imports in the declaration are only used as types. Use `import type`      @typescript-eslint/consistent-type-imports
+  7:10  warning  'apiRequest' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+/home/battulga/Desktop/flint/frontend/src/features/video/hooks/useAgoraEvents.ts
+  3:1  warning  All imports in the declaration are only used as types. Use `import type`  @typescript-eslint/consistent-type-imports
+
+/home/battulga/Desktop/flint/frontend/src/features/video/hooks/useAgoraMediaActions.ts
+  3:1  warning  All imports in the declaration are only used as types. Use `import type`  @typescript-eslint/consistent-type-imports
+
+/home/battulga/Desktop/flint/frontend/src/features/video/lib/agora-client.ts
+   10:37  warning  'performExampleCleanup' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+  111:14  warning  'error' is defined but never used. Allowed unused caught errors must match /^_/u         @typescript-eslint/no-unused-vars
+
+/home/battulga/Desktop/flint/frontend/src/features/video/lib/agora/connection.ts
+  23:18  warning  'audioError' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  31:22  warning  'videoError' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  67:22  warning  'err' is defined but never used. Allowed unused caught errors must match /^_/u         @typescript-eslint/no-unused-vars
+
+/home/battulga/Desktop/flint/frontend/src/features/video/lib/agora/events.ts
+  1:53  warning  'IRemoteVideoTrack' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+✖ 24 problems (0 errors, 24 warnings)
+  0 errors and 5 warnings potentially fixable with the `--fix` option.
+
+(node:29174) ESLintRCWarning: You are using an eslintrc configuration file, which is deprecated and support will be removed in v10.0.0. Please migrate to an eslint.config.js file. See https://eslint.org/docs/latest/use/configure/migration-guide for details. An eslintrc configuration file is used because you have the ESLINT_USE_FLAT_CONFIG environment variable set to false. If you want to use an eslint.config.js file, remove the environment variable. If you want to find the location of the eslintrc configuration file, use the --debug flag.
+(Use `node --trace-warnings ...` to show where the warning was created)

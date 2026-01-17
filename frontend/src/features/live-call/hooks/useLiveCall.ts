@@ -2,7 +2,8 @@
 
 import { useEffect, useCallback, useState, useRef } from 'react'
 import { useSocket } from '@/features/realtime/context/SocketContext'
-import { LIVE_CALL_EVENTS, LiveCallMatchPayload, LiveCallPreferences } from '@shared/types'
+import { LIVE_CALL_EVENTS } from '@shared/types'
+import type { LiveCallMatchPayload, LiveCallPreferences } from '@shared/types'
 import { useUser } from '@/features/auth/context/UserContext'
 import { agoraClient } from '@/features/video/lib/agora-client'
 
@@ -51,6 +52,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
     const onMatchFound = async (
       data: LiveCallMatchPayload & { agoraToken?: string; agoraUid?: number }
     ) => {
+      // eslint-disable-next-line no-console
       console.log('🎤 [LiveCall] Match found, connecting to Agora...', data)
 
       setMatchData(data)
@@ -77,6 +79,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
 
         if (!result.success) throw new Error(result.message || 'Failed to join Agora channel')
 
+        // eslint-disable-next-line no-console
         console.log('✅ [LiveCall] Successfully connected to Agora channel')
         setStatus('in-call')
 
@@ -101,6 +104,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
     }
 
     const onCallResult = (data: { isMatch: boolean; newMatchId?: string }) => {
+      // eslint-disable-next-line no-console
       console.log('✨ [LiveCall] Call result:', data)
       if (data.isMatch) {
         // Success feedback can be handled by UI
@@ -128,6 +132,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const joinQueue = useCallback(
     (preferences?: LiveCallPreferences) => {
       if (!socket || !isConnected) return
+      // eslint-disable-next-line no-console
       console.log('🔍 [LiveCall] Joining queue...')
       socket.emit(LIVE_CALL_EVENTS.JOIN_QUEUE, preferences)
       setStatus('queueing')
@@ -138,6 +143,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
 
   const leaveQueue = useCallback(() => {
     if (!socket || !isConnected) return
+    // eslint-disable-next-line no-console
     console.log('👋 [LiveCall] Leaving queue...')
     socket.emit(LIVE_CALL_EVENTS.LEAVE_QUEUE)
     setStatus('idle')
@@ -146,6 +152,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const performAction = useCallback(
     (action: 'like' | 'pass') => {
       if (!socket || !isConnected || !matchData) return
+      // eslint-disable-next-line no-console
       console.log(`👍 [LiveCall] Performing action: ${action}`)
       socket.emit(LIVE_CALL_EVENTS.CALL_ACTION, {
         matchId: matchData.matchId,
@@ -158,6 +165,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
   )
 
   const reset = useCallback(() => {
+    // eslint-disable-next-line no-console
     console.log('🔄 [LiveCall] Resetting...')
     setStatus('idle')
     setMatchData(null)
