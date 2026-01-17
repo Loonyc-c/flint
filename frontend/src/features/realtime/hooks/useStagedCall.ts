@@ -1,7 +1,7 @@
 'use client'
 
 import { useCallback, useState, useRef } from 'react'
-import { useSocket } from '../context/SocketContext'
+import { useSocket } from '../index'
 import { useUser } from '@/features/auth/context/UserContext'
 import type {
   StagePromptPayload,

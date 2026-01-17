@@ -1,13 +1,16 @@
 'use client'
 
 import { useEffect, useCallback, useState, useRef } from 'react'
-import { useSocket } from '@/features/realtime/context/SocketContext'
+import { useSocket } from '@/features/realtime'
 import { LIVE_CALL_EVENTS } from '@shared/types'
 import type { LiveCallMatchPayload, LiveCallPreferences } from '@shared/types'
 import { useUser } from '@/features/auth/context/UserContext'
-import { agoraClient } from '@/features/video/lib/agora-client'
+import { useCallSystem } from '@/features/call-system'
 
 export type LiveCallStatus = 'idle' | 'queueing' | 'connecting' | 'in-call' | 'error' | 'ended'
+
+// Note: RemainingTime and matchData are now primarily managed by UnifiedCallInterface
+// but we keep some local state for queueing status.
 
 interface UseLiveCallReturn {
   status: LiveCallStatus
@@ -26,6 +29,8 @@ interface UseLiveCallReturn {
 export const useLiveCall = (): UseLiveCallReturn => {
   const { user: _user } = useUser()
   const { socket, isConnected } = useSocket()
+  const { startCall, closeCall } = useCallSystem()
+
   const [status, setStatus] = useState<LiveCallStatus>('idle')
   const [matchData, setMatchData] = useState<LiveCallMatchPayload | null>(null)
   const [remainingTime, setRemainingTime] = useState(0)
@@ -34,17 +39,12 @@ export const useLiveCall = (): UseLiveCallReturn => {
   const [hasPassed, setHasPassed] = useState(false)
 
   const timerRef = useRef<NodeJS.Timeout | null>(null)
-  const statusRef = useRef(status)
-
-  useEffect(() => {
-    statusRef.current = status
-  }, [status])
 
   const endCall = useCallback(async () => {
     if (timerRef.current) clearInterval(timerRef.current)
-    await agoraClient.leave()
+    closeCall()
     setStatus('ended')
-  }, [])
+  }, [closeCall])
 
   useEffect(() => {
     if (!socket) return
@@ -53,7 +53,7 @@ export const useLiveCall = (): UseLiveCallReturn => {
       data: LiveCallMatchPayload & { agoraToken?: string; agoraUid?: number }
     ) => {
       // eslint-disable-next-line no-console
-      console.log('🎤 [LiveCall] Match found, connecting to Agora...', data)
+      console.log('🎤 [LiveCall] Match found, triggering unified UI...', data)
 
       setMatchData(data)
       setStatus('connecting')
@@ -61,54 +61,25 @@ export const useLiveCall = (): UseLiveCallReturn => {
       setHasLiked(false)
       setHasPassed(false)
 
-      try {
-        const appId = process.env.NEXT_PUBLIC_AGORA_APP_ID
-        if (!appId) throw new Error('Agora App ID not configured')
-        if (!data.agoraToken) throw new Error('Agora token missing from match payload')
-        if (!data.channelName) throw new Error('Channel name missing from match payload')
+      // Delegate to UnifiedCallInterface
+      startCall({
+        callType: 'live',
+        matchId: data.matchId,
+        channelName: data.channelName,
+        partnerInfo: {
+          id: data.partner.id,
+          name: data.partner.nickName,
+          avatar: data.partner.photo
+        },
+        remainingTime: Math.floor((new Date(data.expiresAt).getTime() - Date.now()) / 1000)
+      })
 
-        await agoraClient.init()
-
-        const result = await agoraClient.join({
-          appId,
-          channel: data.channelName,
-          token: data.agoraToken,
-          uid: data.agoraUid || 0, // Use the UID from backend or let Agora assign
-          enableVideo: false
-        })
-
-        if (!result.success) throw new Error(result.message || 'Failed to join Agora channel')
-
-        // eslint-disable-next-line no-console
-        console.log('✅ [LiveCall] Successfully connected to Agora channel')
-        setStatus('in-call')
-
-        // Start timer
-        const expiry = new Date(data.expiresAt).getTime()
-        const startTimer = () => {
-          const now = Date.now()
-          const diff = Math.max(0, Math.floor((expiry - now) / 1000))
-          setRemainingTime(diff)
-          if (diff <= 0) {
-            if (timerRef.current) clearInterval(timerRef.current)
-            endCall()
-          }
-        }
-        startTimer()
-        timerRef.current = setInterval(startTimer, 1000)
-      } catch (err: unknown) {
-        console.error('❌ [LiveCall] Connection failed:', err)
-        setError('err.live_call.connection_failed')
-        setStatus('error')
-      }
+      setStatus('in-call')
     }
 
     const onCallResult = (data: { isMatch: boolean; newMatchId?: string }) => {
       // eslint-disable-next-line no-console
       console.log('✨ [LiveCall] Call result:', data)
-      if (data.isMatch) {
-        // Success feedback can be handled by UI
-      }
     }
 
     const onError = (data: { message: string }) => {
@@ -125,9 +96,12 @@ export const useLiveCall = (): UseLiveCallReturn => {
       socket.off(LIVE_CALL_EVENTS.MATCH_FOUND, onMatchFound)
       socket.off(LIVE_CALL_EVENTS.CALL_RESULT, onCallResult)
       socket.off(LIVE_CALL_EVENTS.ERROR, onError)
-      if (timerRef.current) clearInterval(timerRef.current)
+
+      if (timerRef.current) {
+        clearInterval(timerRef.current)
+      }
     }
-  }, [socket, endCall])
+  }, [socket, startCall])
 
   const joinQueue = useCallback(
     (preferences?: LiveCallPreferences) => {
@@ -174,8 +148,8 @@ export const useLiveCall = (): UseLiveCallReturn => {
     setHasLiked(false)
     setHasPassed(false)
     if (timerRef.current) clearInterval(timerRef.current)
-    agoraClient.leave().catch(console.error)
-  }, [])
+    closeCall()
+  }, [closeCall])
 
   return {
     status,
@@ -191,3 +165,4 @@ export const useLiveCall = (): UseLiveCallReturn => {
     reset
   }
 }
+

@@ -373,6 +373,54 @@
       "verificationFailed": "Instagram verification failed. Please try again."
     }
   },
+  "call": {
+    "deviceCheck": {
+      "checking": "Checking hardware...",
+      "pleaseAllow": "Please allow access to your camera and microphone.",
+      "ready": "Hardware ready!",
+      "connecting": "Connecting to call...",
+      "permissionDenied": "Access Denied",
+      "defaultError": "We couldn't access your camera or microphone.",
+      "retry": "Try Again",
+      "cancel": "Cancel",
+      "errors": {
+        "no_mic": "No microphone found. Please connect one to continue.",
+        "no_camera": "No camera found. A camera is required for this stage.",
+        "permission_denied": "Permission denied. Please enable camera/mic access in your browser settings.",
+        "no_hardware": "No camera or microphone hardware detected.",
+        "already_in_use": "Your camera or microphone is being used by another app.",
+        "constraints_not_met": "Your device does not support the required video quality.",
+        "unknown": "An unexpected hardware error occurred."
+      }
+    },
+    "connecting": {
+      "connecting": "Connecting...",
+      "connectingTo": "Connecting to {name}",
+      "timeout": "Connection Timeout",
+      "timeoutMessage": "Unable to connect. Please try again."
+    },
+    "active": {
+      "you": "You",
+      "errorTitle": "Connection Error",
+      "retry": "Retry Connection"
+    },
+    "intermission": {
+      "title": "Continue to Stage {stage}?",
+      "description": "Would you like to continue with {name}?",
+      "decline": "Not Now",
+      "accept": "Continue",
+      "waitingForBoth": "Both users must accept to continue"
+    },
+    "ended": {
+      "successTitle": "Great Call!",
+      "endedTitle": "Call Ended",
+      "duration": "Duration: {duration}",
+      "successMessage": "You've completed the call successfully!",
+      "endedMessage": "Thanks for connecting!",
+      "returnToChat": "Return to Chat",
+      "goHome": "Go Home"
+    }
+  },
   "video": {
     "modal": {
       "you": "You",

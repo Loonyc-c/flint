@@ -2,7 +2,7 @@
 
 import { useCallback } from 'react'
 import { type ChatConversation, type MatchStage } from '@shared/types'
-import { useStagedCallContext } from '@/features/video'
+import { useCallSystem } from '@/features/call-system'
 import { ChatHeader } from './thread/ChatHeader'
 import { MessageList } from './thread/MessageList'
 import { ChatInput } from './thread/ChatInput'
@@ -16,15 +16,35 @@ interface ChatThreadProps {
 }
 
 export const ChatThread = ({ conversation, onClose, onVideoCall, matchStage }: ChatThreadProps) => {
-  const { initiateCall: initiateStagedCall } = useStagedCallContext()
+  const { startCall } = useCallSystem()
 
   const handleStagedAudioCall = useCallback(() => {
-    initiateStagedCall(conversation.matchId, conversation.otherUser.id, 1)
-  }, [conversation.matchId, conversation.otherUser.id, initiateStagedCall])
+    startCall({
+      callType: 'staged',
+      matchId: conversation.matchId,
+      channelName: conversation.matchId, // Standard for staged calls
+      partnerInfo: {
+        id: conversation.otherUser.id,
+        name: conversation.otherUser.name,
+        avatar: conversation.otherUser.avatar
+      },
+      currentStage: 1
+    })
+  }, [conversation, startCall])
 
   const handleStagedVideoCall = useCallback(() => {
-    initiateStagedCall(conversation.matchId, conversation.otherUser.id, 2)
-  }, [conversation.matchId, conversation.otherUser.id, initiateStagedCall])
+    startCall({
+      callType: 'staged',
+      matchId: conversation.matchId,
+      channelName: conversation.matchId,
+      partnerInfo: {
+        id: conversation.otherUser.id,
+        name: conversation.otherUser.name,
+        avatar: conversation.otherUser.avatar
+      },
+      currentStage: 2
+    })
+  }, [conversation, startCall])
 
   const {
     user,

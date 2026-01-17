@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useCallback, useState } from 'react'
-import { useSocket } from '../context/SocketContext'
+import { useSocket } from '../index'
 
 // =============================================================================
 // Types

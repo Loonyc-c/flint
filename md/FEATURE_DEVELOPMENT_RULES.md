@@ -62,7 +62,7 @@ You are the Lead Architect for the **Flint** project. Your primary directive is 
 > - [ ] **Size:** Files < 160 lines?
 > - [ ] **Split:** Complex states decomposed?
 > - [ ] **Middleware:** Imported safe `config`?
-> - [ ] **DRY:** Used `@shared/types`?
+> - [ ] **DRY:** Used `@shared/types` (or backend `shared-types`)?
 > - [ ] **i18n:** Used `@/i18n/routing`?
 > - [ ] **Localization:** Zero hardcoded strings?
 > - [ ] **Theming:** Semantic colors only?

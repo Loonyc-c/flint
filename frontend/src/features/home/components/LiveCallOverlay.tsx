@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 
 import {
@@ -9,6 +9,7 @@ import {
 } from '@/features/live-call/hooks/useLiveCall'
 import { useProfileReadiness } from '@/features/profile/hooks/useProfileReadiness'
 import { ProfileGuidance } from '@/features/profile/components/ProfileGuidance'
+import { useCallSystem } from '@/features/call-system'
 
 import { LiveCallStateQueueing } from './live-call/LiveCallStateQueueing'
 import { LiveCallStateActive } from './live-call/LiveCallStateActive'
@@ -36,25 +37,43 @@ export const LiveCallOverlay = ({ isOpen, onClose }: LiveCallOverlayProps) => {
 
   const { score, missingFields, isReady, isLoading: isCheckingReadiness } = useProfileReadiness()
   const [showGuidance, setShowGuidance] = useState(false)
+  const { startPreflight } = useCallSystem()
+  const [isHardwareReady, setIsHardwareReady] = useState(false)
 
-  useEffect(() => {
-    if (isOpen && status === 'idle' && !isCheckingReadiness) {
-      if (isReady) {
-        joinQueue()
-      } else {
-        setShowGuidance(true)
-      }
-    }
-  }, [isOpen, isReady, isCheckingReadiness, status, joinQueue])
-
-  const handleClose = () => {
+  const handleClose = useCallback(() => {
     if (status === 'queueing' || status === 'connecting') {
       leaveQueue()
     }
     reset()
     setShowGuidance(false)
+    setIsHardwareReady(false)
     onClose()
-  }
+  }, [status, leaveQueue, reset, onClose])
+
+  useEffect(() => {
+    if (isOpen && status === 'idle' && !isCheckingReadiness) {
+      if (!isReady) {
+        setShowGuidance(true)
+        return
+      }
+
+      // Pre-flight hardware check before queueing
+      if (!isHardwareReady) {
+        startPreflight({
+          requireVideo: false, // Live call starts with audio
+          onReady: () => {
+            setIsHardwareReady(true)
+            joinQueue()
+          },
+          onCancel: () => {
+            handleClose()
+          }
+        })
+      } else {
+        joinQueue()
+      }
+    }
+  }, [isOpen, isReady, isCheckingReadiness, status, isHardwareReady, joinQueue, startPreflight, handleClose])
 
   if (!isOpen) return null
 

@@ -6,9 +6,11 @@ import { ToastContainer } from 'react-toastify'
 import { ThemeProvider, useTheme } from 'next-themes'
 import 'react-toastify/dist/ReactToastify.css'
 import { UserProvider } from '@/features/auth/context/UserContext'
-import { SocketProvider } from '@/features/realtime'
+import { GlobalSocketProvider, GlobalNotificationListener } from '@/features/realtime'
+import { CallSystemProvider } from '@/features/call-system'
 import { AuthGuard } from '@/components/auth/AuthGuard'
 import { HeaderWrapper } from '@/components/HeaderWrapper'
+
 
 // =============================================================================
 // Types
@@ -63,13 +65,16 @@ const AuthProviders = ({ children }: AuthProvidersProps) => {
   return (
     <GoogleOAuthProvider clientId={googleClientId}>
       <UserProvider>
-        <SocketProvider>
-          <AuthGuard>
-            <HeaderWrapper />
-            {children}
-          </AuthGuard>
+        <GlobalSocketProvider>
+          <GlobalNotificationListener />
+          <CallSystemProvider>
+            <AuthGuard>
+              <HeaderWrapper />
+              {children}
+            </AuthGuard>
+          </CallSystemProvider>
           <ThemedToastContainer />
-        </SocketProvider>
+        </GlobalSocketProvider>
       </UserProvider>
     </GoogleOAuthProvider>
   )

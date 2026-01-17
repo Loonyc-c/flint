@@ -1,7 +1,5 @@
 export { AgoraClient, agoraClient } from './lib/agora-client'
 export { useAgora } from './hooks/useAgora'
-export { VideoCallModal } from './components/VideoCallModal'
-export { IncomingCallModal } from './components/IncomingCallModal'
 export { CallControls } from './components/CallControls'
 export { VideoGrid } from './components/VideoGrid'
 export { StagedCallProvider, useStagedCallContext } from './components/StagedCallProvider'

@@ -1,7 +1,7 @@
-import AgoraRTC, {
-    type IMicrophoneAudioTrack,
-    type ICameraVideoTrack,
-    type IAgoraRTCClient
+import type {
+    IMicrophoneAudioTrack,
+    ICameraVideoTrack,
+    IAgoraRTCClient
 } from 'agora-rtc-sdk-ng'
 
 export async function toggleMicrophone(track: IMicrophoneAudioTrack | null): Promise<boolean> {
@@ -24,6 +24,8 @@ export async function enableVideo(
 ): Promise<ICameraVideoTrack | null> {
     if (currentTrack) return currentTrack
     try {
+        if (typeof window === 'undefined') return null
+        const AgoraRTC = (await import('agora-rtc-sdk-ng')).default
         const newTrack = await AgoraRTC.createCameraVideoTrack()
         await client?.publish([newTrack])
         return newTrack

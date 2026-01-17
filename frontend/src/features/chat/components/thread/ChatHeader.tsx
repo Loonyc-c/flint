@@ -5,7 +5,7 @@ import Image from 'next/image'
 import { cn } from '@/lib/utils'
 import { type ChatConversation, type MatchStage } from '@shared/types'
 import { useTranslations } from 'next-intl'
-import { useSocket } from '@/features/realtime/context/SocketContext'
+import { useSocket } from '@/features/realtime'
 
 interface ChatHeaderProps {
   conversation: ChatConversation
@@ -34,7 +34,7 @@ export const ChatHeader = ({
 }: ChatHeaderProps) => {
   const t = useTranslations('chat')
   const { isUserBusy } = useSocket()
-  
+
   const partnerId = conversation.otherUser.id
   const isPartnerBusy = isUserBusy(partnerId)
 
@@ -105,8 +105,8 @@ export const ChatHeader = ({
             disabled={isPartnerBusy}
             className={cn(
               "p-2 rounded-full transition-colors",
-              isPartnerBusy 
-                ? "text-neutral-300 cursor-not-allowed" 
+              isPartnerBusy
+                ? "text-neutral-300 cursor-not-allowed"
                 : "hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-brand"
             )}
             title={isPartnerBusy ? t('userBusy') : (stage === 'fresh' ? t('audioCallTitle') : t('audioCall'))}
@@ -121,8 +121,8 @@ export const ChatHeader = ({
             disabled={isPartnerBusy}
             className={cn(
               "p-2 rounded-full transition-colors",
-              isPartnerBusy 
-                ? "text-neutral-300 cursor-not-allowed" 
+              isPartnerBusy
+                ? "text-neutral-300 cursor-not-allowed"
                 : "hover:bg-neutral-100 dark:hover:bg-neutral-800 text-neutral-500 hover:text-brand"
             )}
             title={isPartnerBusy ? t('userBusy') : t('videoCall')}

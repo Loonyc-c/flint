@@ -1,8 +1,9 @@
-import AgoraRTC, {
-  type IAgoraRTCClient,
-  type IAgoraRTCRemoteUser,
-  type IMicrophoneAudioTrack,
-  type ICameraVideoTrack,
+// Types only import to avoid top-level access to window/navigator
+import type {
+  IAgoraRTCClient,
+  IAgoraRTCRemoteUser,
+  IMicrophoneAudioTrack,
+  ICameraVideoTrack,
 } from 'agora-rtc-sdk-ng'
 
 import type { AgoraJoinOptions, AgoraJoinResult, AgoraEventHandlers } from './agora/types'
@@ -33,7 +34,9 @@ export class AgoraClient {
   private readonly MIN_TRACK_RECREATION_DELAY = 500
 
   async init(): Promise<void> {
-    if (this.client) return
+    if (this.client || typeof window === 'undefined') return
+
+    const AgoraRTC = (await import('agora-rtc-sdk-ng')).default
 
     this.client = AgoraRTC.createClient({
       mode: 'rtc',
@@ -155,4 +158,13 @@ export class AgoraClient {
   }
 }
 
-export const agoraClient = new AgoraClient()
+// Export a singleton instance, but ensure it's safe for SSR
+let instance: AgoraClient | null = null;
+export const getAgoraClient = () => {
+  if (typeof window === 'undefined') return null;
+  if (!instance) instance = new AgoraClient();
+  return instance;
+};
+
+// For backward compatibility but guarded
+export const agoraClient = typeof window !== 'undefined' ? new AgoraClient() : ({} as AgoraClient);

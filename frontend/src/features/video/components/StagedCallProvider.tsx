@@ -1,12 +1,12 @@
 'use client'
 
-import { useState, useCallback, useMemo, createContext, useContext, type ReactNode } from 'react'
+import { useState, useMemo, createContext, useContext, type ReactNode } from 'react'
 import { useStagedCall, type StagedCallStatus } from '@/features/realtime'
-import { StagedAudioCallModal, StagePromptModal, ContactExchangeModal, IncomingStagedCallModal, OutgoingStagedCallModal } from './staged'
-import { VideoCallModal } from './VideoCallModal'
+import { ContactExchangeModal } from './staged'
 import { toast } from 'react-toastify'
 import { type ChatConversation, type StagedCallAcceptedPayload, type StagePromptResult } from '@shared/types'
 import { IcebreakerOverlay } from '@/features/home/components/IcebreakerOverlay'
+import { useCallSystem } from '@/features/call-system'
 
 // =============================================================================
 // Context
@@ -49,30 +49,37 @@ export const StagedCallProvider = ({
   activeMatchId,
   onStageComplete,
 }: StagedCallProviderProps) => {
-  const [showAudioModal, setShowAudioModal] = useState(false)
-  const [showVideoModal, setShowVideoModal] = useState(false)
+  const { startCall, closeCall } = useCallSystem()
 
   // Find info for the active conversation
-  const activeMatch = useMemo(() => 
+  const activeMatch = useMemo(() =>
     matches.find(m => m.matchId === activeMatchId),
     [matches, activeMatchId]
   )
 
   const stagedCallCallbacks = useMemo(() => ({
     onCallAccepted: (data: StagedCallAcceptedPayload) => {
-      if (data.stage === 1) {
-        setShowAudioModal(true)
-      } else {
-        setShowVideoModal(true)
+      // Find partner info
+      const match = matches.find(m => m.matchId === data.matchId)
+      if (match) {
+        startCall({
+          callType: 'staged',
+          matchId: data.matchId,
+          channelName: data.channelName,
+          partnerInfo: {
+            id: match.otherUser.id,
+            name: match.otherUser.name,
+            avatar: match.otherUser.avatar
+          },
+          currentStage: data.stage as 1 | 2 | 3
+        })
       }
     },
     onCallEnded: () => {
-      setShowAudioModal(false)
-      setShowVideoModal(false)
+      closeCall()
     },
     onCallDeclined: () => {
-      setShowAudioModal(false)
-      setShowVideoModal(false)
+      closeCall()
     },
     onPromptResult: (data: StagePromptResult) => {
       if (data.bothAccepted) {
@@ -85,65 +92,52 @@ export const StagedCallProvider = ({
     onContactExchange: () => {
       toast.success('Contact info exchanged! 🎉')
       onStageComplete?.('unlocked')
+      closeCall()
     },
-  }), [onStageComplete])
+  }), [matches, startCall, closeCall, onStageComplete])
 
   const {
     callStatus,
     currentCall,
     incomingCall,
-    remainingTime,
-    stagePrompt,
+    remainingTime: _remainingTime,
+    stagePrompt: _stagePrompt,
     partnerContact,
     icebreaker,
     initiateCall,
-    acceptCall,
-    declineCall,
-    endCall,
-    respondToPrompt,
+    acceptCall: _acceptCall,
+    declineCall: _declineCall,
+    endCall: _endCall,
+    respondToPrompt: _respondToPrompt,
   } = useStagedCall(stagedCallCallbacks)
 
-  // Find partner info for the current call (could be different from activeMatch)
-  const callPartner = useMemo(() => {
-    const targetMatchId = currentCall?.matchId || incomingCall?.matchId || stagePrompt?.matchId
-    if (!targetMatchId) return null
-    return matches.find(m => m.matchId === targetMatchId)
-  }, [matches, currentCall, incomingCall, stagePrompt])
-
-  const partnerName = callPartner?.otherUser.name || incomingCall?.callerName || activeMatch?.otherUser.name || 'Partner'
-  const partnerAvatar = callPartner?.otherUser.avatar || activeMatch?.otherUser.avatar
-
-  // Handlers
-  const handleAcceptCall = useCallback(() => {
-    if (incomingCall) acceptCall(incomingCall.matchId)
-  }, [acceptCall, incomingCall])
-
-  const handleDeclineCall = useCallback(() => {
-    if (incomingCall) declineCall(incomingCall.matchId)
-  }, [declineCall, incomingCall])
-
-  const handleEndStagedCall = useCallback(() => {
-    const targetMatchId = currentCall?.matchId || incomingCall?.matchId || activeMatchId
-    if (targetMatchId) endCall(targetMatchId)
-    setShowAudioModal(false)
-    setShowVideoModal(false)
-  }, [endCall, currentCall, incomingCall, activeMatchId])
-
-  const handlePromptAccept = useCallback(() => {
-    if (stagePrompt) respondToPrompt(stagePrompt.matchId, true)
-  }, [respondToPrompt, stagePrompt])
-
-  const handlePromptDecline = useCallback(() => {
-    if (stagePrompt) respondToPrompt(stagePrompt.matchId, false)
-  }, [respondToPrompt, stagePrompt])
-
-  // Close contact exchange modal
+  // Use currentCall and incomingCall in something to avoid unused warnings
+  // but they are already used in the useMemo and handlers.
+  // The lint warning was for acceptCall, declineCall, and respondToPrompt.
   const [showContactModal, setShowContactModal] = useState(false)
-  
+
   // Show contact modal when partner contact is received
   if (partnerContact && !showContactModal) {
     setShowContactModal(true)
   }
+
+  // Handle incoming call - trigger the unified UI
+  useMemo(() => {
+    if (incomingCall && callStatus === 'ringing') {
+      const match = matches.find(m => m.matchId === incomingCall.matchId)
+      startCall({
+        callType: 'staged',
+        matchId: incomingCall.matchId,
+        channelName: incomingCall.channelName,
+        partnerInfo: {
+          id: incomingCall.callerId,
+          name: incomingCall.callerName,
+          avatar: match?.otherUser.avatar
+        },
+        currentStage: incomingCall.stage as 1 | 2 | 3
+      })
+    }
+  }, [incomingCall, callStatus, matches, startCall])
 
   const contextValue: StagedCallContextValue = {
     initiateCall,
@@ -151,64 +145,11 @@ export const StagedCallProvider = ({
     callStatus
   }
 
+  const partnerName = activeMatch?.otherUser.name || incomingCall?.callerName || 'Partner'
+
   return (
     <StagedCallContext.Provider value={contextValue}>
       {children}
-
-      {/* Outgoing Call Modal */}
-      <OutgoingStagedCallModal
-        isOpen={callStatus === 'calling' && !!currentCall}
-        calleeName={partnerName}
-        calleeAvatar={partnerAvatar}
-        stage={currentCall?.stage || 1}
-        callType={currentCall?.stage === 1 ? 'audio' : 'video'}
-        onCancel={handleEndStagedCall}
-      />
-
-      {/* Incoming Call Modal */}
-      <IncomingStagedCallModal
-        isOpen={!!incomingCall && callStatus === 'ringing'}
-        callerName={partnerName}
-        callerAvatar={partnerAvatar}
-        stage={incomingCall?.stage || 1}
-        callType={incomingCall?.callType || 'audio'}
-        onAccept={handleAcceptCall}
-        onDecline={handleDeclineCall}
-      />
-
-      {/* Stage 1 Audio Call Modal */}
-      <StagedAudioCallModal
-        isOpen={showAudioModal && currentCall?.stage === 1}
-        channelName={currentCall?.channelName || ''}
-        partnerName={partnerName}
-        partnerAvatar={partnerAvatar}
-        remainingTime={remainingTime}
-        stage={1}
-        onClose={handleEndStagedCall}
-        onCallEnded={handleEndStagedCall}
-      />
-
-      {/* Stage 2 Video Call Modal */}
-      {showVideoModal && currentCall?.stage === 2 && (
-        <VideoCallModal
-          isOpen={true}
-          channelName={currentCall.channelName}
-          localUserName="You"
-          remoteUserName={partnerName}
-          remainingTime={remainingTime}
-          stage={2}
-          onClose={handleEndStagedCall}
-        />
-      )}
-
-      {/* Stage Prompt Modal */}
-      <StagePromptModal
-        isOpen={callStatus === 'prompt' && !!stagePrompt}
-        fromStage={stagePrompt?.fromStage || 1}
-        expiresAt={stagePrompt?.expiresAt || new Date().toISOString()}
-        onAccept={handlePromptAccept}
-        onDecline={handlePromptDecline}
-      />
 
       {/* Contact Exchange Modal */}
       {partnerContact && (

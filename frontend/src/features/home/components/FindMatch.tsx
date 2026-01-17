@@ -16,7 +16,7 @@ import { Button } from "@/components/ui/button";
 import { useTranslations } from "next-intl";
 import { useState } from "react";
 import { LiveCallOverlay } from "./LiveCallOverlay";
-import { useSocket } from "@/features/realtime/context/SocketContext";
+import { useSocket } from "@/features/realtime";
 import { useUser } from "@/features/auth/context/UserContext";
 import { cn } from "@/lib/utils";
 
@@ -39,8 +39,8 @@ const LiveCallCard = ({ onClick, disabled }: LiveCallCardProps) => {
       disabled={disabled}
       className={cn(
         "p-6 border-2 shadow-sm bg-card rounded-2xl flex flex-col items-center gap-4 transition-all relative overflow-hidden",
-        disabled 
-          ? "border-neutral-200 dark:border-neutral-800 opacity-80 cursor-not-allowed" 
+        disabled
+          ? "border-neutral-200 dark:border-neutral-800 opacity-80 cursor-not-allowed"
           : "border-border hover:border-brand hover:shadow-lg group cursor-pointer"
       )}
     >
@@ -60,13 +60,13 @@ const LiveCallCard = ({ onClick, disabled }: LiveCallCardProps) => {
       </div>
       <div className={cn(
         "w-full px-5 py-2.5 rounded-2xl font-medium text-center text-sm transition-colors",
-        disabled 
-          ? "bg-neutral-100 text-neutral-400" 
+        disabled
+          ? "bg-neutral-100 text-neutral-400"
           : "bg-brand group-hover:bg-brand-300 text-brand-foreground"
       )}>
         {t("liveCall.button")}
       </div>
-      
+
       {disabled && (
         <div className="absolute top-2 right-2">
           <AlertCircle className="w-5 h-5 text-amber-500" />
@@ -208,8 +208,8 @@ const FindMatch = () => {
           </h3>
 
           <div className="w-full grid grid-cols-1 md:grid-cols-2 gap-4">
-            <LiveCallCard 
-              onClick={() => setShowLiveCall(true)} 
+            <LiveCallCard
+              onClick={() => setShowLiveCall(true)}
               disabled={isMeBusy}
             />
             <SwipeCard onNavigate={() => router.push("/swipe")} />
@@ -221,9 +221,9 @@ const FindMatch = () => {
           <AIWingmanCard />
         </div>
 
-        <LiveCallOverlay 
-          isOpen={showLiveCall} 
-          onClose={() => setShowLiveCall(false)} 
+        <LiveCallOverlay
+          isOpen={showLiveCall}
+          onClose={() => setShowLiveCall(false)}
         />
       </section>
     </div>
