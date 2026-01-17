@@ -114,7 +114,7 @@ export const GlobalSocketProvider = ({ children }: { children: React.ReactNode }
             disconnect();
         }
         return () => disconnect();
-    }, [user?.id, token, connect, disconnect]);
+    }, [user, token, connect, disconnect]);
 
     // Join a match room
     const joinMatch = useCallback((matchId: string) => {

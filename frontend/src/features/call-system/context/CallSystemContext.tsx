@@ -8,7 +8,7 @@ import type { PartnerInfo, CallType } from '../types/call-fsm'
 // Types
 // =============================================================================
 
-interface StartCallParams {
+export interface StartCallParams {
     callType: CallType
     matchId: string
     channelName: string
