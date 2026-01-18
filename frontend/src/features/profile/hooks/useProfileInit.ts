@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import type { UseFormReset } from "react-hook-form";
 import type { ProfileAndContactFormData } from "../schemas/profile-form";
 import { useProfileSync } from "./useProfileSync";
-import { QuestionAnswer } from "@/shared-types/types";
+import type { QuestionAnswer } from "@/shared-types/types";
 
 export const useProfileInit = (
   userId: string,

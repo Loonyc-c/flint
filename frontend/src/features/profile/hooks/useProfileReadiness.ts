@@ -26,14 +26,9 @@ export const useProfileReadiness = () => {
       // Fetch profile (which now includes nested contact info)
       const profileRes = await getProfile(user.id);
 
-      console.log("profileRes", profileRes);
-
       const profileData = profileRes.profile || {};
 
-      console.log("profileData", profileData);
-
       const result = calculateProfileCompleteness(profileData);
-      console.log("result", result);
       setReadiness(result);
     } catch (err) {
       console.error("Failed to check profile readiness:", err);

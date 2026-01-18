@@ -2,7 +2,6 @@ import { apiRequest } from "@/lib/api-client";
 import {
   type ProfileUpdateRequest,
   type ProfileResponse,
-  type UserContactInfo,
 } from "@shared/types";
 
 // =============================================================================

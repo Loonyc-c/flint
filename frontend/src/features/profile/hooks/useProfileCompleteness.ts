@@ -4,6 +4,10 @@ import {
   type ProfileCompletenessResult,
 } from "@shared/lib";
 import type { ProfileAndContactFormData } from "../schemas/profile-form";
+import type {
+  ProfileUpdateRequest,
+  QuestionAnswerWithFile,
+} from "@shared/types";
 
 export const useProfileCompleteness = (
   formData: ProfileAndContactFormData,
@@ -17,27 +21,32 @@ export const useProfileCompleteness = (
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      const dataForCalculation = pendingPhotoFile
-        ? { ...formData, photo: "pending" }
-        : formData;
-      const profileData = { ...dataForCalculation };
-
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const calculation = calculateProfileCompleteness({
-        ...profileData,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        contactInfo: (profileData as any).instagram
+      // Map form data to ProfileUpdateRequest structure for calculation
+      const calculationInput: Partial<
+        ProfileUpdateRequest & { questions?: QuestionAnswerWithFile[] }
+      > = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        nickName: formData.nickName,
+        age: formData.age,
+        gender: formData.gender,
+        bio: formData.bio,
+        interests: formData.interests,
+        // If a new photo is selected but not uploaded, count it as present
+        photo: pendingPhotoFile ? "pending" : formData.photo,
+        voiceIntro: formData.voiceIntro,
+        questions: formData.questions as QuestionAnswerWithFile[],
+        contactInfo: formData.instagram
           ? {
               instagram: {
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                userName: (profileData as any).instagram,
+                userName: formData.instagram,
                 isVerified: false,
               },
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
             }
-          : (profileData as any).contactInfo,
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } as any);
+          : undefined,
+      };
+
+      const calculation = calculateProfileCompleteness(calculationInput);
       setResult(calculation);
     }, 500);
     return () => clearTimeout(timer);
