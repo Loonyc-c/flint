@@ -132,7 +132,7 @@ export const stagedCallLogic = {
       const partner = users.find(u => u._id.toHexString() === partnerId)
       io.to(`user:${user._id.toHexString()}`).emit('contact-exchange', {
         matchId,
-        partnerContact: partner?.contactInfo || {},
+        partnerContact: partner?.profile?.contactInfo?.instagram.userName || {},
         expiresAt,
       })
     }

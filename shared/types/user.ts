@@ -35,8 +35,8 @@ export type UserContactInfo = {
 
 export interface QuestionAnswer {
   questionId: string
-  audioUrl: string
-  uploadId: string
+  audioUrl?: string
+  uploadId?: string
 }
 
 // Extended type for form state that includes local audio file (Blob)

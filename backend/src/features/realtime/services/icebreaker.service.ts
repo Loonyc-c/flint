@@ -33,7 +33,7 @@ class IcebreakerService {
       // In a real production app, we would call OpenAI/Gemini here.
       // For this implementation, I'll use a fetch to Gemini API if key exists, 
       // or a robust rule-based generator as a fallback.
-      
+
       const apiKey = process.env.GEMINI_API_KEY
       if (apiKey) {
         return await this.callGemini(user1Interests, user2Interests, apiKey)
@@ -48,7 +48,7 @@ class IcebreakerService {
 
   private async callGemini(interests1: string[], interests2: string[], apiKey: string): Promise<string[]> {
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`
-    
+
     const prompt = `
       User 1 Interests: ${interests1.join(', ')}
       User 2 Interests: ${interests2.join(', ')}
@@ -66,7 +66,7 @@ class IcebreakerService {
         })
       })
 
-      const data = await response.json() as any
+      const data = (await response.json()) as { candidates?: { content?: { parts?: { text?: string }[] } }[] }
       const text = data.candidates?.[0]?.content?.parts?.[0]?.text
       if (text) {
         return JSON.parse(text)
@@ -74,7 +74,7 @@ class IcebreakerService {
     } catch (e) {
       console.error('[IcebreakerService] Gemini API call failed:', e)
     }
-    
+
     return this.generateRuleBasedIcebreakers(interests1, interests2)
   }
 

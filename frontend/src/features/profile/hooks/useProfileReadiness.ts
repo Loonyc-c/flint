@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect, useCallback } from 'react'
-import { getProfile, getContactInfo } from '../api/profile'
+import { getProfile } from '../api/profile'
 import { calculateProfileCompleteness, type ProfileCompletenessResult } from '@shared/lib/profile/calculator'
 import { useUser } from '@/features/auth/context/UserContext'
 
@@ -13,21 +13,17 @@ export const useProfileReadiness = () => {
 
   const checkReadiness = useCallback(async () => {
     if (!user?.id) return
-    
+
     setIsLoading(true)
     setError(null)
-    
+
     try {
-      // Parallel fetch for profile and contact info
-      const [profileRes, contactRes] = await Promise.all([
-        getProfile(user.id),
-        getContactInfo(user.id)
-      ])
+      // Fetch profile (which now includes nested contact info)
+      const profileRes = await getProfile(user.id)
 
       const profileData = profileRes.profile || {}
-      const contactData = contactRes.contactInfo || { verifiedPlatforms: [] }
 
-      const result = calculateProfileCompleteness(profileData, contactData)
+      const result = calculateProfileCompleteness(profileData)
       setReadiness(result)
     } catch (err) {
       console.error('Failed to check profile readiness:', err)

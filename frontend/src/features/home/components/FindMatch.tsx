@@ -21,7 +21,6 @@ import { useUser } from "@/features/auth/context/UserContext";
 import { cn } from "@/lib/utils";
 import { IncompleteProfileModal } from "@/features/profile/components/modals/IncompleteProfileModal";
 import { calculateProfileCompleteness, type MissingField } from "@shared/lib";
-import { type UserContactInfo } from "@shared/types";
 
 // =============================================================================
 // Sub-Components
@@ -196,7 +195,7 @@ const FindMatch = () => {
 
   // Calculate completeness on the fly for the guard
   const completeness = user?.profile
-    ? calculateProfileCompleteness(user.profile, (user as unknown as { contactInfo?: UserContactInfo }).contactInfo || {})
+    ? calculateProfileCompleteness(user.profile)
     : { score: 0, isFeatureUnlocked: false, missingFields: [] as MissingField[] };
 
   const checkGate = (action: () => void) => {
@@ -247,8 +246,7 @@ const FindMatch = () => {
           isOpen={showIncompleteModal}
           onClose={() => setShowIncompleteModal(false)}
           score={completeness.score}
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          missingFields={completeness.missingFields as any}
+          missingFields={completeness.missingFields}
         />
       </section>
     </div>

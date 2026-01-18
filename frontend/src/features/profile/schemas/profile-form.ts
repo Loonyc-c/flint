@@ -1,7 +1,6 @@
 import { z } from 'zod'
 import {
     profileUpdateSchema,
-    contactInfoSchema
 } from '@/shared-types/validations'
 import { QUESTION_POOL } from '@/shared-types/types'
 

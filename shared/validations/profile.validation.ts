@@ -13,7 +13,7 @@ export const contactInfoSchema = z.object({
   }),
 });
 
-export type ContactFormData = z.infer<typeof contactInfoSchema>;
+export type ContactInfoFormData = z.infer<typeof contactInfoSchema>;
 
 export const questionAnswerSchema = z.object({
   questionId: z.string().min(1, "Question ID is required").refine(
