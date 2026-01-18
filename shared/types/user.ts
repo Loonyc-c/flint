@@ -11,7 +11,7 @@ export type UserProfile = {
   photo?: string
   voiceIntro?: string
   questions?: QuestionAnswer[]
-  contact?: UserContactInfo
+  contactInfo?: UserContactInfo
 }
 
 export type Subscription = {
@@ -27,8 +27,10 @@ export type UserPreferences = {
 }
 
 export type UserContactInfo = {
-  instagram: string
-  isVerified: boolean
+  instagram: {
+    userName: string
+    isVerified: boolean
+  }
 }
 
 export interface QuestionAnswer {
@@ -54,7 +56,7 @@ export interface ProfileUpdateRequest {
   photo?: string
   voiceIntro?: string
   questions?: QuestionAnswer[]
-  contact?: UserContactInfo
+  contactInfo?: UserContactInfo
 }
 export interface ProfileResponse {
   isComplete: boolean

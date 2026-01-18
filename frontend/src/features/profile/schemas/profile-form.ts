@@ -20,10 +20,10 @@ export const questionAnswerFormSchema = z.object({
 
 // Combine schemas for the form - relax questions validation for form state
 export const formSchema = profileUpdateSchema
-    .omit({ questions: true })
+    .omit({ questions: true, contactInfo: true })
     .extend({
         voiceIntro: z.string().optional(), // Make optional in form because it might be in voiceIntroFile
-        instagram: contactInfoSchema.shape.instagram,
+        instagram: z.string().min(1, 'Instagram username is required').max(50, 'Instagram username too long'),
         voiceIntroFile: z.union([z.instanceof(Blob), z.string()]).optional(),
         questions: z.array(questionAnswerFormSchema).length(3, 'Please complete all 3 questions')
     })

@@ -126,7 +126,7 @@ export const calculateProfileCompleteness = (
   }
 
   // 7. Contact Info (20%) - Instagram
-  const instagram = profile.contact?.instagram
+  const instagram = profile.contactInfo?.instagram?.userName
   if (instagram) {
     score += 20
   } else {
