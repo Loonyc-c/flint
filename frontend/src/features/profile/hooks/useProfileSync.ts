@@ -17,7 +17,6 @@ export const useProfileSync = (userId: string) => {
 
   const saveProfileData = async (
     profileToUpdate: ProfileCreationFormData,
-    _instagram: string
   ) => {
     try {
       await updateProfile(userId, profileToUpdate)
