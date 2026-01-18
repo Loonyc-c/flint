@@ -36,11 +36,12 @@ export const useProfileInit = (
                         photo: profileRes.profile.photo || '',
                         voiceIntro: profileRes.profile.voiceIntro || '',
                         questions: questionsWithDefaults,
-                        voiceIntroFile: undefined
+                        voiceIntroFile: undefined,
+                        instagram: profileRes.profile.instagram || ''
                     }
                 }
 
-                if (contactRes.contactInfo) {
+                if (contactRes.contactInfo && !combinedData.instagram) {
                     combinedData.instagram = contactRes.contactInfo.instagram || ''
                 }
                 reset(combinedData)

@@ -1,6 +1,5 @@
 import type {
   ProfileUpdateRequest,
-  UserContactInfo,
   QuestionAnswerWithFile
 } from '../../types/user'
 
@@ -40,8 +39,7 @@ export interface ProfileCompletenessResult {
  * If ANY critical field is missing, the score is capped at 75%.
  */
 export const calculateProfileCompleteness = (
-  profile: Partial<ProfileUpdateRequest & { questions?: QuestionAnswerWithFile[] }> = {},
-  contactInfo: Partial<UserContactInfo> = {}
+  profile: Partial<ProfileUpdateRequest & { questions?: QuestionAnswerWithFile[] }> = {}
 ): ProfileCompletenessResult => {
   let score = 0
   const missingFields: MissingField[] = []
@@ -128,7 +126,8 @@ export const calculateProfileCompleteness = (
   }
 
   // 7. Contact Info (20%) - Instagram
-  if (contactInfo.instagram) {
+  const instagram = profile.contact?.instagram
+  if (instagram) {
     score += 20
   } else {
     missingFields.push({ key: 'instagram', label: 'Instagram', weight: 20 })
@@ -153,7 +152,7 @@ export const calculateProfileCompleteness = (
 
   const hasCriticalEngagement = answeredCount >= 3 && profile.interests && profile.interests.length >= 3
 
-  const hasCriticalContact = contactInfo.instagram
+  const hasCriticalContact = !!instagram
 
   // If ANY of these "Gate Components" are missing, the user CANNOT pass 80%
   const isGateOpen = hasCriticalIdentity && hasCriticalContent && hasCriticalEngagement && hasCriticalContact

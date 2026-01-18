@@ -1,6 +1,5 @@
 import {
   Subscription,
-  UserContactInfo,
   UserPreferences,
   UserProfile,
   BaseCollection,
@@ -14,7 +13,6 @@ export type DbUser = BaseCollection & {
   profile?: UserProfile
   subscription: Subscription
   preferences: UserPreferences
-  contactInfo?: UserContactInfo
   voiceIntro?: string // Optional
   profileCompletion: number
 }

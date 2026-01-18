@@ -2,7 +2,7 @@
  * Main logo SVG component for the Flint brand.
  */
 const MainLogo = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 44 44" fill="none">
+  <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 44 44" fill="none">
     <path
       d="M11.9375 17.2597C11.4466 18.0536 10.4911 17.3844 9.91423 16.6506L4.27343 9.47521C4.08616 7.82731 5.13176 7.74229 5.67797 7.90578L11.6155 15.7339C11.9181 16.1328 12.2009 16.8338 11.9375 17.2597Z"
       fill="var(--brand)"

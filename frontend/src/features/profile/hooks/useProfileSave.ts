@@ -94,15 +94,16 @@ export const useProfileSave = (
                 })
             )
 
-            const { instagram, voiceIntroFile: _voiceIntroFile, ...profilePayload } = data
+            const { voiceIntroFile: _voiceIntroFile, ...profilePayload } = data
             const profileToUpdate: ProfileCreationFormData = {
                 ...profilePayload,
                 photo: finalPhotoUrl || data.photo,
                 questions: questionsToSave,
-                voiceIntro: finalVoiceIntroUrl || data.voiceIntro || ''
+                voiceIntro: finalVoiceIntroUrl || data.voiceIntro || '',
+                instagram: data.instagram,
             } as ProfileCreationFormData
 
-            await saveProfileData(profileToUpdate, instagram)
+            await saveProfileData(profileToUpdate, data.instagram)
         } finally {
             setIsSaving(false)
         }
