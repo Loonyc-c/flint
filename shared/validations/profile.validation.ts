@@ -6,12 +6,14 @@ import { QUESTION_POOL } from "../types/questions"; // Import QUESTION_POOL
 export const GenderEnum = z.nativeEnum(USER_GENDER);
 export const InterestEnum = z.nativeEnum(INTERESTS);
 
-export const contactSchema = z.object({
-  instagram: z.string().min(1, "Instagram handle is required").max(50, "Instagram handle too long"),
-  isVerified: z.boolean().default(false),
+export const contactInfoSchema = z.object({
+  instagram: z.object({
+    userName: z.string().min(1, "Instagram username is required").max(50, "Instagram username too long"),
+    isVerified: z.boolean().default(false),
+  }),
 });
 
-export type ContactFormData = z.infer<typeof contactSchema>;
+export type ContactFormData = z.infer<typeof contactInfoSchema>;
 
 export const questionAnswerSchema = z.object({
   questionId: z.string().min(1, "Question ID is required").refine(
@@ -37,7 +39,7 @@ export const profileUpdateSchema = z.object({
   photo: z.string().optional(),
   voiceIntro: z.string().optional(),
   questions: z.array(questionAnswerSchema).optional(),
-  contact: contactSchema.optional(),
+  contactInfo: contactInfoSchema.optional(),
 });
 
 export type ProfileCreationFormData = z.infer<typeof profileUpdateSchema>;

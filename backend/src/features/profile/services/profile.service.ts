@@ -11,10 +11,7 @@ export const profileService = {
     const userCollection = await getUserCollection()
     const userObjectId = new ObjectId(userId)
 
-    const user = await userCollection.findOne({ _id: userObjectId })
-    const contactInfo = user?.contactInfo
-
-    const { score } = calculateProfileCompleteness(data, contactInfo)
+    const { score } = calculateProfileCompleteness(data)
 
     const updates: Partial<DbUser> = {
       profile: {
@@ -28,8 +25,7 @@ export const profileService = {
         photo: data.photo,
         voiceIntro: data.voiceIntro,
         questions: data.questions,
-        instagram: data.instagram,
-        verifiedPlatforms: data.verifiedPlatforms,
+        contactInfo: data.contactInfo,
       },
       profileCompletion: score,
       updatedAt: new Date(),
@@ -79,8 +75,7 @@ export const profileService = {
       photo: user.profile.photo,
       voiceIntro: user.profile.voiceIntro,
       questions: user.profile.questions,
-      instagram: user.profile.instagram,
-      verifiedPlatforms: user.profile.verifiedPlatforms,
+      contactInfo: user.profile.contactInfo,
     }
 
     return {
@@ -100,20 +95,21 @@ export const profileService = {
 
     const updatedProfile = {
       ...(user.profile || {}),
-      instagram: data.instagram,
-      verifiedPlatforms: data.verifiedPlatforms || user.profile?.verifiedPlatforms || [],
+      contactInfo: data,
     }
 
-    const { score } = calculateProfileCompleteness(updatedProfile, data)
+    const { score } = calculateProfileCompleteness(updatedProfile)
 
     const result = await userCollection.findOneAndUpdate(
       { _id: userObjectId },
       {
         $set: {
-          contactInfo: data,
           profile: updatedProfile,
           profileCompletion: score,
           updatedAt: new Date()
+        },
+        $unset: {
+          contactInfo: "" // Ensure root is removed if it existed
         }
       },
       { returnDocument: 'after' }
@@ -123,7 +119,7 @@ export const profileService = {
       throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
     }
 
-    return result.contactInfo || data
+    return result.profile?.contactInfo || data
   },
 
   verifyPlatform: async (userId: string, platform: string, handle: string): Promise<UserContactInfo> => {
@@ -144,11 +140,16 @@ export const profileService = {
 
     const updatedProfile = {
       ...currentProfile,
-      [platform]: handle,
-      verifiedPlatforms,
+      contactInfo: {
+        ...(currentProfile.contactInfo || { instagram: { userName: handle, isVerified: false } }),
+        instagram: {
+          userName: handle,
+          isVerified: platform === 'instagram' // In this context platform might be 'instagram'
+        }
+      }
     }
 
-    const { score } = calculateProfileCompleteness(updatedProfile, user.contactInfo || {})
+    const { score } = calculateProfileCompleteness(updatedProfile)
 
     const result = await userCollection.findOneAndUpdate(
       { _id: userObjectId },
@@ -160,7 +161,7 @@ export const profileService = {
       throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
     }
 
-    return result.contactInfo || { verifiedPlatforms: [] }
+    return result.profile?.contactInfo || { instagram: { userName: '', isVerified: false } }
   },
 
   getContactInfo: async (userId: string): Promise<UserContactInfo | null> => {
@@ -171,13 +172,6 @@ export const profileService = {
       throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
     }
 
-    // Prioritize instagram from profile but fallback to contactInfo
-    const instagram = user.profile?.instagram || user.contactInfo?.instagram
-    const verifiedPlatforms = user.profile?.verifiedPlatforms || user.contactInfo?.verifiedPlatforms || []
-
-    return {
-      instagram,
-      verifiedPlatforms,
-    }
+    return user.profile?.contactInfo || null
   },
 }
