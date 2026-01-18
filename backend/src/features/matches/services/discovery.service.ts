@@ -1,5 +1,5 @@
 import { getUserCollection } from '@/data/db/collection'
-import { LOOKING_FOR, User } from '@shared/types'
+import { User } from '@shared/types'
 import { ObjectId } from 'mongodb'
 import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 import { ListCandidatesRequest } from '@shared/validations/match.validation'
@@ -10,19 +10,17 @@ export const discoveryService = {
    * Enforces 80% profile completeness gating for both requester and candidates
    */
   getCandidates: async (userId: string, filters: ListCandidatesRequest): Promise<User[]> => {
-    const { limit = 20, ageRange: filterAgeRange, lookingFor: filterLookingFor } = filters
+    const { limit = 20, ageRange: filterAgeRange } = filters
     const userObjectId = new ObjectId(userId)
     const userCollection = await getUserCollection()
 
     // 1. Fetch current user to verify their own profile completeness (Security Gate)
     const currentUser = await userCollection.findOne({ _id: userObjectId })
     if (!currentUser || (currentUser.profileCompletion || 0) < 80) {
-      console.warn(`⚠️ [Discovery] User ${userId} blocked from discovery (Completeness: ${currentUser?.profileCompletion || 0}%)`)
       return []
     }
 
     // 2. Determine discovery preferences
-    const lookingFor = filterLookingFor ?? currentUser.preferences?.lookingFor
     const ageRange = filterAgeRange ?? currentUser.preferences?.ageRange
 
     // 3. Aggregate candidates
@@ -31,7 +29,9 @@ export const discoveryService = {
         $match: {
           _id: { $ne: userObjectId },
           profileCompletion: { $gte: 80 }, // Quality Gate: Only show complete profiles
-          'profile.gender': lookingFor === LOOKING_FOR.ALL ? { $exists: true } : lookingFor,
+          'profile.gender': {
+            $ne: currentUser.profile?.gender,
+          },
           'profile.age': {
             $gte: 18,
             $lte: ageRange ?? DEFAULT_AGE_RANGE,
@@ -76,5 +76,5 @@ export const discoveryService = {
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
     }))
-  }
+  },
 }

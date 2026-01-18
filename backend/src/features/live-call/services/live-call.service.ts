@@ -2,7 +2,6 @@ import {
   LiveCallPreferences,
   LiveCallQueueUser,
   LiveCallMatchPayload,
-  LOOKING_FOR,
   USER_GENDER,
 } from '@shared/types'
 import { profileService } from '@/features/profile/services/profile.service'
@@ -141,31 +140,15 @@ export const liveCallService = {
    * Check if two users are compatible based on their preferences
    */
   isCompatible: (user1: LiveCallQueueUser, user2: LiveCallQueueUser): boolean => {
-    const checkGender = (u1: LiveCallQueueUser, u2: LiveCallQueueUser) => {
-      // u1's preference for u2's gender
-      if (u1.preferences.lookingFor === LOOKING_FOR.ALL) return true
-      return u1.preferences.lookingFor.toString() === u2.gender.toString()
+    // STRICT: Only match opposite genders. Ignore age and preferences.
+    const isMatch = user1.gender !== user2.gender
+
+    if (!isMatch) {
+      console.log(`📡 [LiveCall] Incompatible: ${user1.userId} (${user1.gender}) vs ${user2.userId} (${user2.gender})`)
     }
 
-    const checkAge = (u1: LiveCallQueueUser, u2: LiveCallQueueUser) => {
-      // u1's preference for u2's age
-      return (
-        u2.age >= u1.preferences.minAge && u2.age <= u1.preferences.maxAge
-      )
-    }
-
-    const match = checkGender(user1, user2) &&
-      checkGender(user2, user1) &&
-      checkAge(user1, user2) &&
-      checkAge(user2, user1)
-
-    if (!match) {
-      console.log(`📡 [LiveCall] Incompatible: ${user1.userId} vs ${user2.userId}`)
-    }
-
-    return match
+    return isMatch
   },
-
 
   /**
    * End a live call for a user and return the partner ID (if any)

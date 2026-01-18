@@ -1,14 +1,7 @@
 export enum USER_GENDER {
   MALE = 'male',
   FEMALE = 'female',
-  OTHER = 'other',
-}
-
-export enum LOOKING_FOR {
-  MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other',
-  ALL = 'all',
+  OTHER = 'other'
 }
 
 export enum INTERESTS {
@@ -31,18 +24,18 @@ export enum INTERESTS {
   Dancing = 'Dancing',
   Yoga = 'Yoga',
   Wine = 'Wine',
-  Cycling = 'Cycling',
+  Cycling = 'Cycling'
 }
 
 export enum SUBSCRIPTION_PLANS {
   FREE = 'free',
   BASIC = 'basic',
   PREMIUM = 'premium',
-  VIP = 'vip',
+  VIP = 'vip'
 }
 
 export enum PROFILE_STEPS {
   STEP_ONE = 'step-1',
   STEP_TWO = 'step-2',
-  STEP_THREE = 'step-3',
+  STEP_THREE = 'step-3'
 }

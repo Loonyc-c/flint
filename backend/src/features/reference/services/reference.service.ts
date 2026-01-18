@@ -6,14 +6,16 @@ import { isNil } from '@/utils'
 import { UserPreferences } from '@shared/types'
 
 export const referenceService = {
-  updateReference: async (userId: string, data: ReferenceUpdateRequest): Promise<UserPreferences> => {
+  updateReference: async (
+    userId: string,
+    data: ReferenceUpdateRequest,
+  ): Promise<UserPreferences> => {
     const userCollection = await getUserCollection()
     const userObjectId = new ObjectId(userId)
 
     const updates = {
       preferences: {
         ageRange: data.ageRange,
-        lookingFor: data.lookingFor,
       },
       updatedAt: new Date(),
     }
@@ -29,8 +31,8 @@ export const referenceService = {
     }
 
     if (isNil(result.preferences)) {
-        // Should ideally not happen if user is created correctly
-         throw new ServiceException('err.data.not_found', ErrorCode.INTERNAL_ERROR)
+      // Should ideally not happen if user is created correctly
+      throw new ServiceException('err.data.not_found', ErrorCode.INTERNAL_ERROR)
     }
 
     return result.preferences

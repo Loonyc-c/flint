@@ -1,5 +1,9 @@
-import { apiRequest } from '@/lib/api-client'
-import { type ProfileUpdateRequest, type ProfileResponse, type UserContactInfo } from '@shared/types'
+import { apiRequest } from "@/lib/api-client";
+import {
+  type ProfileUpdateRequest,
+  type ProfileResponse,
+  type UserContactInfo,
+} from "@shared/types";
 
 // =============================================================================
 // API Functions
@@ -13,12 +17,12 @@ import { type ProfileUpdateRequest, type ProfileResponse, type UserContactInfo }
  */
 export const updateProfile = async (
   userId: string,
-  data: ProfileUpdateRequest
+  data: ProfileUpdateRequest,
 ): Promise<ProfileResponse> =>
   apiRequest<ProfileResponse>(`/profile/${userId}`, {
-    method: 'PUT',
-    body: JSON.stringify(data)
-  })
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
 
 /**
  * Retrieves a user's profile.
@@ -27,6 +31,5 @@ export const updateProfile = async (
  */
 export const getProfile = async (userId: string): Promise<ProfileResponse> =>
   apiRequest<ProfileResponse>(`/profile/${userId}`, {
-    method: 'GET'
-  })
-
+    method: "GET",
+  });

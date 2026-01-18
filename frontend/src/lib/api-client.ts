@@ -1,31 +1,32 @@
-import { isNil } from './utils'
+import { isNil } from "./utils";
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:9999/v1'
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_URL || "http://localhost:9999/v1";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 export interface ApiSuccessResponse<T> {
-  success: true
-  data: T
+  success: true;
+  data: T;
 }
 
 export interface ApiErrorResponse {
-  success: false
+  success: false;
   error: {
-    code: number
-    message: string
-    isReadableMessage: boolean
-    data?: unknown
-  }
+    code: number;
+    message: string;
+    isReadableMessage: boolean;
+    data?: unknown;
+  };
 }
 
-export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse
+export type ApiResponse<T> = ApiSuccessResponse<T> | ApiErrorResponse;
 
 // =============================================================================
 // Error Class
@@ -40,10 +41,10 @@ export class ApiError extends Error {
     public code: number,
     message: string,
     public isReadableMessage: boolean,
-    public data?: unknown
+    public data?: unknown,
   ) {
-    super(message)
-    this.name = 'ApiError'
+    super(message);
+    this.name = "ApiError";
   }
 }
 
@@ -51,16 +52,16 @@ export class ApiError extends Error {
 // Token Management
 // =============================================================================
 
-const TOKEN_KEY = 'flint_access_token'
+const TOKEN_KEY = "flint_access_token";
 
 /**
  * Retrieves the authentication token from localStorage.
  * Returns null when running on the server or when no token exists.
  */
 const getAuthToken = (): string | null => {
-  if (typeof window === 'undefined') return null
-  return localStorage.getItem(TOKEN_KEY)
-}
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem(TOKEN_KEY);
+};
 
 // =============================================================================
 // API Request Function
@@ -87,62 +88,69 @@ const getAuthToken = (): string | null => {
  * })
  * ```
  */
-export const apiRequest = async <T>(endpoint: string, options: RequestInit = {}): Promise<T> => {
-  const url = `${API_BASE_URL}${endpoint}`
-  const token = getAuthToken()
+export const apiRequest = async <T>(
+  endpoint: string,
+  options: RequestInit = {},
+): Promise<T> => {
+  const url = `${API_BASE_URL}${endpoint}`;
+  const token = getAuthToken();
 
   // Attempt the fetch request
-  let response: Response
+  let response: Response;
   try {
     response = await fetch(url, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         ...(!isNil(token) ? { Authorization: `Bearer ${token}` } : {}),
-        ...options.headers
+        ...options.headers,
       },
-      credentials: 'include'
-    })
+      credentials: "include",
+    });
   } catch (error) {
     if (error instanceof TypeError) {
       throw new ApiError(
         0,
-        'Network error: Could not connect to server. Please check if the server is running.',
-        false
-      )
+        "Network error: Could not connect to server. Please check if the server is running.",
+        false,
+      );
     }
-    throw error
+    throw error;
   }
 
   // Parse the response JSON
-  let responseData: ApiResponse<T> | ApiErrorResponse
+  let responseData: ApiResponse<T> | ApiErrorResponse;
   try {
-    responseData = await response.json()
+    responseData = await response.json();
   } catch {
     throw new ApiError(
       response.status || 0,
       `Invalid response from server (status: ${response.status})`,
-      false
-    )
+      false,
+    );
   }
 
   // Handle error responses
-  if (!response.ok || ('success' in responseData && !responseData.success)) {
-    if ('error' in responseData) {
+  if (!response.ok || ("success" in responseData && !responseData.success)) {
+    if ("error" in responseData) {
       throw new ApiError(
         responseData.error.code,
         responseData.error.message,
         responseData.error.isReadableMessage,
-        responseData.error.data
-      )
+        responseData.error.data,
+      );
     }
-    throw new ApiError(response.status, `Request failed with status ${response.status}`, false)
+    throw new ApiError(
+      response.status,
+      `Request failed with status ${response.status}`,
+      false,
+    );
   }
 
   // Return successful response data
-  if ('success' in responseData && responseData.success) {
-    return responseData.data
+  if ("success" in responseData && responseData.success) {
+    return responseData.data;
   }
 
-  throw new ApiError(response.status, 'Unexpected response format', false)
-}
+  throw new ApiError(response.status, "Unexpected response format", false);
+};

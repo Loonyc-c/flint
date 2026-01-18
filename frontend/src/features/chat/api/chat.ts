@@ -1,5 +1,5 @@
-import { apiRequest } from '@/lib/api-client'
-import { type Message } from '@shared/types'
+import { apiRequest } from "@/lib/api-client";
+import { type Message } from "@shared/types";
 
 // =============================================================================
 // API Functions
@@ -13,18 +13,18 @@ import { type Message } from '@shared/types'
  */
 export const getMessages = async (
   matchId: string,
-  params?: { limit?: number; before?: string }
+  params?: { limit?: number; before?: string },
 ): Promise<Message[]> => {
-  const query = new URLSearchParams()
-  if (params?.limit) query.append('limit', params.limit.toString())
-  if (params?.before) query.append('before', params.before)
+  const query = new URLSearchParams();
+  if (params?.limit) query.append("limit", params.limit.toString());
+  if (params?.before) query.append("before", params.before);
 
-  const queryString = query.toString() ? `?${query.toString()}` : ''
+  const queryString = query.toString() ? `?${query.toString()}` : "";
 
   return apiRequest<Message[]>(`/matches/${matchId}/messages${queryString}`, {
-    method: 'GET',
-  })
-}
+    method: "GET",
+  });
+};
 
 /**
  * Sends a message to a specific match.
@@ -32,18 +32,23 @@ export const getMessages = async (
  * @param matchId - The match ID to send the message to
  * @param text - The message text
  */
-export const sendMessage = async (matchId: string, text: string): Promise<Message> =>
+export const sendMessage = async (
+  matchId: string,
+  text: string,
+): Promise<Message> =>
   apiRequest<Message>(`/matches/${matchId}/messages`, {
-    method: 'POST',
+    method: "POST",
     body: JSON.stringify({ text }),
-  })
+  });
 
 /**
  * Marks all messages in a match as read.
  *
  * @param matchId - The match ID to mark as read
  */
-export const markAsRead = async (matchId: string): Promise<{ success: boolean }> =>
+export const markAsRead = async (
+  matchId: string,
+): Promise<{ success: boolean }> =>
   apiRequest<{ success: boolean }>(`/matches/${matchId}/read`, {
-    method: 'POST',
-  })
+    method: "POST",
+  });

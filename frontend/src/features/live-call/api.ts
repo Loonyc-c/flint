@@ -2,4 +2,4 @@
 // Currently everything is handled via Socket.io
 export const liveCallApi = {
   // Add any future REST endpoints here
-}
+};

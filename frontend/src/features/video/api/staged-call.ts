@@ -1,14 +1,14 @@
-import { apiRequest } from '@/lib/api-client'
-import type { MatchStage } from '@shared/types'
+import { apiRequest } from "@/lib/api-client";
+import type { MatchStage } from "@shared/types";
 
 // =============================================================================
 // Types
 // =============================================================================
 
 interface GetMatchStageResponse {
-  matchId: string
-  stage: MatchStage
-  contactExchangedAt?: string
+  matchId: string;
+  stage: MatchStage;
+  contactExchangedAt?: string;
 }
 
 // =============================================================================
@@ -17,10 +17,12 @@ interface GetMatchStageResponse {
 
 /**
  * Get the current stage of a match
- * 
+ *
  * @param matchId - The match ID
  */
-export const getMatchStage = async (matchId: string): Promise<GetMatchStageResponse> =>
+export const getMatchStage = async (
+  matchId: string,
+): Promise<GetMatchStageResponse> =>
   apiRequest<GetMatchStageResponse>(`/staged-call/match/${matchId}/stage`, {
-    method: 'GET'
-  })
+    method: "GET",
+  });

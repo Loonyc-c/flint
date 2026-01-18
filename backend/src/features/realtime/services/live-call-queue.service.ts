@@ -62,12 +62,12 @@ class LiveCallQueueService {
     }
   }
 
-  private isMatch(_a: QueueEntry, _b: QueueEntry): boolean {
+  private isMatch(a: QueueEntry, b: QueueEntry): boolean {
     /**
-     * Requirement: Live call should not use preferences or age range.
-     * Random matching is used to maximize connectivity.
+     * Requirement: Live call should only match users of opposite genders.
+     * Age and preferences are explicitly ignored.
      */
-    return true
+    return a.gender !== b.gender
   }
 
   public getQueueSize(): number {

@@ -3,7 +3,6 @@
 // =============================================================================
 
 // Components
-export { default as FindMatch } from './components/FindMatch'
-export { default as MatchingPref } from './components/MatchingPref'
-export { default as SubscriptionRedirect } from './components/SubscriptionRedirect'
-
+export { default as FindMatch } from "./components/FindMatch";
+export { default as MatchingPref } from "./components/MatchingPref";
+export { default as SubscriptionRedirect } from "./components/SubscriptionRedirect";
