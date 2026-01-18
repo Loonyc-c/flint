@@ -1,15 +1,14 @@
-import { getProfile, updateProfile, getContactInfo } from '@/features/profile/api/profile'
+import { getProfile, updateProfile } from '@/features/profile/api/profile'
 import { toast } from 'react-toastify'
 import type { ProfileCreationFormData } from '@/shared-types/validations'
 
 export const useProfileSync = (userId: string) => {
   const fetchProfileData = async () => {
     try {
-      const [profileRes, contactRes] = await Promise.all([
+      const [profileRes] = await Promise.all([
         getProfile(userId),
-        getContactInfo(userId),
       ])
-      return { profileRes, contactRes }
+      return { profileRes }
     } catch (error) {
       console.error(error)
       return null

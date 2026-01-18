@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import type { UseFormReset } from 'react-hook-form'
 import type { ProfileAndContactFormData } from '../schemas/profile-form'
 import { useProfileSync } from './useProfileSync'
+import { QuestionAnswer } from '@/shared-types/types'
 
 export const useProfileInit = (
     userId: string,
@@ -13,11 +14,11 @@ export const useProfileInit = (
         const init = async () => {
             const data = await fetchProfileData()
             if (data) {
-                const { profileRes, contactRes } = data
+                const { profileRes } = data
                 let combinedData: Partial<ProfileAndContactFormData> = {}
 
                 if (profileRes.isComplete && profileRes.profile) {
-                    const questionsWithDefaults = (profileRes.profile.questions || []).map(q => ({
+                    const questionsWithDefaults = (profileRes.profile.questions || []).map((q: QuestionAnswer) => ({
                         ...q,
                         audioFile: undefined
                     }))
@@ -41,9 +42,6 @@ export const useProfileInit = (
                     }
                 }
 
-                if (contactRes.contactInfo && !combinedData.instagram) {
-                    combinedData.instagram = contactRes.contactInfo.instagram.userName || ''
-                }
                 reset(combinedData)
             } else {
                 // Reset to default if fetch failed or empty
