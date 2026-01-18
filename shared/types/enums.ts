@@ -1,7 +1,6 @@
 export enum USER_GENDER {
   MALE = 'male',
-  FEMALE = 'female',
-  OTHER = 'other'
+  FEMALE = 'female'
 }
 
 export enum INTERESTS {

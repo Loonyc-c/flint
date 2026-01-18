@@ -68,7 +68,6 @@ export const BasicInfoSection = ({ register, errors }: BasicInfoProps) => {
           >
             <option value="male">{t('genders.male')}</option>
             <option value="female">{t('genders.female')}</option>
-            <option value="other">{t('genders.other')}</option>
           </select>
         </LabelInputContainer>
       </div>
