@@ -122,47 +122,6 @@ export const profileService = {
     return result.profile?.contactInfo || data
   },
 
-  verifyPlatform: async (userId: string, platform: string, handle: string): Promise<UserContactInfo> => {
-    const userCollection = await getUserCollection()
-    const userObjectId = new ObjectId(userId)
-
-    const user = await userCollection.findOne({ _id: userObjectId })
-    if (isNil(user)) {
-      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
-    }
-
-    const currentProfile = user.profile || {}
-    const verifiedPlatforms = [...(currentProfile.verifiedPlatforms || [])]
-
-    if (!verifiedPlatforms.includes(platform)) {
-      verifiedPlatforms.push(platform)
-    }
-
-    const updatedProfile = {
-      ...currentProfile,
-      contactInfo: {
-        ...(currentProfile.contactInfo || { instagram: { userName: handle, isVerified: false } }),
-        instagram: {
-          userName: handle,
-          isVerified: platform === 'instagram' // In this context platform might be 'instagram'
-        }
-      }
-    }
-
-    const { score } = calculateProfileCompleteness(updatedProfile)
-
-    const result = await userCollection.findOneAndUpdate(
-      { _id: userObjectId },
-      { $set: { profile: updatedProfile, profileCompletion: score, updatedAt: new Date() } },
-      { returnDocument: 'after' }
-    )
-
-    if (isNil(result)) {
-      throw new ServiceException('err.user.not_found', ErrorCode.NOT_FOUND)
-    }
-
-    return result.profile?.contactInfo || { instagram: { userName: '', isVerified: false } }
-  },
 
   getContactInfo: async (userId: string): Promise<UserContactInfo | null> => {
     const userCollection = await getUserCollection()

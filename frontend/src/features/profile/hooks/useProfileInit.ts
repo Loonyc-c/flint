@@ -37,12 +37,12 @@ export const useProfileInit = (
                         voiceIntro: profileRes.profile.voiceIntro || '',
                         questions: questionsWithDefaults,
                         voiceIntroFile: undefined,
-                        instagram: profileRes.profile.instagram || ''
+                        instagram: profileRes.profile.contactInfo?.instagram.userName || ''
                     }
                 }
 
                 if (contactRes.contactInfo && !combinedData.instagram) {
-                    combinedData.instagram = contactRes.contactInfo.instagram || ''
+                    combinedData.instagram = contactRes.contactInfo.instagram.userName || ''
                 }
                 reset(combinedData)
             } else {

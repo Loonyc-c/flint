@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSwipe } from '../hooks/useSwipe'
 import { useSwipeShortcuts } from '../hooks/useSwipeShortcuts'
@@ -13,8 +13,8 @@ import { EmptyState } from './states/EmptyState'
 import { SwipeSkeleton } from './states/SwipeSkeleton'
 import { IncompleteProfileModal } from '@/features/profile/components/modals/IncompleteProfileModal'
 import { useUser } from '@/features/auth/context/UserContext'
-import { calculateProfileCompleteness, type MissingField } from '@shared/lib'
-import { type UserContactInfo } from '@shared/types'
+import { calculateProfileCompleteness } from '@shared/lib'
+
 
 export const SwipeFeature = () => {
   const {
@@ -37,9 +37,9 @@ export const SwipeFeature = () => {
   const { user } = useUser()
 
   // Calculate completeness for the gate
-  const completeness = user?.profile
-    ? calculateProfileCompleteness(user.profile, (user as unknown as { contactInfo?: UserContactInfo }).contactInfo || {})
-    : { score: 0, isFeatureUnlocked: false, missingFields: [] as MissingField[] }
+  const completeness = useMemo(() => user?.profile
+    ? calculateProfileCompleteness(user.profile)
+    : { score: 0, isFeatureUnlocked: false, missingFields: [] }, [user?.profile])
 
   const onSwipeAction = useCallback(
     async (type: SwipeAction, fromDrag = false) => {
