@@ -13,11 +13,11 @@ export const useProfileInit = (
         const init = async () => {
             const data = await fetchProfileData()
             if (data) {
-                const { profileRes, contactRes } = data
+                const { profileRes } = data
                 let combinedData: Partial<ProfileAndContactFormData> = {}
 
                 if (profileRes.isComplete && profileRes.profile) {
-                    const questionsWithDefaults = (profileRes.profile.questions || []).map(q => ({
+                    const questionsWithDefaults = (profileRes.profile.questions || []).map((q: any) => ({
                         ...q,
                         audioFile: undefined
                     }))
@@ -41,9 +41,6 @@ export const useProfileInit = (
                     }
                 }
 
-                if (contactRes.contactInfo && !combinedData.instagram) {
-                    combinedData.instagram = contactRes.contactInfo.instagram.userName || ''
-                }
                 reset(combinedData)
             } else {
                 // Reset to default if fetch failed or empty
