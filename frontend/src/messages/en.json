@@ -509,6 +509,14 @@
   },
   "common": {
     "close": "Close",
-    "error": "Something went wrong. Let's try that again."
+    "error": "Something went wrong. Let's try that again.",
+    "theme": {
+      "light": "Light",
+      "dark": "Dark"
+    },
+    "language": {
+      "en": "English",
+      "mn": "Mongolian"
+    }
   }
 }

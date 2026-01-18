@@ -1,4 +1,4 @@
-import { getProfile, updateProfile, getContactInfo, updateContactInfo } from '@/features/profile/api/profile'
+import { getProfile, updateProfile, getContactInfo } from '@/features/profile/api/profile'
 import { toast } from 'react-toastify'
 import type { ProfileCreationFormData } from '@/shared-types/validations'
 
@@ -18,16 +18,10 @@ export const useProfileSync = (userId: string) => {
 
   const saveProfileData = async (
     profileToUpdate: ProfileCreationFormData,
-    instagram: string
+    _instagram: string
   ) => {
     try {
-      await Promise.all([
-        updateProfile(userId, profileToUpdate),
-        updateContactInfo(userId, {
-          instagram: instagram || '',
-          verifiedPlatforms: [],
-        }),
-      ])
+      await updateProfile(userId, profileToUpdate)
       toast.success('Profile updated!')
       return true
     } catch (error: unknown) {
