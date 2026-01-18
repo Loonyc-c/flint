@@ -1,4 +1,4 @@
-import type { INTERESTS, LOOKING_FOR, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
+import type { INTERESTS, SUBSCRIPTION_PLANS, USER_GENDER } from './enums'
 
 export type UserProfile = {
   firstName?: string
@@ -23,7 +23,6 @@ export type Subscription = {
 
 export type UserPreferences = {
   ageRange: number // max age range
-  lookingFor: LOOKING_FOR
 }
 
 export type UserContactInfo = {
@@ -73,5 +72,4 @@ export interface UserAuth {
 
 export interface ReferenceUpdateRequest {
   ageRange: number
-  lookingFor: LOOKING_FOR
 }

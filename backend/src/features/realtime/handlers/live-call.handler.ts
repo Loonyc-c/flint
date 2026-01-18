@@ -38,7 +38,7 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
       if ((user.profileCompletion || 0) < 80) {
         socket.emit(LIVE_CALL_EVENTS.ERROR, {
           message: 'err.profile.incomplete_for_call',
-          isReadableMessage: true
+          isReadableMessage: true,
         })
         return
       }
@@ -48,12 +48,11 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
       const preferences: LiveCallPreferences = validation.success
         ? validation.data
         : {
-          age: user.profile.age!,
-          gender: user.profile.gender!,
-          lookingFor: user.preferences?.lookingFor || 'all',
-          minAge: 18,
-          maxAge: 100,
-        }
+            age: user.profile.age!,
+            gender: user.profile.gender!,
+            minAge: 18,
+            maxAge: 100,
+          }
 
       // 2. Add to queue
       await liveCallService.addToQueue(userId, {
@@ -163,7 +162,9 @@ export const registerLiveCallHandlers = (io: Server, socket: AuthenticatedSocket
    * This is critical to clear busy state without waiting for disconnect
    */
   socket.on(LIVE_CALL_EVENTS.END_CALL, () => {
-    console.log(`[DEBUG-HANGUP] Received LIVE_CALL_EVENTS.END_CALL from Socket: ${socket.id}, User: ${userId}`)
+    console.log(
+      `[DEBUG-HANGUP] Received LIVE_CALL_EVENTS.END_CALL from Socket: ${socket.id}, User: ${userId}`,
+    )
     console.log(`📞 [LiveCall] User ${userId} ended call explicitly`)
 
     // Clear busy state immediately for self

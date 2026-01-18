@@ -1,5 +1,5 @@
-import { clsx, type ClassValue } from 'clsx'
-import { twMerge } from 'tailwind-merge'
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 // =============================================================================
 // Class Name Utilities
@@ -14,7 +14,7 @@ import { twMerge } from 'tailwind-merge'
  * cn('px-4 py-2', isActive && 'bg-blue-500', 'px-6') // -> 'py-2 px-6 bg-blue-500'
  * ```
  */
-export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(inputs))
+export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(inputs));
 
 // =============================================================================
 // Type Guards
@@ -32,7 +32,7 @@ export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(inputs))
  * ```
  */
 export const isNil = (value: unknown): value is null | undefined =>
-  value === null || value === undefined
+  value === null || value === undefined;
 
 /**
  * Type guard that checks if a value is a non-empty string.
@@ -45,8 +45,9 @@ export const isNil = (value: unknown): value is null | undefined =>
  * isNonEmptyString(null)        // false
  * ```
  */
-export const isNonEmptyString = (value: string | null | undefined): value is string =>
-  (value ?? '').trim() !== ''
+export const isNonEmptyString = (
+  value: string | null | undefined,
+): value is string => (value ?? "").trim() !== "";
 
 // =============================================================================
 // Value Validators
@@ -67,16 +68,16 @@ export const isNonEmptyString = (value: string | null | undefined): value is str
  */
 export const isNonEmptyValue = (value: unknown): boolean => {
   if (value === undefined || value === null) {
-    return false
+    return false;
   }
-  if (typeof value === 'string') {
-    return value.trim() !== ''
+  if (typeof value === "string") {
+    return value.trim() !== "";
   }
   if (Array.isArray(value)) {
-    return value.length > 0
+    return value.length > 0;
   }
-  if (typeof value === 'object' && value !== null) {
-    return Object.keys(value).length > 0
+  if (typeof value === "object" && value !== null) {
+    return Object.keys(value).length > 0;
   }
-  return true
-}
+  return true;
+};

@@ -11,7 +11,7 @@ import bcrypt from 'bcrypt'
 import crypto from 'crypto'
 import { OAuth2Client } from 'google-auth-library'
 import sendEmail from './email.service'
-import { LOOKING_FOR, SUBSCRIPTION_PLANS } from '@shared/types'
+import { SUBSCRIPTION_PLANS } from '@shared/types'
 import { DEFAULT_AGE_RANGE } from '@/data/constants/user'
 
 const JWT_SECRET = process.env.JWT_SECRET
@@ -151,7 +151,6 @@ export const authService: AuthService = {
         },
         preferences: {
           ageRange: DEFAULT_AGE_RANGE,
-          lookingFor: LOOKING_FOR.ALL,
         },
         profileCompletion: 0,
         isDeleted: false as const,
@@ -287,10 +286,7 @@ export const authService: AuthService = {
 
       const payload = ticket.getPayload()
 
-      if (
-        isNil(payload) ||
-        isNil(payload.email)
-      ) {
+      if (isNil(payload) || isNil(payload.email)) {
         throw new ServiceException('err.auth.invalid_token', ErrorCode.BAD_REQUEST)
       }
 
@@ -304,7 +300,7 @@ export const authService: AuthService = {
           $setOnInsert: {
             auth: { email, password: '' },
             subscription: { plan: SUBSCRIPTION_PLANS.FREE, isActive: true },
-            preferences: { ageRange: DEFAULT_AGE_RANGE, lookingFor: LOOKING_FOR.ALL },
+            preferences: { ageRange: DEFAULT_AGE_RANGE, },
             profileCompletion: 0,
             isDeleted: false as const,
             isActive: true,

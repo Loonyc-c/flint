@@ -1,1 +1,1 @@
-export { ContactExchangeModal } from './ContactExchangeModal'
+export { ContactExchangeModal } from "./ContactExchangeModal";

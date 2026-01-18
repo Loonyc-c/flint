@@ -1,11 +1,11 @@
-import type { NextConfig } from 'next'
-import createNextIntlPlugin from 'next-intl/plugin'
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 // =============================================================================
 // Plugin Configuration
 // =============================================================================
 
-const withNextIntl = createNextIntlPlugin()
+const withNextIntl = createNextIntlPlugin();
 
 // =============================================================================
 // Next.js Configuration
@@ -25,15 +25,15 @@ const nextConfig: NextConfig = {
   images: {
     remotePatterns: [
       {
-        protocol: 'https',
-        hostname: 'res.cloudinary.com'
+        protocol: "https",
+        hostname: "res.cloudinary.com",
       },
       {
-        protocol: 'https',
-        hostname: 'example.com'
-      }
-    ]
-  }
-}
+        protocol: "https",
+        hostname: "example.com",
+      },
+    ],
+  },
+};
 
-export default withNextIntl(nextConfig)
+export default withNextIntl(nextConfig);

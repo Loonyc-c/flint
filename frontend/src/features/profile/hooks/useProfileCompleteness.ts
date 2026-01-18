@@ -1,40 +1,56 @@
-import { useState, useEffect } from 'react'
-import { calculateProfileCompleteness, type ProfileCompletenessResult } from '@shared/lib'
-import type { ProfileAndContactFormData } from '../schemas/profile-form'
+import { useState, useEffect } from "react";
+import {
+  calculateProfileCompleteness,
+  type ProfileCompletenessResult,
+} from "@shared/lib";
+import type { ProfileAndContactFormData } from "../schemas/profile-form";
+import type {
+  ProfileUpdateRequest,
+  QuestionAnswerWithFile,
+} from "@shared/types";
 
 export const useProfileCompleteness = (
-    formData: ProfileAndContactFormData,
-    pendingPhotoFile: File | null
+  formData: ProfileAndContactFormData,
+  pendingPhotoFile: File | null,
 ) => {
-    const [result, setResult] = useState<ProfileCompletenessResult>({
-        score: 0,
-        isFeatureUnlocked: false,
-        missingFields: []
-    })
+  const [result, setResult] = useState<ProfileCompletenessResult>({
+    score: 0,
+    isFeatureUnlocked: false,
+    missingFields: [],
+  });
 
-    useEffect(() => {
-        const timer = setTimeout(() => {
-            const dataForCalculation = pendingPhotoFile ? { ...formData, photo: 'pending' } : formData
-            const profileData = { ...dataForCalculation }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      // Map form data to ProfileUpdateRequest structure for calculation
+      const calculationInput: Partial<
+        ProfileUpdateRequest & { questions?: QuestionAnswerWithFile[] }
+      > = {
+        firstName: formData.firstName,
+        lastName: formData.lastName,
+        nickName: formData.nickName,
+        age: formData.age,
+        gender: formData.gender,
+        bio: formData.bio,
+        interests: formData.interests,
+        // If a new photo is selected but not uploaded, count it as present
+        photo: pendingPhotoFile ? "pending" : formData.photo,
+        voiceIntro: formData.voiceIntro,
+        questions: formData.questions as QuestionAnswerWithFile[],
+        contactInfo: formData.instagram
+          ? {
+              instagram: {
+                userName: formData.instagram,
+                isVerified: false,
+              },
+            }
+          : undefined,
+      };
 
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            const calculation = calculateProfileCompleteness({
-                ...profileData,
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                contactInfo: (profileData as any).instagram ? {
-                    instagram: {
-                        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                        userName: (profileData as any).instagram,
-                        isVerified: false
-                    }
-                    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                } : (profileData as any).contactInfo
-                // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            } as any)
-            setResult(calculation)
-        }, 500)
-        return () => clearTimeout(timer)
-    }, [formData, pendingPhotoFile])
+      const calculation = calculateProfileCompleteness(calculationInput);
+      setResult(calculation);
+    }, 500);
+    return () => clearTimeout(timer);
+  }, [formData, pendingPhotoFile]);
 
-    return result
-}
+  return result;
+};
